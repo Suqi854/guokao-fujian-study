@@ -273,7 +273,7 @@
         "同一个知识点，交叉看方法。",
         "先核对出处，再比较共识与边界，最后用原创练习验证。",
       ) +
-      `<div class="filters" aria-label="方法模块"><button class="chip ${methodFilter === "all" ? "active" : ""}" data-action="method-filter" data-id="all">全部</button>${C.comparisons.map((t) => `<button class="chip ${methodFilter === t.id ? "active" : ""}" data-action="method-filter" data-id="${t.id}">${t.filterLabel || t.module}</button>`).join("")}</div><details class="roadmap"><summary>五模块来源盘点 · 哪些还没有两位具名教师</summary>${C.comparisons.map((t) => `<div class="coverage-row"><strong>${t.module}<small>同一知识点 · ${t.refs.length} 份出处</small></strong><p>${esc(t.gap)}</p></div>`).join("")}<p class="stat-foot">当前${C.methods.length}份资料中，6份有历史教学身份或关联介绍、3份只核实到作者署名、5份只核实到机构。定义判断与估算已有两份具名教学资料；其余专题仍有缺口。</p></details><div class="comparison-list">${topics
+      `<div class="filters" aria-label="方法模块"><button class="chip ${methodFilter === "all" ? "active" : ""}" data-action="method-filter" data-id="all">全部</button>${C.comparisons.map((t) => `<button class="chip ${methodFilter === t.id ? "active" : ""}" data-action="method-filter" data-id="${t.id}">${t.filterLabel || t.module}</button>`).join("")}</div><details class="roadmap"><summary>五模块来源盘点 · 哪些还没有两位具名教师</summary>${C.comparisons.map((t) => `<div class="coverage-row"><strong>${t.module}<small>同一知识点 · ${t.refs.length} 份出处</small></strong><p>${esc(t.gap)}</p></div>`).join("")}<p class="stat-foot">当前${C.methods.length}份资料中，${C.methods.filter((m) => m.kind === "historical-teacher").length}份有历史教学身份或关联介绍、${C.methods.filter((m) => m.kind === "author").length}份只核实到作者署名、${C.methods.filter((m) => m.kind === "institution").length}份只核实到机构。定义判断、估算和细节判断已有两份具名教学资料；其余专题仍有缺口。</p></details><div class="comparison-list">${topics
         .map(
           (t) =>
             `<section class="panel comparison-card"><span class="pill gray">${t.module} · 两个可核查出处</span><h2>${esc(t.title)}</h2><div class="comparison-sources">${t.refs
@@ -806,14 +806,33 @@
           ))
     );
   }
+  let writingType = "all",
+    writingStatus = "all",
+    writingQuery = "";
+  const writingCategory = (w) => w.taskKind || w.type.split("·")[0].trim();
+  function writingResults() {
+    const rows = C.writing.filter(
+      (w) =>
+        (writingType === "all" || writingCategory(w) === writingType) &&
+        (writingStatus === "all" ||
+          (writingStatus === "draft"
+            ? !!state.drafts[w.id]?.trim()
+            : !state.drafts[w.id]?.trim())) &&
+        (!writingQuery ||
+          [w.title, w.type, w.task, w.material]
+            .join(" ")
+            .includes(writingQuery)),
+    );
+    return `<p class="stat-foot" role="status">当前 ${rows.length} / ${C.writing.length} 个原创练习 · 不是历年真题 · 不提供自动评分</p><div class="writing-cards">${rows.map((w) => `<article class="card writing-card" data-writing="${w.id}"><div class="type"><span class="pill">${w.type}</span>${state.drafts[w.id]?.trim() ? '<span class="pill green">有本机草稿</span>' : ""}</div><h3>${w.title}</h3><p>${w.task}</p><div class="actions">${btn(state.drafts[w.id]?.trim() ? "继续写作" : "开始写作", "#write/" + w.id)}<a class="text-button" href="#lesson/${w.lesson}">先学对应方法 →</a></div><div class="card-bottom"><span>建议练习 ${w.minutes} 分钟</span><span>不超过 ${w.limit} 字</span></div></article>`).join("")}</div>${rows.length ? "" : empty("没有匹配的写作练习", "当前材料组仍有限，可以放宽条件查看已有原创练习。", '<button class="btn secondary" data-action="writing-clear">清除筛选</button>')}`;
+  }
   function writingList() {
     return (
       heading(
         "WRITING STUDIO",
         "让思路，落在纸上。",
-        "读材料、写答案、对照要点。草稿仅在当前浏览器自动保存。",
+        "选任务、读材料、写答案。先独立完成，再逐项自查。",
       ) +
-      `<div class="note" style="margin-bottom:22px">以下均为原创虚构材料与参考要点，不是真题或官方评分标准；本工具不提供 AI 阅卷、自动打分或分数预测。</div><div class="writing-cards">${C.writing.map((w) => `<article class="card writing-card"><div class="type"><span class="pill">${w.type}</span>${state.drafts[w.id] ? '<span class="pill green">有本机草稿</span>' : ""}</div><h3>${w.title}</h3><p>${w.task}</p>${btn(state.drafts[w.id] ? "继续写作" : "开始写作", "#write/" + w.id)}<div class="card-bottom"><span>建议练习 ${w.minutes} 分钟</span><span>不超过 ${w.limit} 字</span></div></article>`).join("")}</div><div class="section-head"><h2>先学方法，再组织答案</h2><a href="#learn">知识地图 →</a></div><div class="compact-links">${C.lessons
+      `<section class="panel"><div class="bank-filters"><label class="bank-field">搜索训练<input id="writing-search" type="search" value="${esc(writingQuery)}" placeholder="题目、材料或任务关键词"></label><label class="bank-field">训练任务<select id="writing-type"><option value="all">全部任务</option>${[...new Set(C.writing.map(writingCategory))].map((t) => `<option ${writingType === t ? "selected" : ""}>${esc(t)}</option>`).join("")}</select></label><label class="bank-field">本机草稿<select id="writing-status"><option value="all">全部状态</option><option value="draft" ${writingStatus === "draft" ? "selected" : ""}>已有草稿</option><option value="new" ${writingStatus === "new" ? "selected" : ""}>尚无草稿</option></select></label></div><p class="stat-foot">均为原创虚构材料与参考表达。草稿不等于完成，勾选不等于得分；不提供AI阅卷或分数预测。</p></section><section id="writing-results">${writingResults()}</section><div class="section-head"><h2>先学方法，再组织答案</h2><a href="#learn">知识地图 →</a></div><div class="compact-links">${C.lessons
         .filter((l) => l.category === "申论方法")
         .map(
           (l) =>
@@ -822,13 +841,23 @@
         .join("")}</div>`
     );
   }
+  function relatedWriting(w) {
+    const related = w.materialGroup
+      ? C.writing.filter(
+          (x) => x.id !== w.id && x.materialGroup === w.materialGroup,
+        )
+      : [];
+    return related.length
+      ? `<div class="note"><strong>同材料，换一个任务</strong><p>材料相同，设问和草稿分别保存；不要直接复用整篇答案。</p>${related.map((x) => `<a class="text-button" href="#write/${x.id}">${esc(x.title)} →</a>`).join("")}</div>`
+      : "";
+  }
   const countWords = (text) => Array.from(text.replace(/\s/g, "")).length;
   function writePage(id) {
     const w = writing(id);
     if (!w) return missing();
     const value = state.drafts[id] || "",
       count = countWords(value);
-    return `<a class="back-link" href="#writing">${icon("back")}申论写作</a>${heading(w.type, w.title, `原创虚构材料 · 建议练习 ${w.minutes} 分钟 · 字数仅作自查`)}<div class="writing-grid"><div class="stack"><section class="panel"><h2>给定材料</h2><p class="material">${w.material}</p><div class="task"><strong>作答任务</strong><br>${w.task}</div><a class="text-button" href="#lesson/${w.lesson}">先看对应方法 →</a></section><section class="panel"><h2>写完后，逐项自查</h2>${w.points.map((p, i) => `<label class="check-item"><input type="checkbox" data-check="${id}" value="${i}" ${(state.checks[id] || []).includes(i) ? "checked" : ""}>${p}</label>`).join("")}<p class="stat-foot">自查勾选只记录你的判断，不代表评分。</p></section></div><section class="panel"><label class="field-label" for="draft">我的答案</label><textarea id="draft" class="writing-area" data-draft="${id}" maxlength="20000" placeholder="先列关键词，再组织成完整答案。输入会自动保存在本机。">${esc(value)}</textarea><div class="field-meta"><span id="draft-status">本机自动保存</span><span id="word-count" class="${count > w.limit ? "over-limit" : ""}">${count} / ${w.limit} 字</span></div><p class="stat-foot">统计非空白字符，包含标点；不等同于答题纸格数。</p><div class="actions"><button class="btn secondary" data-action="export-draft" data-id="${id}">${icon("download")}导出这篇草稿</button></div><details><summary>展开参考要点与表达示例</summary><div class="note">建议先独立作答，再对照查漏。以下是编写者参考，不是官方答案或评分标准。</div><ul>${w.points.map((p) => `<li>${p}</li>`).join("")}</ul><div class="reference">${esc(w.sample)}</div></details></section></div>`;
+    return `<a class="back-link" href="#writing">${icon("back")}申论写作</a>${heading(w.type, w.title, `原创虚构材料 · 建议练习 ${w.minutes} 分钟 · 字数仅作自查`)}<div class="writing-grid"><div class="stack"><section class="panel"><h2>给定材料</h2><p class="material">${w.material}</p><div class="task"><strong>作答任务</strong><br>${w.task}</div>${relatedWriting(w)}<a class="text-button" href="#lesson/${w.lesson}">先看对应方法 →</a></section><section class="panel"><h2>写完后，逐项自查</h2>${w.points.map((p, i) => `<label class="check-item"><input type="checkbox" data-check="${id}" value="${i}" ${(state.checks[id] || []).includes(i) ? "checked" : ""}>${p}</label>`).join("")}<p class="stat-foot">自查勾选只记录你的判断，不代表评分。</p></section></div><section class="panel"><label class="field-label" for="draft">我的答案</label><textarea id="draft" class="writing-area" data-draft="${id}" maxlength="20000" placeholder="先列关键词，再组织成完整答案。输入会自动保存在本机。">${esc(value)}</textarea><div class="field-meta"><span id="draft-status">本机自动保存</span><span id="word-count" class="${count > w.limit ? "over-limit" : ""}">${count} / ${w.limit} 字</span></div><p class="stat-foot">统计非空白字符，包含标点；不等同于答题纸格数。</p><div class="actions"><button class="btn secondary" data-action="export-draft" data-id="${id}">${icon("download")}导出这篇草稿</button></div><details><summary>展开参考要点与表达示例</summary><div class="note">建议先独立作答，再对照查漏。以下是编写者参考，不是官方答案或评分标准。</div><ul>${w.points.map((p) => `<li>${p}</li>`).join("")}</ul><div class="reference">${esc(w.sample)}</div></details></section></div>`;
   }
   function settings() {
     return (
@@ -948,6 +977,13 @@
     if (!b) return;
     const id = b.dataset.id,
       a = b.dataset.action;
+    if (a === "writing-clear") {
+      writingQuery = "";
+      writingType = "all";
+      writingStatus = "all";
+      render();
+      $("#writing-search").focus();
+    }
     if (a === "rotate-demo" || a === "reset-demo" || a === "overlay-demo") {
       if (a === "rotate-demo") diagramStep = (diagramStep + 1) % 4;
       if (a === "reset-demo") diagramStep = 0;
@@ -1066,6 +1102,10 @@
   });
   document.addEventListener("input", (e) => {
     const t = e.target;
+    if (t.id === "writing-search") {
+      writingQuery = t.value.trim();
+      $("#writing-results").innerHTML = writingResults();
+    }
     if (t.id === "bank-search") {
       bankFilter.search = t.value.trim();
       bankPage = 0;
@@ -1094,6 +1134,11 @@
   });
   document.addEventListener("change", async (e) => {
     const t = e.target;
+    if (["writing-type", "writing-status"].includes(t.id)) {
+      if (t.id === "writing-type") writingType = t.value;
+      else writingStatus = t.value;
+      $("#writing-results").innerHTML = writingResults();
+    }
     if (t.id === "target-module") {
       targetModule = t.value;
       render();

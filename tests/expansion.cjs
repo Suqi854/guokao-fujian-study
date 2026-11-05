@@ -19,9 +19,9 @@ const evidence = path.join(__dirname, "..", "test-results");
   p.on("pageerror", (e) => errors.push(e.message));
   await p.goto(base);
   const data = await p.evaluate(() => window.STUDY_CONTENT);
-  assert.equal(data.lessons.length, 58);
-  assert.equal(data.questions.length, 108);
-  assert.equal(data.writing.length, 13);
+  assert.equal(data.lessons.length, 64);
+  assert.equal(data.questions.length, 120);
+  assert.equal(data.writing.length, 16);
   for (const key of ["lessons", "questions", "writing"])
     assert.equal(new Set(data[key].map((x) => x.id)).size, data[key].length);
   for (const l of data.lessons) {
@@ -125,7 +125,7 @@ const evidence = path.join(__dirname, "..", "test-results");
   }
   await p.goto(base + "/#sources");
   assert.equal(await p.locator(".source-grid article").count(), 18);
-  console.log("PASS All 58 lesson pages expose their relevant source links");
+  console.log("PASS All 64 lesson pages expose their relevant source links");
   // Existing v1 records remain readable after adding content.
   const old = {
     schemaVersion: 1,

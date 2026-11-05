@@ -23,7 +23,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   await p.goto(base);
   const C = await p.evaluate(() => window.STUDY_CONTENT),
     q = Object.fromEntries(C.questions.map((x) => [x.id, x]));
-  assert.equal(C.comparisons.length, 6);
+  assert.equal(C.comparisons.length, 7);
   for (const t of C.comparisons) {
     assert.equal(new Set(t.refs).size, 2);
     for (const id of t.refs) assert.ok(C.methods.find((m) => m.id === id));
@@ -32,7 +32,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   }
   assert.equal(
     C.methods.filter((m) => m.kind === "historical-teacher").length,
-    6,
+    7,
   );
   assert.equal(C.methods.filter((m) => m.kind === "author").length, 3);
   assert.equal(C.methods.filter((m) => m.kind === "institution").length, 5);
@@ -43,7 +43,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   for (const stage of ["识别概念", "迁移运用", "检查边界"])
     assert.equal(
       C.questions.filter((q) => q.meta.trainingStage === stage).length,
-      8,
+      12,
     );
   assert.ok(
     C.questions.every(
@@ -52,7 +52,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
     ),
   );
   console.log(
-    "PASS Six same-topic comparisons, identity boundaries and editorial tiers",
+    "PASS Seven same-topic comparisons, identity boundaries and editorial tiers",
   );
   // Independently check profit scaling, a fixed-fee counterexample and mixed-growth calculations.
   for (const cost of [1, 23, 407])
@@ -113,7 +113,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
     "PASS Independent scaling, counterexample, truth-table and weighted-rate audit",
   );
   await p.goto(base + "/#methods");
-  assert.equal(await p.locator(".comparison-card").count(), 6);
+  assert.equal(await p.locator(".comparison-card").count(), 7);
   await p.getByRole("button", { name: "资料分析", exact: true }).tap();
   assert.equal(await p.locator(".comparison-card").count(), 1);
   assert.equal(await p.locator(".comparison-sources article").count(), 2);
@@ -126,7 +126,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
     .waitFor();
   await p.goto(base + "/#bank");
   await p.locator("#bank-stage").selectOption("检查边界");
-  assert.equal(await p.locator(".bank-question").count(), 8);
+  assert.equal(await p.locator(".bank-question").count(), 12);
   await p.locator("#bank-module").selectOption("资料分析");
   assert.equal(await p.locator(".bank-question").count(), 3);
   await p.getByRole("link", { name: "练习筛选结果", exact: true }).tap();

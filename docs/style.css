@@ -1783,7 +1783,8 @@ footer a {
   font-size: 12px;
   color: #5d6680;
 }
-.bank-field select {
+.bank-field select,
+.bank-field input {
   min-width: 0;
   width: 100%;
   padding: 11px 8px;
