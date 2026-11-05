@@ -108,7 +108,7 @@
     ],
   };
   C.coverageAdded = [];
-  C.coverageDeepened = ["development", "state-organs", "sentence-link"];
+  C.coverageDeepened = ["work", "travel", "growth", "share"];
 
   C.coverageMatrix = C.categories
     .filter((c) => c !== "全部")

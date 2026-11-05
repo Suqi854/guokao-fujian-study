@@ -35,11 +35,11 @@ const base = process.env.STUDY_BASE_URL || 'http://127.0.0.1:4173';
  assert.equal(C.methods.length,17);assert.equal(C.comparisons.length,7);
  const a=C.writing.find(w=>w.id==='w25'),b=C.writing.find(w=>w.id==='w26');assert.equal(a.material,b.material);assert.equal(a.materialGroup,b.materialGroup);assert.ok(a.material.length>1800);
  for(const w of [a,b])assert.ok(w.sample.replace(/\s/g,'').length<=w.limit);
- assert.equal(C.questions.length,189);assert.equal(C.writing.length,32);assert.equal(new Set(C.writing.map(w=>w.material)).size,24);
+ assert.equal(C.questions.length,201);assert.equal(C.writing.length,32);assert.equal(new Set(C.writing.map(w=>w.material)).size,24);
  console.log('PASS Minute simulation, unique set-partition enumeration, ordered draws and scoped author attribution');
  const old={schemaVersion:1,exam:'both',read:['travel'],favorites:['count'],notes:{travel:'测试旧行程笔记',count:'测试旧计数笔记'},attempts:[{qid:'q16',choice:1,at:'2026-11-04T12:00:00Z',seconds:9}],drafts:{w23:'测试旧对策草稿'},checks:{w23:[0]}};
  await p.evaluate(s=>localStorage.setItem('zhixu-study-v1',JSON.stringify(s)),old);await p.reload();
- for(const id of ['travel','count']){await p.goto(base+'/#lesson/'+id);assert.equal(await p.locator('#lesson-note').inputValue(),old.notes[id]);await p.getByRole('link',{name:'练配套题',exact:true}).tap();assert.match(await p.locator('.quiz-header').textContent(),/1 \/ 5/);}
+ for(const id of ['travel','count']){await p.goto(base+'/#lesson/'+id);assert.equal(await p.locator('#lesson-note').inputValue(),old.notes[id]);await p.getByRole('link',{name:'练配套题',exact:true}).tap();assert.ok((await p.locator('.quiz-header').textContent()).includes('1 / '+(id==='travel'?8:5)));}
  await p.goto(base+'/#quiz/one/q168');await p.locator('[data-action="choose"][data-id="1"]').tap();await p.locator('[data-action="submit"]').tap();assert.equal(await p.locator('.option-review li').count(),4);
  await p.goto(base+'/#targeted');await p.locator('#target-module').selectOption('数量关系');await p.locator('#target-stage').selectOption('检查边界');
  assert.equal((await p.getByRole('link',{name:/开始这组/}).getAttribute('href')).split('/').at(-1).split(',')[0],'q168');
@@ -47,13 +47,13 @@ const base = process.env.STUDY_BASE_URL || 'http://127.0.0.1:4173';
  await p.locator('a[href="#write/w26"]').tap();await p.getByRole('heading',{name:b.title,exact:true}).waitFor();assert.equal(await p.locator('#draft').inputValue(),'');assert.equal(await p.locator('[data-check]').first().isChecked(),false);
  await p.locator('#draft').fill('测试新句意解释');await p.locator('a[href="#write/w25"]').tap();await p.getByRole('heading',{name:a.title,exact:true}).waitFor();assert.equal(await p.locator('#draft').inputValue(),'测试新问题概括');assert.equal(await p.locator('[data-check]').first().isChecked(),true);
  const saved=await p.evaluate(()=>JSON.parse(localStorage.getItem('zhixu-study-v1')));assert.deepEqual(saved.notes,old.notes);assert.deepEqual(saved.attempts[0],old.attempts[0]);assert.equal(saved.drafts.w23,old.drafts.w23);
- console.log('PASS Existing records, five-question routes, targeted mistake priority and distinct shared-material drafts/checks');
+ console.log('PASS Existing records, eight/five-question routes, targeted mistake priority and distinct shared-material drafts/checks');
  await p.goto(base+'/#settings');const download=p.waitForEvent('download');await p.getByRole('button',{name:'导出完整备份'}).tap();const file=path.join(__dirname,'../test-results/v012-backup.json');await(await download).saveAs(file);
  await p.evaluate(()=>localStorage.removeItem('zhixu-study-v1'));await p.reload();p.once('dialog',d=>d.accept());await p.locator('#import-file').setInputFiles(file);await p.getByText('备份已恢复。',{exact:true}).waitFor();assert.deepEqual(await p.evaluate(()=>JSON.parse(localStorage.getItem('zhixu-study-v1'))),saved);fs.unlinkSync(file);
  console.log('PASS Old and new data restores exactly through v1 backup');
  for(const width of [360,390,768,1440]){await p.setViewportSize({width,height:1100});for(const route of ['lesson/travel','lesson/count','quiz/one/q168','write/w25','write/w26','methods','coverage']){await p.goto(base+'/#'+route);assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,width+':'+route);}}
  await p.evaluate(()=>localStorage.removeItem('zhixu-study-v1'));await p.goto(base+'/#lesson/travel');await p.reload();await p.setViewportSize({width:390,height:1100});
- await p.getByRole('heading',{name:'等时间：为什么可以直接平均',exact:true}).evaluate(el=>el.scrollIntoView({block:'start'}));await p.screenshot({path:path.join(__dirname,'../test-results/mobile-travel-v012.png'),fullPage:false});
+ await p.getByRole('heading',{name:'巩固：等时与等距为什么不同',exact:true}).evaluate(el=>el.scrollIntoView({block:'start'}));await p.screenshot({path:path.join(__dirname,'../test-results/mobile-travel-v012.png'),fullPage:false});
  assert.deepEqual(errors,[]);assert.deepEqual(external,[]);console.log('PASS Four-width mobile lessons and writing with no JS errors or outgoing learning data; real cleared-state screenshot');
  const f=path.join(__dirname,'../test-results/test-results.json'),r=JSON.parse(fs.readFileSync(f));for(const name of ['v012 independent travel and partition enumeration','v012 scoped sources and stable linked tasks','v012 v1 backup compatibility','v012 responsive privacy regression'])r.tests.push({name,status:'passed'});r.tests=[...new Map(r.tests.map(x=>[x.name,x])).values()];fs.writeFileSync(f,JSON.stringify(r,null,2));await browser.close();
 })().catch(e=>{console.error(e);process.exit(1);});

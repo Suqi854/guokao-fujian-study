@@ -32,7 +32,7 @@ const base=process.env.STUDY_BASE_URL||'http://127.0.0.1:4173';
  assert.match(C.lessons.find(l=>l.id==='average').sections[0][1],/均值相同/);
  assert.equal(C.methods.length,17);assert.equal(C.comparisons.length,7);
  const a=C.writing.find(w=>w.id==='w27'),b=C.writing.find(w=>w.id==='w28');assert.equal(a.material,b.material);assert.equal(a.materialGroup,b.materialGroup);assert.ok(a.material.length>1750);for(const w of [a,b])assert.ok(w.sample.replace(/\s/g,'').length<=w.limit);
- assert.equal(C.questions.length,189);assert.equal(C.writing.length,32);assert.equal(new Set(C.writing.map(w=>w.material)).size,24);
+ assert.equal(C.questions.length,201);assert.equal(C.writing.length,32);assert.equal(new Set(C.writing.map(w=>w.material)).size,24);
  console.log('PASS Independent unit constructions, error extrema, base enumeration and percentage-point checks with positive-weight counterexample');
  const old={schemaVersion:1,exam:'both',read:['average'],favorites:['mixed-growth'],notes:{average:'测试旧平均数笔记','mixed-growth':'测试旧混合增长笔记'},attempts:[{qid:'q06',choice:1,at:'2026-11-04T12:00:00Z',seconds:12}],drafts:{w25:'测试旧问题概括'},checks:{w25:[1]}};
  await p.evaluate(s=>localStorage.setItem('zhixu-study-v1',JSON.stringify(s)),old);await p.reload();

@@ -69,10 +69,10 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   for (const id of ["work", "share"]) {
     const l = C.lessons.find((l) => l.id === id);
     assert.ok(l.sections.map((s) => s[1]).join("").length > 1000);
-    assert.equal(l.practice.length, 5);
-    assert.ok(l.sections.some((s) => s[0].includes("出处")));
+    assert.equal(l.practice.length, 8);
+    assert.ok(l.sources.length && l.sources.every((id) => C.sources[id]?.url));
   }
-  assert.ok(C.questions.slice(-6).every((q) => q.optionReviews.length === 4));
+  assert.ok([145,146,147,148,149,150].every((n) => q['q'+n].optionReviews.length === 4));
   const w = C.writing.find((w) => w.id === "w20");
   assert.ok(w.material.length >= 1400);
   assert.ok(w.sample.replace(/\s/g, "").length <= w.limit);
@@ -100,7 +100,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   await p.goto(base + "/#lesson/work");
   assert.equal(await p.locator("#lesson-note").inputValue(), old.notes.work);
   await p.getByRole("link", { name: "练配套题", exact: true }).tap();
-  assert.match(await p.locator(".quiz-header").textContent(), /1 \/ 5/);
+  assert.match(await p.locator(".quiz-header").textContent(), /1 \/ 8/);
   await p.goto(base + "/#quiz/one/q147");
   await p.locator('[data-action="choose"][data-id="1"]').tap();
   await p.locator('[data-action="submit"]').tap();
@@ -169,7 +169,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   await p.reload();
   await p.setViewportSize({ width: 390, height: 1100 });
   await p
-    .getByRole("heading", { name: "方法一：以整项任务为单位列式" })
+    .getByRole("heading", { name: "入门：用时间反推效率" })
     .evaluate((el) => el.scrollIntoView({ block: "start" }));
   await p.evaluate(() => window.scrollBy(0, -90));
   await p.screenshot({
