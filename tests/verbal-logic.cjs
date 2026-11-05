@@ -89,7 +89,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
       q.q151.meta.methodIds.includes("wutong-2022"),
   );
   assert.equal(C.methods.find((m) => m.id === "wutong-2022").kind, "author");
-  assert.equal(C.methods.length, 16);
+  assert.equal(C.methods.length, 17);
   const w1 = C.writing.find((w) => w.id === "w21"),
     w2 = C.writing.find((w) => w.id === "w22");
   assert.equal(w1.material, w2.material);
@@ -97,7 +97,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   assert.ok(w1.material.length > 1400);
   for (const w of [w1, w2])
     assert.ok(w.sample.replace(/\s/g, "").length <= w.limit);
-  assert.equal(new Set(C.writing.map((w) => w.material)).size, 22);
+  assert.equal(new Set(C.writing.map((w) => w.material)).size, 23);
   console.log(
     "PASS Definition truth tables and unknown completions, semantic review ledger, source identity boundaries and long shared material",
   );

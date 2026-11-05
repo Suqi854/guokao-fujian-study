@@ -76,7 +76,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   const w = C.writing.find((w) => w.id === "w20");
   assert.ok(w.material.length >= 1400);
   assert.ok(w.sample.replace(/\s/g, "").length <= w.limit);
-  assert.equal(new Set(C.writing.map((w) => w.material)).size, 22);
+  assert.equal(new Set(C.writing.map((w) => w.material)).size, 23);
   console.log(
     "PASS Independent time slices, underdetermination counterexamples, pooled people and two-period share calculations",
   );
