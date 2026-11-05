@@ -43,7 +43,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   for (const stage of ["识别概念", "迁移运用", "检查边界"])
     assert.equal(
       C.questions.filter((q) => q.meta.trainingStage === stage).length,
-      48,
+      53,
     );
   assert.ok(
     C.questions.every(
@@ -129,7 +129,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   assert.equal(await p.locator(".bank-question").count(), 12);
   await p.locator("#bank-module").selectOption("资料分析");
   assert.equal(await p.locator(".bank-question").count(), 12);
-  assert.match(await p.locator("#bank-results [role=status]").textContent(), /15 道题/);
+  assert.match(await p.locator("#bank-results [role=status]").textContent(), /18 道题/);
   await p.getByRole("link", { name: "练习筛选结果", exact: true }).tap();
   await p.reload();
   assert.match(await p.locator(".quiz-card h1").textContent(), /1200/);

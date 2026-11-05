@@ -108,7 +108,7 @@
     ],
   };
   C.coverageAdded = [];
-  C.coverageDeepened = ["average", "mixed-growth", "count", "rotation", "argument"];
+  C.coverageDeepened = ["growth", "rate-amount-order", "compound-growth", "detail-reading", "sentence-order"];
 
   C.coverageMatrix = C.categories
     .filter((c) => c !== "全部")

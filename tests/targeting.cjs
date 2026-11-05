@@ -143,18 +143,18 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
     .locator('.target-card[data-lesson="rate-amount-order"]')
     .getByRole("link", { name: "练这个知识点", exact: true })
     .tap();
-  assert.equal(p.url().split("#")[1], "quiz/target/q97,q99");
+  assert.equal(p.url().split("#")[1], "quiz/target/q97,q99,q232,q233,q234");
   await p.locator(".option").nth(2).tap();
   await p.getByRole("button", { name: "提交答案", exact: true }).tap();
   await p.reload();
   assert.match(await p.locator(".quiz-card h1").textContent(), /甲项目/);
-  assert.match(await p.locator(".quiz-header").textContent(), /1 \/ 2/);
+  assert.match(await p.locator(".quiz-header").textContent(), /1 \/ 5/);
   await p.goto(base + "/#targeted");
   assert.equal(
     await p
       .locator('.target-card[data-lesson="rate-amount-order"] .target-reason')
       .textContent(),
-    "还有未练题，可继续检验理解。未练 1 道。",
+    "还有未练题，可继续检验理解。未练 4 道。",
   );
   // No wrong questions but some previously done: wording must describe unattempted questions, not entire lesson as unattempted.
   await p.goto(base + "/#quiz/target/q97,q97,nope,q105");
