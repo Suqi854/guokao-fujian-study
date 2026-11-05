@@ -19,9 +19,9 @@ const evidence = path.join(__dirname, "..", "test-results");
   p.on("pageerror", (e) => errors.push(e.message));
   await p.goto(base);
   const data = await p.evaluate(() => window.STUDY_CONTENT);
-  assert.equal(data.lessons.length, 34);
-  assert.equal(data.questions.length, 54);
-  assert.equal(data.writing.length, 6);
+  assert.equal(data.lessons.length, 46);
+  assert.equal(data.questions.length, 84);
+  assert.equal(data.writing.length, 8);
   for (const key of ["lessons", "questions", "writing"])
     assert.equal(new Set(data[key].map((x) => x.id)).size, data[key].length);
   for (const l of data.lessons) {
@@ -117,12 +117,12 @@ const evidence = path.join(__dirname, "..", "test-results");
   console.log("PASS New figure/source/writing screens across four widths");
   for (const l of data.lessons) {
     await p.goto(base + "/#lesson/" + l.id);
-    assert.equal(await p.locator(".source-panel a").count(), l.sources.length);
+    assert.equal(await p.locator(".source-panel .source-item a").count(), l.sources.length);
     await p.getByRole("heading", { name: l.title, exact: true }).waitFor();
   }
   await p.goto(base + "/#sources");
-  assert.equal(await p.locator(".source-grid article").count(), 10);
-  console.log("PASS All 34 lesson pages expose their relevant source links");
+  assert.equal(await p.locator(".source-grid article").count(), 16);
+  console.log("PASS All 46 lesson pages expose their relevant source links");
   // Existing v1 records remain readable after adding content.
   const old = {
     schemaVersion: 1,
