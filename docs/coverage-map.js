@@ -108,7 +108,7 @@
     ],
   };
   C.coverageAdded = [];
-  C.coverageDeepened = ["cohesion-reference", "detail-boundaries", "analogy", "definition-conditions", "argument-controls"];
+  C.coverageDeepened = ["profit-discount", "mixture", "probability", "inclusion", "guarantee-count"];
 
   C.coverageMatrix = C.categories
     .filter((c) => c !== "全部")

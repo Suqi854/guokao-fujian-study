@@ -170,7 +170,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   await p.goto(base + "/#bank");
   assert.match(
     await p.locator("#bank-results [role=status]").textContent(),
-    /291/,
+    /321/,
   );
   assert.equal(await p.locator(".bank-question").count(), 12);
   await p.getByRole("button", { name: "下一页", exact: true }).tap();
@@ -182,10 +182,10 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   await p.locator("#bank-knowledge").selectOption("mixture");
   await p.locator("#bank-year").selectOption("none");
   await p.locator("#bank-difficulty").selectOption("unrated");
-  assert.equal(await p.locator(".bank-question").count(), 3);
+  assert.equal(await p.locator(".bank-question").count(), 9);
   await p.getByRole("link", { name: "练习筛选结果", exact: true }).tap();
   await p.reload();
-  assert.match(await p.locator(".quiz-header").textContent(), /1 \/ 3/);
+  assert.match(await p.locator(".quiz-header").textContent(), /1 \/ 9/);
   assert.match(await p.locator(".quiz-card h1").textContent(), /100克/);
   await p.locator(".option").first().tap();
   await p.getByRole("button", { name: "提交答案" }).tap();
@@ -207,12 +207,12 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   await p.locator("#bank-target").selectOption("national");
   assert.match(
     await p.locator("#bank-results [role=status]").textContent(),
-    /289/,
+    /319/,
   );
   await p.locator("#bank-target").selectOption("fujian");
   assert.match(
     await p.locator("#bank-results [role=status]").textContent(),
-    /291/,
+    /321/,
   );
   await p.locator("#bank-search").fill("q64");
   assert.equal(await p.locator(".bank-question").count(), 1);
