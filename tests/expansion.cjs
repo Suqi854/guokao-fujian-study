@@ -20,8 +20,8 @@ const evidence = path.join(__dirname, "..", "test-results");
   await p.goto(base);
   const data = await p.evaluate(() => window.STUDY_CONTENT);
   assert.equal(data.lessons.length, 72);
-  assert.equal(data.questions.length, 180);
-  assert.equal(data.writing.length, 30);
+  assert.equal(data.questions.length, 189);
+  assert.equal(data.writing.length, 32);
   for (const key of ["lessons", "questions", "writing"])
     assert.equal(new Set(data[key].map((x) => x.id)).size, data[key].length);
   for (const l of data.lessons) {
@@ -119,13 +119,13 @@ const evidence = path.join(__dirname, "..", "test-results");
     await p.goto(base + "/#lesson/" + l.id);
     assert.equal(
       await p.locator(".source-panel .source-item a").count(),
-      l.sources.length,
+      0,
     );
     await p.getByRole("heading", { name: l.title, exact: true }).waitFor();
   }
   await p.goto(base + "/#sources");
-  assert.equal(await p.locator(".source-grid article").count(), 18);
-  console.log("PASS All 72 lesson pages expose their relevant source links");
+  assert.equal(await p.locator(".source-grid article").count(), 19);
+  console.log("PASS All 72 lesson pages keep provenance in the separate archive");
   // Existing v1 records remain readable after adding content.
   const old = {
     schemaVersion: 1,

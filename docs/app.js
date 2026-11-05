@@ -55,6 +55,7 @@
     catalogFilter = "全部",
     query = "",
     onlySaved = false,
+    learningPath = "",
     quiz = null,
     toastTimer;
   function validate(raw) {
@@ -478,7 +479,7 @@
         "已有多少，缺在哪里。",
         "按模块查看讲义、配套题与待建设项，再决定下一步学什么。",
       ) +
-      `<section class="panel"><div class="actions"><span class="pill">${C.lessons.length} 篇讲义</span><span class="pill">${C.questions.length} 道原创题</span><span class="pill">${C.writing.length} 个写作练习</span></div><p>这是本站内容盘点，不是官方完整大纲或完成率。入门条目只有少量练习，不代表该题型已全面覆盖；当前历年真题收录为0，难度未标定。</p><div class="bank-filters"><label class="bank-field">选择模块<select id="coverage-module"><option value="all">全部模块</option>${C.coverageMatrix.map((g) => `<option ${coverageModule === g.module ? "selected" : ""}>${g.module}</option>`).join("")}</select></label><label class="bank-field">查看范围<select id="coverage-status"><option value="all">已有与缺口</option><option value="intro" ${coverageStatus === "intro" ? "selected" : ""}>已有入门</option><option value="missing" ${coverageStatus === "missing" ? "selected" : ""}>待建设 / 待扩充</option></select></label></div><p class="stat-foot">本轮深化逻辑填空与加强削弱，补语义搭配、程度、选项作用点与证据范围；另增长材料的问题概括与评价分析。政治理论与年度时政、福建政策等需可靠来源核验，仍明确保留缺口。</p></section><section id="coverage-results">${coverageMatrixResults()}</section><details class="roadmap"><summary>数量关系：两位具名教师出处核验</summary><p>目前仍缺同题型两位具名教师的可靠出处链；已收录一份行程署名作者资料，见出处与对照。以下为历史未采用候选，本轮未重查，不计入已核实方法数量。</p>${C.quantitySourceAudit.map((x) => `<article class="source-item"><a href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">${esc(x.title)} ↗</a><small>${esc(x.date)}</small><p>${esc(x.identity)}</p><p>${esc(x.result)}</p></article>`).join("")}<p class="stat-foot">核对2026-11-05。公开可读不等于有转载许可；未复制商业题干、解析、图片或模板。已采用的其他历史方法见<a href="#methods">出处与对照</a>。</p></details>`
+      `<section class="panel"><div class="actions"><span class="pill">${C.lessons.length} 篇讲义</span><span class="pill">${C.questions.length} 道原创题</span><span class="pill">${C.writing.length} 个写作练习</span></div><p>这是本站内容盘点，不是官方完整大纲或完成率。入门条目只有少量练习，不代表该题型已全面覆盖；当前历年真题收录为0，难度未标定。</p><div class="bank-filters"><label class="bank-field">选择模块<select id="coverage-module"><option value="all">全部模块</option>${C.coverageMatrix.map((g) => `<option ${coverageModule === g.module ? "selected" : ""}>${g.module}</option>`).join("")}</select></label><label class="bank-field">查看范围<select id="coverage-status"><option value="all">已有与缺口</option><option value="intro" ${coverageStatus === "intro" ? "selected" : ""}>已有入门</option><option value="missing" ${coverageStatus === "missing" ? "selected" : ""}>待建设 / 待扩充</option></select></label></div><p class="stat-foot">本轮深化新发展理念、国家机构与语句衔接，三课提供入门、巩固、提升讲解与对应练习；新增技能交换坊长材料两问。其余专题的逐层讲解、年度时政与福建动态仍待补，不把入口数量当成完整覆盖。</p></section><section id="coverage-results">${coverageMatrixResults()}</section><details class="roadmap"><summary>数量关系：两位具名教师出处核验</summary><p>目前仍缺同题型两位具名教师的可靠出处链；已收录一份行程署名作者资料，见出处与对照。以下为历史未采用候选，本轮未重查，不计入已核实方法数量。</p>${C.quantitySourceAudit.map((x) => `<article class="source-item"><a href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">${esc(x.title)} ↗</a><small>${esc(x.date)}</small><p>${esc(x.identity)}</p><p>${esc(x.result)}</p></article>`).join("")}<p class="stat-foot">核对2026-11-05。公开可读不等于有转载许可；未复制商业题干、解析、图片或模板。已采用的其他历史方法见<a href="#methods">出处与对照</a>。</p></details>`
     );
   }
   function coverageRows() {
@@ -511,19 +512,31 @@
         )}</div><div class="note notice"><a href="#methods">查看历史方法资料与本站独立对照 →</a><br>未复制商业题库、教材图表或官方样题。数学公式为基础演绎，图示与虚构材料由本站独立编写。已有私人知识手册尚未导入。政治与法律页面只覆盖所列基础条目；法规和年度文件可能更新，请以权威文本为准。</div>`
     );
   }
+  function pathChoices(base, selected = "") {
+    return `<nav class="learning-paths" aria-label="学习路径"><a class="chip ${!selected ? "active" : ""}" href="${base}" ${!selected ? 'aria-current="page"' : ''}>完整讲义</a>${Object.entries(C.learningPaths).map(([id,p])=>`<a class="chip ${selected===id?"active":""}" href="${base}/${id}" ${selected===id?'aria-current="page"':''}>${esc(p.label)}</a>`).join("")}</nav>`;
+  }
+  function levelGuide(l, selected) {
+    const path=l.learningLevels?.[selected];
+    if(!path) return "";
+    const ids=l.practice.filter(id=>question(id).meta.trainingStage===path.stage);
+    return `<section class="level-guide"><span class="pill">${esc(path.label)}</span><h2>${esc(path.goal)}</h2><p>先读下面的对应讲解，再做${ids.length}道${esc(path.stage)}练习。路径由你选择，不是能力诊断或实测难度。</p>${ids.length?btn("练本路径 · "+ids.length+"题", "#quiz/target/"+ids.join(",")):"<p>本路径配套题待补，可先阅读讲解。</p>"}</section>`;
+  }
   function lessonCards() {
     const list = C.lessons.filter(
       (l) =>
         (catalogFilter === "全部" || l.category === catalogFilter) &&
+        (!learningPath || Boolean(l.learningLevels?.[learningPath])) &&
         (!onlySaved || state.favorites.includes(l.id)) &&
         (!query ||
           [l.title, l.subtitle, l.category, ...l.tags, ...l.sections.flat()]
             .join(" ")
             .includes(query)),
     );
-    return `<p class="stat-foot" aria-live="polite">找到 ${list.length} 篇讲义 · 基础方法整理，非官方教材</p><div class="catalog-grid">${list.map((l) => `<article class="card lesson-card"><div class="card-top"><span class="pill ${l.category === "申论方法" ? "green" : "gray"}">${l.category}</span><button class="small-icon ${state.favorites.includes(l.id) ? "saved" : ""}" data-action="favorite" data-id="${l.id}" aria-pressed="${state.favorites.includes(l.id)}" aria-label="收藏：${l.title}">${icon("star")}</button></div><a href="#lesson/${l.id}"><h3>${l.title}</h3><p>${l.subtitle}</p></a><a class="card-bottom" href="#lesson/${l.id}"><span>${l.minutes} 分钟 · ${l.practice.length ? l.practice.length + " 道配套题" : "写作方法"} ${state.read.includes(l.id) ? "· 已读" : ""}</span>${icon("arrow")}</a></article>`).join("")}</div>${list.length ? "" : empty("没有找到对应讲义", "试试其他关键词，或取消分类和收藏筛选。", '<button class="btn secondary" data-action="reset-search">重置筛选</button>')}`;
+    return `<p class="stat-foot" aria-live="polite">找到 ${list.length} 篇讲义 · 基础方法整理，非官方教材</p><div class="catalog-grid">${list.map((l) => `<article class="card lesson-card"><div class="card-top"><span class="pill ${l.category === "申论方法" ? "green" : "gray"}">${l.category}</span><button class="small-icon ${state.favorites.includes(l.id) ? "saved" : ""}" data-action="favorite" data-id="${l.id}" aria-pressed="${state.favorites.includes(l.id)}" aria-label="收藏：${l.title}">${icon("star")}</button></div><a href="#lesson/${l.id}${learningPath ? "/"+learningPath : ""}"><h3>${l.title}</h3><p>${l.subtitle}</p></a><a class="card-bottom" href="#lesson/${l.id}${learningPath ? "/"+learningPath : ""}"><span>${l.minutes} 分钟 · ${l.practice.length ? l.practice.length + " 道配套题" : "写作方法"} ${state.read.includes(l.id) ? "· 已读" : ""}</span>${icon("arrow")}</a></article>`).join("")}</div>${list.length ? "" : empty("没有找到对应讲义", "试试其他关键词，或取消分类和收藏筛选。", '<button class="btn secondary" data-action="reset-search">重置筛选</button>')}`;
   }
   function learn() {
+    const choice=location.hash.split("/")[1];
+    learningPath=C.learningPaths[choice]?choice:"";
     return (
       heading(
         "KNOWLEDGE MAP",
@@ -531,14 +544,17 @@
         "先看懂方法，再到练习里检验。收藏值得反复读的内容。",
         btn("查看覆盖矩阵", "#coverage", true),
       ) +
+      `<section class="panel"><h2>从你需要的地方开始</h2><p>小白先懂概念，基础阶段练迁移，高手阶段检查条件与边界。选择路径后，显示已有对应讲解的专题；完整讲义保留全部内容。</p>${pathChoices("#learn",learningPath)}<p class="stat-foot">当前${C.lessons.filter(l=>l.learningLevels).length}课已逐层编写，其他专题仍可从完整讲义进入。路径不是考试难度或能力等级认证。</p></section>` +
       roadmap() +
       `<label class="search-box">${icon("search")}<input id="search" aria-label="搜索知识点" placeholder="搜索知识点、公式或技巧…" value="${esc(query)}"></label><div class="filters">${C.categories.map((c) => `<button class="chip ${c === catalogFilter ? "active" : ""}" data-action="filter" data-id="${c}" aria-pressed="${c === catalogFilter}">${c}</button>`).join("")}<button class="chip ${onlySaved ? "active" : ""}" data-action="saved-filter" aria-pressed="${onlySaved}">★ 收藏</button></div><div id="catalog">${lessonCards()}</div>`
     );
   }
-  function lessonPage(id) {
+  function lessonPage(id, pathId) {
     const l = lesson(id);
     if (!l) return missing();
-    return `<a class="back-link" href="#learn">${icon("back")}知识地图</a><div class="reading-grid"><article class="panel reading"><span class="pill">${l.category} · 基础讲义</span><h1>${l.title}</h1><p class="subtitle">${l.subtitle}</p><span class="muted" style="font-size:12px">约 ${l.minutes} 分钟 · ${l.tags.join(" / ")}</span><div class="formula">${l.formula}</div>${diagram(l)}${l.sections.map((s) => `<section><h2>${s[0]}</h2><p>${s[1]}</p></section>`).join("")}${sourcePanel(l)}${methodLinks(l)}<div class="note">学习讲义并非官方教材。请结合题目限定条件使用；阅读完成不代表已经掌握。</div><div class="actions"><button class="btn" data-action="read" data-id="${l.id}">${icon("check")}${state.read.includes(l.id) ? "已读 · 点击取消" : "标记已读"}</button><button class="btn secondary" data-action="favorite" data-id="${l.id}" aria-pressed="${state.favorites.includes(l.id)}">${icon("star")}${state.favorites.includes(l.id) ? "已收藏" : "收藏讲义"}</button></div></article><aside class="stack sticky"><div class="panel"><h2>把方法用起来</h2><p class="subtitle">${l.practice.length ? `用 ${l.practice.length} 道原创示例题检验理解。` : "读完方法，选一个材料开始写。"}</p><div class="actions">${btn(l.practice.length ? "练配套题" : "去申论写作", l.practice.length ? "#quiz/lesson/" + l.id : "#write/" + (C.writing.find((w) => w.lesson === l.id)?.id || "w01"))}</div></div><div class="panel"><label class="field-label" for="lesson-note">我的笔记</label><textarea id="lesson-note" data-note="${l.id}" rows="7" maxlength="10000" placeholder="记下卡住的地方、适用条件或自己的解法…">${esc(state.notes[l.id] || "")}</textarea><div class="field-meta"><span id="note-status">仅保存在当前浏览器</span></div></div></aside></div>`;
+    const selected=l.learningLevels?.[pathId]?pathId:"";
+    const sections=l.sections.filter((item,i)=>(!selected || l.learningLevels[selected].sections.includes(i)) && !/来源|归属/.test(item[0]));
+    return `<a class="back-link" href="#learn">${icon("back")}知识地图</a><div class="reading-grid"><article class="panel reading"><span class="pill">${l.category} · 学习讲义</span><h1>${l.title}</h1><p class="subtitle">${l.subtitle}</p><span class="muted" style="font-size:12px">约 ${l.minutes} 分钟 · ${l.tags.join(" / ")} · 更新 ${esc(l.updated || "2026-11-05")}${l.versionNote ? " · "+esc(l.versionNote):""}</span>${l.learningLevels ? pathChoices("#lesson/"+l.id,selected)+levelGuide(l,selected):""}<div class="formula">${l.formula}</div>${diagram(l)}${sections.map((s) => `<section><h2>${s[0]}</h2><p>${s[1]}</p></section>`).join("")}<p class="stat-foot"><a href="#sources">资料说明</a> · <a href="#methods">方法对照</a></p><div class="note">学习讲义并非官方教材。请结合题目限定条件使用；阅读完成不代表已经掌握。</div><div class="actions"><button class="btn" data-action="read" data-id="${l.id}">${icon("check")}${state.read.includes(l.id) ? "已读 · 点击取消" : "标记已读"}</button><button class="btn secondary" data-action="favorite" data-id="${l.id}" aria-pressed="${state.favorites.includes(l.id)}">${icon("star")}${state.favorites.includes(l.id) ? "已收藏" : "收藏讲义"}</button></div></article><aside class="stack sticky"><div class="panel"><h2>把方法用起来</h2><p class="subtitle">${l.practice.length ? `用 ${l.practice.length} 道原创示例题检验理解。` : "读完方法，选一个材料开始写。"}</p><div class="actions">${btn(l.practice.length ? "练配套题" : "去申论写作", l.practice.length ? "#quiz/lesson/" + l.id : "#write/" + (C.writing.find((w) => w.lesson === l.id)?.id || "w01"))}</div></div><div class="panel"><label class="field-label" for="lesson-note">我的笔记</label><textarea id="lesson-note" data-note="${l.id}" rows="7" maxlength="10000" placeholder="记下卡住的地方、适用条件或自己的解法…">${esc(state.notes[l.id] || "")}</textarea><div class="field-meta"><span id="note-status">仅保存在当前浏览器</span></div></div></aside></div>`;
   }
 
   const bankDefaults = () => ({
@@ -696,7 +712,7 @@
   function questionMeta(q) {
     const m = q.meta,
       year = m.examSource.year === null ? "无考试年份" : m.examSource.year;
-    return `<details class="question-meta"><summary>题目档案 · 来源、条件与难度</summary><p>${esc(m.type)} · ${esc(m.module)} · ${m.tags.map(esc).join(" / ")}</p><p>训练层次：${esc(m.trainingStage)}；目标：${esc(m.trainingGoal)}。</p><p>出处：${esc(m.source.title)}；${esc(year)}。难度：${esc(m.difficulty.level || "未标定")}。用途：${esc(m.purpose)}。</p><p>${esc(m.rights.note)}</p><p>答案核对：${esc(m.answerReview.date)}；${esc(m.answerReview.basis)}</p><p>本题独立编写；<a href="#methods">可查看方法出处与独立对照</a>，相关作者未参与本题或认可其答案。事实依据见<a href="#lesson/${q.lesson}">配套讲义的来源说明</a>。</p></details>`;
+    return `<details class="question-meta"><summary>题目档案 · 来源、条件与难度</summary><p>${esc(m.type)} · ${esc(m.module)} · ${m.tags.map(esc).join(" / ")}</p><p>训练层次：${esc(m.trainingStage)}；目标：${esc(m.trainingGoal)}。</p><p>出处：${esc(m.source.title)}；${esc(year)}。难度：${esc(m.difficulty.level || "未标定")}。用途：${esc(m.purpose)}。</p><p>${esc(m.rights.note)}</p><p>答案核对：${esc(m.answerReview.date)}；${esc(m.answerReview.basis)}</p><p>本题独立编写；<a href="#methods">可查看方法出处与独立对照</a>，相关作者未参与本题或认可其答案。事实核验汇总见<a href="#sources">资料说明</a>。</p></details>`;
   }
 
   let targetModule = "all",
@@ -962,7 +978,7 @@
     const views = {
       home,
       learn,
-      lesson: () => lessonPage(parts[1]),
+      lesson: () => lessonPage(parts[1],parts[2]),
       practice,
       targeted,
       bank,

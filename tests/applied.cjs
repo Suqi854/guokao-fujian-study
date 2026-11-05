@@ -107,6 +107,9 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   assert.equal(href.split("/").at(-1).split(",")[0], "q130");
   await p.locator("#target-module").selectOption("政治理论");
   await p.locator("#target-stage").selectOption("检查边界");
+  href = await p.getByRole("link", { name: /开始这组/ }).getAttribute("href");
+  assert.deepEqual(href.split("/").at(-1).split(","), ["q183"]);
+  await p.locator("#target-module").selectOption("福建专题");
   await p.getByRole("heading", { name: "当前筛选下没有待选题" }).waitFor();
   assert.equal(await p.locator('a[href^="#quiz/target/"]').count(), 0);
   console.log(

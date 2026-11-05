@@ -2018,3 +2018,5 @@ footer a {
 .option-review li {
   margin: 8px 0;
 }
+
+.learning-paths{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0}.learning-paths a{text-decoration:none}.level-guide{padding:18px;border:1px solid var(--line,#ddd);border-radius:16px;background:#f6f5ff;margin:16px 0}.level-guide h2{font-size:20px;line-height:1.6}.level-guide p{font-size:15px;line-height:1.8}

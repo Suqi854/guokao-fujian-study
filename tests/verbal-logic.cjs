@@ -97,7 +97,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   assert.ok(w1.material.length > 1400);
   for (const w of [w1, w2])
     assert.ok(w.sample.replace(/\s/g, "").length <= w.limit);
-  assert.equal(new Set(C.writing.map((w) => w.material)).size, 23);
+  assert.equal(new Set(C.writing.map((w) => w.material)).size, 24);
   console.log(
     "PASS Definition truth tables and unknown completions, semantic review ledger, source identity boundaries and long shared material",
   );
