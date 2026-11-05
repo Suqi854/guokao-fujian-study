@@ -1,12 +1,12 @@
 {
   "name": "guokao-fujian-study",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "description": "A standalone, local-first civil service study website",
   "scripts": {
     "start": "python3 -m http.server 4173 --directory docs",
-    "test": "node tests/smoke.cjs && node tests/touch.cjs && node tests/expansion.cjs && node tests/deepening.cjs && node tests/crossstudy.cjs",
-    "check": "node --check docs/app.js && node --check docs/content.js && node --check docs/expansion.js && node --check docs/deepening.js && node --check docs/catalog.js && node --check docs/methods.js && node --check docs/crossstudy.js && node --check docs/comparisons.js"
+    "test": "node tests/smoke.cjs && node tests/touch.cjs && node tests/expansion.cjs && node tests/deepening.cjs && node tests/crossstudy.cjs && node tests/targeting.cjs",
+    "check": "node --check docs/app.js && node --check docs/content.js && node --check docs/expansion.js && node --check docs/deepening.js && node --check docs/catalog.js && node --check docs/methods.js && node --check docs/crossstudy.js && node --check docs/comparisons.js && node --check docs/targeting-content.js && node --check docs/verified-methods.js"
   },
   "devDependencies": {
     "@playwright/test": "1.64.1"

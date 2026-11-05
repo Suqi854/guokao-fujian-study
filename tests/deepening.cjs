@@ -136,7 +136,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
     for (const m of q.meta.methodIds)
       assert.ok(data.methods.find((x) => x.id === m));
   }
-  assert.equal(data.methods.length, 10);
+  assert.equal(data.methods.length, 14);
   assert.ok(
     data.methods.every(
       (x) => x.checked && x.date && x.url.startsWith("https://"),
@@ -170,7 +170,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   await p.goto(base + "/#bank");
   assert.match(
     await p.locator("#bank-results [role=status]").textContent(),
-    /96/,
+    /108/,
   );
   assert.equal(await p.locator(".bank-question").count(), 12);
   await p.getByRole("button", { name: "下一页", exact: true }).tap();
@@ -207,12 +207,12 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   await p.locator("#bank-target").selectOption("national");
   assert.match(
     await p.locator("#bank-results [role=status]").textContent(),
-    /94/,
+    /106/,
   );
   await p.locator("#bank-target").selectOption("fujian");
   assert.match(
     await p.locator("#bank-results [role=status]").textContent(),
-    /96/,
+    /108/,
   );
   await p.locator("#bank-search").fill("q64");
   assert.equal(await p.locator(".bank-question").count(), 1);
@@ -245,7 +245,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
     }
   }
   await p.goto(base + "/#methods");
-  assert.equal(await p.locator(".method-card").count(), 10);
+  assert.equal(await p.locator(".method-card").count(), 14);
   await p.locator("details.roadmap").last().locator("summary").tap();
   await p.getByText("尚未核实教师职务", { exact: false }).waitFor();
   console.log("PASS Spatial, bank, method and writing pages at four widths");

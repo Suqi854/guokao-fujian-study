@@ -263,14 +263,17 @@
       (t) => methodFilter === "all" || t.id === methodFilter,
     );
     const ids = new Set(topics.flatMap((t) => t.refs));
-    const records = C.methods.filter((m) => ids.has(m.id));
+    const records =
+      methodFilter === "all"
+        ? C.methods
+        : C.methods.filter((m) => ids.has(m.id));
     return (
       heading(
         "COMPARE & PRACTICE",
         "同一个知识点，交叉看方法。",
         "先核对出处，再比较共识与边界，最后用原创练习验证。",
       ) +
-      `<div class="filters" aria-label="方法模块"><button class="chip ${methodFilter === "all" ? "active" : ""}" data-action="method-filter" data-id="all">全部</button>${C.comparisons.map((t) => `<button class="chip ${methodFilter === t.id ? "active" : ""}" data-action="method-filter" data-id="${t.id}">${t.module}</button>`).join("")}</div><details class="roadmap"><summary>五模块来源盘点 · 哪些还没有两位具名教师</summary>${C.comparisons.map((t) => `<div class="coverage-row"><strong>${t.module}<small>同一知识点 · ${t.refs.length} 份出处</small></strong><p>${esc(t.gap)}</p></div>`).join("")}<p class="stat-foot">当前10份资料中，3份有历史教师身份介绍、2份只核实到作者署名、5份只核实到机构。尚未达到每个知识点两位具名教师的覆盖。</p></details><div class="comparison-list">${topics
+      `<div class="filters" aria-label="方法模块"><button class="chip ${methodFilter === "all" ? "active" : ""}" data-action="method-filter" data-id="all">全部</button>${C.comparisons.map((t) => `<button class="chip ${methodFilter === t.id ? "active" : ""}" data-action="method-filter" data-id="${t.id}">${t.filterLabel || t.module}</button>`).join("")}</div><details class="roadmap"><summary>五模块来源盘点 · 哪些还没有两位具名教师</summary>${C.comparisons.map((t) => `<div class="coverage-row"><strong>${t.module}<small>同一知识点 · ${t.refs.length} 份出处</small></strong><p>${esc(t.gap)}</p></div>`).join("")}<p class="stat-foot">当前${C.methods.length}份资料中，6份有历史教学身份或关联介绍、3份只核实到作者署名、5份只核实到机构。定义判断与估算已有两份具名教学资料；其余专题仍有缺口。</p></details><div class="comparison-list">${topics
         .map(
           (t) =>
             `<section class="panel comparison-card"><span class="pill gray">${t.module} · 两个可核查出处</span><h2>${esc(t.title)}</h2><div class="comparison-sources">${t.refs
@@ -652,6 +655,62 @@
     return `<details class="question-meta"><summary>题目档案 · 来源、条件与难度</summary><p>${esc(m.type)} · ${esc(m.module)} · ${m.tags.map(esc).join(" / ")}</p><p>训练层次：${esc(m.trainingStage)}；目标：${esc(m.trainingGoal)}。</p><p>出处：${esc(m.source.title)}；${esc(year)}。难度：${esc(m.difficulty.level || "未标定")}。用途：${esc(m.purpose)}。</p><p>${esc(m.rights.note)}</p><p>答案核对：${esc(m.answerReview.date)}；${esc(m.answerReview.basis)}</p><p>本题独立编写；<a href="#methods">可查看方法出处与独立对照</a>，相关作者未参与本题或认可其答案。事实依据见<a href="#lesson/${q.lesson}">配套讲义的来源说明</a>。</p></details>`;
   }
 
+  let targetModule = "all";
+  function targetRows() {
+    const done = latest();
+    return C.lessons
+      .filter(
+        (l) =>
+          l.practice.length &&
+          (targetModule === "all" || l.category === targetModule),
+      )
+      .map((l) => ({
+        lesson: l,
+        wrong: l.practice.filter(
+          (id) => done[id] && done[id].choice !== question(id).answer,
+        ),
+        fresh: l.practice.filter((id) => !done[id]),
+      }))
+      .filter((r) => r.wrong.length || r.fresh.length)
+      .sort(
+        (a, b) =>
+          b.wrong.length - a.wrong.length || b.fresh.length - a.fresh.length,
+      );
+  }
+  function targetQueue(rows) {
+    const ids = [];
+    for (const key of ["wrong", "fresh"]) {
+      const groups = rows.map((r) => [...r[key]]);
+      while (ids.length < 12 && groups.some((g) => g.length)) {
+        for (const g of groups)
+          if (g.length && ids.length < 12) ids.push(g.shift());
+      }
+    }
+    return ids;
+  }
+  const targetLink = (ids) => "#quiz/target/" + ids.join(",");
+  function targeted() {
+    const rows = targetRows(),
+      ids = targetQueue(rows);
+    const wrong = rows.reduce((n, r) => n + r.wrong.length, 0),
+      freshCount = rows.reduce((n, r) => n + r.fresh.length, 0);
+    return (
+      heading(
+        "YOUR NEXT PRACTICE",
+        "下一组，从记录出发。",
+        "先回看最近答错，再练尚未尝试的题。记录仅在本机计算。",
+      ) +
+      `<section class="panel"><label class="bank-field">选择练习模块<select id="target-module"><option value="all">全部选择题模块</option>${C.categories
+        .filter((c) => !["全部", "申论方法"].includes(c))
+        .map(
+          (c) =>
+            `<option ${targetModule === c ? "selected" : ""}>${esc(c)}</option>`,
+        )
+        .join(
+          "",
+        )}</select></label><div class="actions"><span class="pill">${wrong} 道最近答错</span><span class="pill gray">${freshCount} 道尚未练习</span></div><p>未做过不等于薄弱，答对一次也不等于掌握。当前题目均为原创，难度尚未经样本标定。</p>${ids.length ? btn(`开始这组 · ${ids.length} 题`, targetLink(ids)) : btn("自主选择重练", "#bank", true)}<details class="roadmap"><summary>这组题怎样选出来</summary><p>先选最近一次答错的题，再用未做题补足，最多12题。知识点按错题数量、再按未做数量排序，同数按目录顺序；每轮每个知识点取一题，避免单一知识点占满。进入后题号固定，刷新会从本组首题重新开始，已提交记录保留。练完回到本页会重新计算。</p><p>这里不推断能力、考试得分或遗忘周期；申论草稿不自动评分，可到申论写作页训练。</p></details></section><div class="practice-grid">${rows.map((r) => `<section class="card practice-card target-card" data-lesson="${r.lesson.id}"><span class="pill gray">${r.lesson.category}</span><h2>${r.lesson.title}</h2><p class="target-reason">${r.wrong.length ? `最近答错 ${r.wrong.length} 道，建议回看解析。` : "还有未练题，可继续检验理解。"}未练 ${r.fresh.length} 道。</p><div class="actions">${btn("练这个知识点", targetLink(targetQueue([r])))}${btn("先读讲义", "#lesson/" + r.lesson.id, true)}</div></section>`).join("")}</div>${!rows.length ? empty("当前筛选下没有待选题", "本机已有题目的最近一次作答均正确。你仍可自行重练或继续申论写作。", btn("练申论", "#writing")) : ""}`
+    );
+  }
   function practice() {
     const categories = C.categories.filter(
       (c) => !["全部", "申论方法"].includes(c),
@@ -662,7 +721,7 @@
         "用练习，检验理解。",
         `${C.questions.length} 道原创练习题，每次提交后展开解析。不是历年真题库。`,
       ) +
-      `<section class="panel bank-entry"><div><h2>按题型与知识点找题</h2><p class="subtitle">组合筛选 · 本机错题 · 题源与年份</p></div>${btn("打开题库检索", "#bank")}</section><div class="practice-grid"><section class="card practice-card"><div class="tile-icon">${icon("chart")}</div><h3>综合练习</h3><p>覆盖当前全部选择题，顺序作答。已做过的题也可以重练。</p><span class="pill">${C.questions.length} 道 · 基础</span>${btn("开始综合练习", "#quiz/all")}</section>${categories
+      `<section class="panel bank-entry"><div><h2>根据本机记录练下一组</h2><p class="subtitle">最近答错优先 · 未练补充 · 最多12题</p></div>${btn("打开针对性练习", "#targeted")}</section><section class="panel bank-entry"><div><h2>按题型与知识点找题</h2><p class="subtitle">组合筛选 · 本机错题 · 题源与年份</p></div>${btn("打开题库检索", "#bank")}</section><div class="practice-grid"><section class="card practice-card"><div class="tile-icon">${icon("chart")}</div><h3>综合练习</h3><p>覆盖当前全部选择题，顺序作答。已做过的题也可以重练。</p><span class="pill">${C.questions.length} 道 · 基础</span>${btn("开始综合练习", "#quiz/all")}</section>${categories
         .map((c) => {
           const count = C.questions.filter(
             (q) => lesson(q.lesson).category === c,
@@ -690,6 +749,10 @@
       ids = filteredQuestions(f).map((q) => q.id);
     } else if (parts[1] === "wrong") ids = wrongIds();
     else if (parts[1] === "one" && question(parts[2])) ids = [parts[2]];
+    else if (parts[1] === "target")
+      ids = [...new Set((parts[2] || "").split(","))]
+        .filter((id) => question(id))
+        .slice(0, 12);
     return {
       route: location.hash,
       ids,
@@ -774,7 +837,7 @@
         "把进度，留在自己手里。",
         "备份包含笔记、草稿和作答记录。请保存在私人位置，不要上传公开仓库。",
       ) +
-      `<div class="settings-grid"><div class="stack"><section class="panel"><h2>备份与恢复</h2><p>记录只保存在当前设备、浏览器及网站地址下。清除网站数据、换设备或更换网址后不会自动同步，请定期导出。</p><div class="actions"><button class="btn" data-action="backup">${icon("download")}导出完整备份</button><label class="btn secondary file-button" for="import-file">导入备份</label><input class="sr-only" type="file" id="import-file" accept="application/json,.json"></div><p class="stat-foot">导入前会校验文件，并要求确认替换当前记录。建议先导出一次。</p><div id="import-status" role="status"></div>${storageError ? '<button class="btn secondary" data-action="raw-backup">导出当前存储原文</button>' : ""}</section><section class="panel"><h2>当前记录</h2><p>已读 ${state.read.length} 篇 · 收藏 ${state.favorites.length} 篇<br>作答 ${state.attempts.length} 次 · 草稿 ${Object.values(state.drafts).filter(Boolean).length} 篇</p><div class="note">网站无账号、广告、分析追踪或远程同步。打开页面时托管方仍可处理常规访问请求。公开代码中不包含你的学习记录。</div></section><section class="panel danger-zone"><h2>重置本机记录</h2><p>此操作清空本工具的学习记录。其他网站的数据不受影响。请先备份。</p><button class="btn danger" data-action="reset">清空学习记录</button></section></div><div class="stack"><section class="panel"><h2>内容范围 · 知识基础版</h2><p>当前提供 ${C.lessons.length} 篇基础讲义、${C.questions.length} 道原创选择题、${C.writing.length} 个原创虚构材料写作练习。适用于通用方法入门，不声称覆盖国考或福建省考全部大纲。</p><ul><li>已扩展到政治理论、常识、福建地理、平面图形、更多言语数量资料题型和五类申论方法。</li><li>仍未覆盖完整理论与时政、人文历史、立体图形、全部言语数量题型和福建文化政策专题。<a class="source" href="#sources">查看逐模块覆盖与来源 →</a></li><li>尚无历年真题库；已有原型和知识手册尚未成功取回，未并入本版。</li><li>备考方向选项仅用于记录目标，不会把同一内容包装成两套专属题库。</li></ul><p>申论参考要点与框架是学习提示，不是官方评分。不要把模板当成固定答案。</p></section><section class="panel"><h2>官方信息入口</h2><p><a class="source" href="#sources">讲义来源、年份与编写边界 →</a>以下是官方招录信息入口，供核对公告与考试要求；它们不是本站原创题目的出处。请以报考年度和具体职位公告为准。</p><a class="source" href="https://bm.scs.gov.cn/pp/gkweb/core/web/ui/business/home/gkhome.html" target="_blank" rel="noopener noreferrer">国家公务员考试专题 ↗</a><a class="source" href="https://gwykl.fujian.gov.cn/" target="_blank" rel="noopener noreferrer">福建省公务员考试录用网 ↗</a><p class="stat-foot">入口检索核对：2026-11-05。本站没有提供报名时间、资格判断或最新政策解读。</p></section></div></div>`
+      `<div class="settings-grid"><div class="stack"><section class="panel"><h2>备份与恢复</h2><p>记录只保存在当前设备、浏览器及网站地址下。清除网站数据、换设备或更换网址后不会自动同步，请定期导出。</p><div class="actions"><button class="btn" data-action="backup">${icon("download")}导出完整备份</button><label class="btn secondary file-button" for="import-file">导入备份</label><input class="sr-only" type="file" id="import-file" accept="application/json,.json"></div><p class="stat-foot">导入前会校验文件，并要求确认替换当前记录。建议先导出一次。</p><div id="import-status" role="status"></div>${storageError ? '<button class="btn secondary" data-action="raw-backup">导出当前存储原文</button>' : ""}</section><section class="panel"><h2>当前记录</h2><p>已读 ${state.read.length} 篇 · 收藏 ${state.favorites.length} 篇<br>作答 ${state.attempts.length} 次 · 草稿 ${Object.values(state.drafts).filter(Boolean).length} 篇</p><div class="note">网站无账号、广告、分析追踪或远程同步。打开页面时托管方仍可处理常规访问请求。公开代码中不包含你的学习记录。</div></section><section class="panel danger-zone"><h2>重置本机记录</h2><p>此操作清空本工具的学习记录。其他网站的数据不受影响。请先备份。</p><button class="btn danger" data-action="reset">清空学习记录</button></section></div><div class="stack"><section class="panel"><h2>内容范围 · 知识基础版</h2><p>当前提供 ${C.lessons.length} 篇基础讲义、${C.questions.length} 道原创选择题、${C.writing.length} 个原创虚构材料写作练习。适用于通用方法入门，不声称覆盖国考或福建省考全部大纲。</p><ul><li>已扩展到政治理论、常识、福建地理、平面图形、更多言语数量资料题型，以及材料分析、对策落实、应用文和论证段方法。</li><li>仍未覆盖完整理论与时政、断代史与文学全体系、复杂空间重构、全部言语数量题型和福建文化政策专题。<a class="source" href="#sources">查看逐模块覆盖与来源 →</a></li><li>尚无历年真题库；已有原型和知识手册尚未成功取回，未并入本版。</li><li>备考方向选项仅用于记录目标，不会把同一内容包装成两套专属题库。</li></ul><p>申论参考要点与框架是学习提示，不是官方评分。不要把模板当成固定答案。</p></section><section class="panel"><h2>官方信息入口</h2><p><a class="source" href="#sources">讲义来源、年份与编写边界 →</a>以下是官方招录信息入口，供核对公告与考试要求；它们不是本站原创题目的出处。请以报考年度和具体职位公告为准。</p><a class="source" href="https://bm.scs.gov.cn/pp/gkweb/core/web/ui/business/home/gkhome.html" target="_blank" rel="noopener noreferrer">国家公务员考试专题 ↗</a><a class="source" href="https://gwykl.fujian.gov.cn/" target="_blank" rel="noopener noreferrer">福建省公务员考试录用网 ↗</a><p class="stat-foot">入口检索核对：2026-11-05。本站没有提供报名时间、资格判断或最新政策解读。</p></section></div></div>`
     );
   }
   function missing() {
@@ -799,6 +862,7 @@
         lesson: "learn",
         quiz: "practice",
         bank: "practice",
+        targeted: "practice",
         methods: "learn",
         fujian: "learn",
         write: "writing",
@@ -820,6 +884,7 @@
       learn,
       lesson: () => lessonPage(parts[1]),
       practice,
+      targeted,
       bank,
       quiz: () => quizPage(parts),
       mistakes,
@@ -1029,6 +1094,11 @@
   });
   document.addEventListener("change", async (e) => {
     const t = e.target;
+    if (t.id === "target-module") {
+      targetModule = t.value;
+      render();
+      $("#target-module").focus();
+    }
     if (t.dataset.bank) {
       bankFilter[t.dataset.bank] = t.value;
       bankPage = 0;
