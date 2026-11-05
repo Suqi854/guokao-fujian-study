@@ -60,7 +60,7 @@
     w15: "归纳概括",
     w16: "综合分析",
   };
-  for (const w of C.writing) w.taskKind = taskKinds[w.id];
+  for (const w of C.writing) if (taskKinds[w.id]) w.taskKind = taskKinds[w.id];
   const g = C.methods.find((m) => m.id === "gufei-2010");
   g.lessons.push("detail-boundaries");
   C.writing.find((w) => w.id === "w15").materialGroup = "service-modes";

@@ -28,7 +28,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   });
   await p.locator('nav a[href="#learn"]').tap();
   await p.getByRole("button", { name: "判断推理", exact: true }).tap();
-  assert.equal(await p.locator(".lesson-card").count(), 11);
+  assert.equal(await p.locator(".lesson-card").count(), 12);
   await p.locator(".lesson-card h3").first().tap();
   await p.getByRole("link", { name: "练配套题" }).tap();
   await p.locator(".option").first().tap();

@@ -448,6 +448,39 @@
       return `<div class="question-figures">${q.graphic.values.map((bits, i) => `<div>${i === 0 ? "A" : "B"}${gridFigure(bits, `图${i === 0 ? "A" : "B"}`)}</div>`).join("")}<span class="figure-question">?</span></div>`;
     return `<div class="question-figures" aria-label="题目图形序列">${q.graphic.values.map((deg) => arrowFigure(deg, { 0: "向上", 90: "向右", 180: "向下", 270: "向左" }[deg])).join("")}<span class="figure-question">?</span></div>`;
   }
+  let coverageModule = "all",
+    coverageStatus = "all";
+  function coverageMatrixResults() {
+    const groups = C.coverageMatrix.filter(
+      (g) => coverageModule === "all" || g.module === coverageModule,
+    );
+    const count = groups.reduce(
+      (n, g) =>
+        n +
+        [...g.topics, ...g.gaps].filter(
+          (t) => coverageStatus === "all" || t.status === coverageStatus,
+        ).length,
+      0,
+    );
+    return `<p class="stat-foot" role="status">当前 ${count} 个目录条目；条目是本站划分，不是考试考点总数。</p>${groups
+      .map((g) => {
+        const rows = [...g.topics, ...g.gaps].filter(
+          (t) => coverageStatus === "all" || t.status === coverageStatus,
+        );
+        return `<details class="roadmap coverage-module" ${coverageModule !== "all" || coverageStatus !== "all" ? "open" : ""}><summary>${g.module} · ${g.topics.length} 篇讲义 / ${g.topics.reduce((n, t) => n + t.questionIds.length, 0)} 道原创题 / ${g.topics.reduce((n, t) => n + t.writingIds.length, 0)} 个写作练习</summary><div class="coverage-topics">${rows.map((t) => `<article class="coverage-topic" data-topic="${esc(t.id)}" data-status="${t.status}"><span class="pill ${t.status === "missing" ? "gray" : ""}">${t.status === "missing" ? "待建设 / 待扩充" : "已有入门"}${C.coverageAdded.includes(t.id) ? " · 本轮补空白" : ""}</span><h3>${esc(t.title)}</h3><p>${esc(t.scope)}</p><p class="coverage-counts">${t.lessonIds.length} 篇讲义 · ${t.questionIds.length} 道原创题 · ${t.writingIds.length} 个写作练习</p><p class="stat-foot">${esc(t.remaining)}</p>${t.lessonIds.length ? `<div class="actions">${btn("阅读讲义", "#lesson/" + t.lessonIds[0], true)}${t.questionIds.length ? btn(`练 ${t.questionIds.length} 道配套题`, "#quiz/lesson/" + t.lessonIds[0]) : t.writingIds.length ? btn(`写作训练 · ${t.writingIds.length} 个任务`, "#write/" + t.writingIds[0]) : ""}</div>` : '<p class="stat-foot">此缺口没有可供练习的题组，不以其他题型填充。</p>'}</article>`).join("")}</div></details>`;
+      })
+      .join("")}`;
+  }
+  function coverageMatrixPage() {
+    return (
+      heading(
+        "COVERAGE, WITH BOUNDARIES",
+        "已有多少，缺在哪里。",
+        "按模块查看讲义、配套题与待建设项，再决定下一步学什么。",
+      ) +
+      `<section class="panel"><div class="actions"><span class="pill">${C.lessons.length} 篇讲义</span><span class="pill">${C.questions.length} 道原创题</span><span class="pill">${C.writing.length} 个写作练习</span></div><p>这是本站内容盘点，不是官方完整大纲或完成率。入门条目只有少量练习，不代表该题型已全面覆盖；当前历年真题收录为0，难度未标定。</p><div class="bank-filters"><label class="bank-field">选择模块<select id="coverage-module"><option value="all">全部模块</option>${C.coverageMatrix.map((g) => `<option ${coverageModule === g.module ? "selected" : ""}>${g.module}</option>`).join("")}</select></label><label class="bank-field">查看范围<select id="coverage-status"><option value="all">已有与缺口</option><option value="intro" ${coverageStatus === "intro" ? "selected" : ""}>已有入门</option><option value="missing" ${coverageStatus === "missing" ? "selected" : ""}>待建设 / 待扩充</option></select></label></div><p class="stat-foot">本轮先补贡献率、至少保证、量词命题和长材料组。政治理论与年度时政、福建政策等需可靠来源核验，仍明确保留缺口。</p></section><section id="coverage-results">${coverageMatrixResults()}</section><details class="roadmap"><summary>数量关系：两位具名教师出处核验</summary><p>本轮未找到满足“同题型、两位完整姓名、具体方法可读”的可靠出处链。以下为未采用的候选记录，不计入已核实方法数量。</p>${C.quantitySourceAudit.map((x) => `<article class="source-item"><a href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">${esc(x.title)} ↗</a><small>${esc(x.date)}</small><p>${esc(x.identity)}</p><p>${esc(x.result)}</p></article>`).join("")}<p class="stat-foot">核对2026-11-05。公开可读不等于有转载许可；未复制商业题干、解析、图片或模板。已采用的其他历史方法见<a href="#methods">出处与对照</a>。</p></details>`
+    );
+  }
   function coverageRows() {
     return C.coverage
       .map(
@@ -466,7 +499,7 @@
         "每一条知识，都有边界。",
         "事实查来源，方法看条件，练习用原创。来源核对日期：2026-11-05。",
       ) +
-      `<section class="panel"><h2>实际覆盖</h2>${coverageRows()}</section><div class="section-head"><h2>公开参考资料</h2><span class="pill">${Object.keys(C.sources).length} 项</span></div><div class="source-grid">${Object.values(
+      `<section class="panel"><h2>实际覆盖</h2><a class="text-button" href="#coverage">逐专题查看题数与空白 →</a>${coverageRows()}</section><div class="section-head"><h2>公开参考资料</h2><span class="pill">${Object.keys(C.sources).length} 项</span></div><div class="source-grid">${Object.values(
         C.sources,
       )
         .map(
@@ -496,6 +529,7 @@
         "KNOWLEDGE MAP",
         "知识地图",
         "先看懂方法，再到练习里检验。收藏值得反复读的内容。",
+        btn("查看覆盖矩阵", "#coverage", true),
       ) +
       roadmap() +
       `<label class="search-box">${icon("search")}<input id="search" aria-label="搜索知识点" placeholder="搜索知识点、公式或技巧…" value="${esc(query)}"></label><div class="filters">${C.categories.map((c) => `<button class="chip ${c === catalogFilter ? "active" : ""}" data-action="filter" data-id="${c}" aria-pressed="${c === catalogFilter}">${c}</button>`).join("")}<button class="chip ${onlySaved ? "active" : ""}" data-action="saved-filter" aria-pressed="${onlySaved}">★ 收藏</button></div><div id="catalog">${lessonCards()}</div>`
@@ -892,6 +926,7 @@
         quiz: "practice",
         bank: "practice",
         targeted: "practice",
+        coverage: "learn",
         methods: "learn",
         fujian: "learn",
         write: "writing",
@@ -921,6 +956,7 @@
       write: () => writePage(parts[1]),
       settings,
       sources: sourcesPage,
+      coverage: coverageMatrixPage,
       methods: () => methodsPage(parts[1]),
       fujian: fujianPage,
     };
@@ -1134,6 +1170,11 @@
   });
   document.addEventListener("change", async (e) => {
     const t = e.target;
+    if (["coverage-module", "coverage-status"].includes(t.id)) {
+      if (t.id === "coverage-module") coverageModule = t.value;
+      else coverageStatus = t.value;
+      $("#coverage-results").innerHTML = coverageMatrixResults();
+    }
     if (["writing-type", "writing-status"].includes(t.id)) {
       if (t.id === "writing-type") writingType = t.value;
       else writingStatus = t.value;

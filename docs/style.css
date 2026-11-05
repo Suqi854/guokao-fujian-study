@@ -1938,3 +1938,36 @@ footer a {
     font-size: 20px;
   }
 }
+
+.coverage-topics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 18px;
+}
+.coverage-topic {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 20px;
+  background: white;
+  min-width: 0;
+}
+.coverage-topic h3 {
+  margin: 14px 0 10px;
+  line-height: 1.6;
+}
+.coverage-topic p {
+  line-height: 1.8;
+}
+.coverage-counts {
+  color: var(--accent);
+  font-size: 13px;
+}
+@media (max-width: 760px) {
+  .coverage-topics {
+    grid-template-columns: 1fr;
+  }
+  .coverage-topic {
+    padding: 16px;
+  }
+}
