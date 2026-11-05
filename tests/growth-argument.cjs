@@ -1,3 +1,4 @@
+const { readPageProgress, seedPageLegacy, resetPageProgress, assertPageRestored, assertV2Snapshot } = require("./progress-dom-support.cjs");
 const { chromium } = require('@playwright/test');
 const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path');
 const base = process.env.STUDY_BASE_URL || 'http://127.0.0.1:4173';
@@ -34,7 +35,7 @@ const base = process.env.STUDY_BASE_URL || 'http://127.0.0.1:4173';
   assert.equal(q.q162.answer,2);
   // q161's semantic evidence-to-conclusion review is documented separately; this is regression only.
   assert.equal(q.q161.answer,3);
-  assert.equal(C.questions.length,459);assert.equal(C.writing.length,47);
+  assert.equal(C.questions.length,519);assert.equal(C.writing.length,62);
   for(const id of ['growth','argument'])assert.ok(C.lessons.find(l=>l.id===id).sections.map(s=>s[1]).join('').length>=1300);
   for(const id of ['q157','q158','q159','q160','q161','q162']){
     assert.equal(q[id].optionReviews.length,4);assert.equal(q[id].meta.source.kind,'original');
@@ -44,10 +45,10 @@ const base = process.env.STUDY_BASE_URL || 'http://127.0.0.1:4173';
   const a=C.writing.find(w=>w.id==='w23'),b=C.writing.find(w=>w.id==='w24');
   assert.equal(a.material,b.material);assert.equal(a.materialGroup,b.materialGroup);assert.ok(a.material.length>1600);
   for(const w of [a,b])assert.ok(w.sample.replace(/\s/g,'').length<=w.limit);
-  assert.equal(new Set(C.writing.map(w=>w.material)).size,27);
+  assert.equal(new Set(C.writing.map(w=>w.material)).size,30);
   console.log('PASS Independent unit enumeration, weighted-range and causality countermodels; original provenance and material scope');
   const old={schemaVersion:1,exam:'both',read:['growth','argument'],favorites:['growth'],notes:{growth:'测试旧增长笔记',argument:'测试旧论证笔记'},attempts:[{qid:'q09',choice:0,at:'2026-11-04T12:00:00Z',seconds:11}],drafts:{w21:'测试旧概括草稿'},checks:{w21:[1]}};
-  await p.evaluate(s=>localStorage.setItem('zhixu-study-v1',JSON.stringify(s)),old);await p.reload();
+  await seedPageLegacy(p, old);await p.reload();
   for(const [id,count] of [['growth',15],['argument',13]]){
     await p.goto(base+'/#lesson/'+id);assert.equal(await p.locator('#lesson-note').inputValue(),old.notes[id]);
     await p.getByRole('link',{name:'练配套题',exact:true}).tap();assert.ok((await p.locator('.quiz-header').textContent()).includes('1 / '+count));
@@ -62,25 +63,27 @@ const base = process.env.STUDY_BASE_URL || 'http://127.0.0.1:4173';
   assert.equal(await p.locator('#draft').inputValue(),'');assert.equal(await p.locator('[data-check]').first().isChecked(),false);
   await p.locator('#draft').fill('测试内部交流提纲');await p.locator('a[href="#write/w23"]').tap();await p.getByRole('heading',{name:a.title,exact:true}).waitFor();
   assert.equal(await p.locator('#draft').inputValue(),'测试新对策草稿');assert.equal(await p.locator('[data-check]').first().isChecked(),true);
-  const saved=await p.evaluate(()=>JSON.parse(localStorage.getItem('zhixu-study-v1')));assert.deepEqual(saved.attempts[0],old.attempts[0]);assert.equal(saved.drafts.w21,old.drafts.w21);assert.deepEqual(saved.notes,old.notes);
+  const saved=await readPageProgress(p);assert.deepEqual(saved.attempts[0],old.attempts[0]);assert.equal(saved.drafts.w21,old.drafts.w21);assert.deepEqual(saved.notes,old.notes);
   console.log('PASS Old lesson records, enlarged practice routes, targeted new error and separate linked writing state');
   await p.goto(base+'/#settings');const download=p.waitForEvent('download');await p.getByRole('button',{name:'导出完整备份'}).tap();
   const file=path.join(__dirname,'../test-results/v011-backup.json');await(await download).saveAs(file);
-  await p.evaluate(()=>localStorage.removeItem('zhixu-study-v1'));await p.reload();p.once('dialog',d=>d.accept());await p.locator('#import-file').setInputFiles(file);
-  await p.getByText('备份已恢复。',{exact:true}).waitFor();assert.deepEqual(await p.evaluate(()=>JSON.parse(localStorage.getItem('zhixu-study-v1'))),saved);
-  fs.unlinkSync(file);console.log('PASS Old and new notes, choices, drafts and checks survive lossless v1 backup round-trip');
+  assertV2Snapshot(JSON.parse(fs.readFileSync(file, "utf8")));
+  const reset = await resetPageProgress(p);p.once('dialog',d=>d.accept());await p.locator('#import-file').setInputFiles(file);
+  await p.getByText('备份已恢复，活动计时保持暂停。',{exact:true}).waitFor();
+  await assertPageRestored(p, saved, reset.revision);
+  fs.unlinkSync(file);console.log('PASS Old and new notes, choices, drafts and checks survive lossless v2 backup round-trip');
   for(const width of [360,390,768,1440]){
     await p.setViewportSize({width,height:1100});
     for(const route of ['lesson/growth','lesson/argument','quiz/one/q160','write/w23','write/w24','coverage']){
       await p.goto(base+'/#'+route);assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,width+':'+route);
     }
   }
-  await p.evaluate(()=>localStorage.removeItem('zhixu-study-v1'));await p.goto(base+'/#lesson/argument');await p.reload();await p.setViewportSize({width:390,height:1100});
+  await resetPageProgress(p);await p.goto(base+'/#lesson/argument');await p.reload();await p.setViewportSize({width:390,height:1100});
   await p.getByRole('heading',{name:'方法一：沿论证链定位断点',exact:true}).evaluate(el=>el.scrollIntoView({block:'start'}));
   await p.screenshot({path:path.join(__dirname,'../test-results/mobile-argument-v011.png'),fullPage:false});
   assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
   console.log('PASS Four-width content flow, no page errors or outgoing learning data; cleared-state real screenshot');
   const f=path.join(__dirname,'../test-results/test-results.json'),r=JSON.parse(fs.readFileSync(f));
-  for(const name of ['v011 independent math and argument countermodels','v011 stable records and linked writing','v011 v1 backup round-trip','v011 responsive privacy regression'])r.tests.push({name,status:'passed'});
+  for(const name of ['v011 independent math and argument countermodels','v011 stable records and linked writing','v011 v2 backup round-trip','v011 responsive privacy regression'])r.tests.push({name,status:'passed'});
   r.tests=[...new Map(r.tests.map(x=>[x.name,x])).values()];fs.writeFileSync(f,JSON.stringify(r,null,2));await browser.close();
 })().catch(e=>{console.error(e);process.exit(1);});

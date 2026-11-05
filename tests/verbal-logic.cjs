@@ -1,3 +1,4 @@
+const { readPageProgress, seedPageLegacy, resetPageProgress, assertPageRestored, assertV2Snapshot } = require("./progress-dom-support.cjs");
 const { chromium } = require("@playwright/test"),
   assert = require("node:assert/strict"),
   fs = require("node:fs"),
@@ -97,7 +98,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   assert.ok(w1.material.length > 1400);
   for (const w of [w1, w2])
     assert.ok(w.sample.replace(/\s/g, "").length <= w.limit);
-  assert.equal(new Set(C.writing.map((w) => w.material)).size, 27);
+  assert.equal(new Set(C.writing.map((w) => w.material)).size, 30);
   console.log(
     "PASS Definition truth tables and unknown completions, semantic review ledger, source identity boundaries and long shared material",
   );
@@ -113,10 +114,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
     drafts: { w17: "测试旧长材料草稿" },
     checks: { w17: [1] },
   };
-  await p.evaluate(
-    (s) => localStorage.setItem("zhixu-study-v1", JSON.stringify(s)),
-    old,
-  );
+  await seedPageLegacy(p, old);
   await p.reload();
   await p.goto(base + "/#lesson/definition");
   assert.equal(
@@ -149,9 +147,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   await p.getByRole("heading", { name: w1.title, exact: true }).waitFor();
   assert.equal(await p.locator("#draft").inputValue(), "测试概括草稿");
   assert.equal(await p.locator("[data-check]").first().isChecked(), true);
-  const saved = await p.evaluate(() =>
-    JSON.parse(localStorage.getItem("zhixu-study-v1")),
-  );
+  const saved = await readPageProgress(p);
   assert.equal(saved.drafts.w17, old.drafts.w17);
   assert.deepEqual(saved.attempts[0], old.attempts[0]);
   console.log(
@@ -162,15 +158,12 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   await p.getByRole("button", { name: "导出完整备份" }).tap();
   const file = path.join(__dirname, "../test-results/v010-backup.json");
   await (await download).saveAs(file);
-  await p.evaluate(() => localStorage.removeItem("zhixu-study-v1"));
-  await p.reload();
+  assertV2Snapshot(JSON.parse(fs.readFileSync(file, "utf8")));
+  const reset = await resetPageProgress(p);
   p.once("dialog", (d) => d.accept());
   await p.locator("#import-file").setInputFiles(file);
-  await p.getByText("备份已恢复。", { exact: true }).waitFor();
-  assert.deepEqual(
-    await p.evaluate(() => JSON.parse(localStorage.getItem("zhixu-study-v1"))),
-    saved,
-  );
+  await p.getByText("备份已恢复，活动计时保持暂停。", { exact: true }).waitFor();
+  await assertPageRestored(p, saved, reset.revision);
   console.log(
     "PASS Old records plus both new task drafts and checks restore losslessly",
   );
@@ -195,7 +188,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
       );
     }
   }
-  await p.evaluate(() => localStorage.removeItem("zhixu-study-v1"));
+  await resetPageProgress(p);
   await p.goto(base + "/#writing");
   await p.reload();
   await p.setViewportSize({ width: 390, height: 1100 });

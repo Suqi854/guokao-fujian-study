@@ -4,6 +4,7 @@ const { JSDOM, VirtualConsole } = require("jsdom");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
+const { navigateHash, installSerialLocks, assertV2Snapshot, assertEmptySnapshot, assertRestored } = require("./progress-dom-support.cjs");
 const root = path.join(__dirname, "..");
 const html = fs.readFileSync(path.join(root, "docs/index.html"), "utf8");
 const errors = [], outgoing = [];
@@ -11,6 +12,7 @@ const vc = new VirtualConsole();
 vc.on("jsdomError", e => errors.push(e.message));
 const dom = new JSDOM(html, { url: "https://study.example/", runScripts: "outside-only", pretendToBeVisual: true, virtualConsole: vc });
 const w = dom.window, d = w.document;
+installSerialLocks(w);
 w.scrollTo = () => {};
 w.HTMLElement.prototype.scrollIntoView = () => {};
 w.confirm = () => true;
@@ -23,13 +25,14 @@ w.URL.revokeObjectURL = () => {};
 const anchorClick = w.HTMLAnchorElement.prototype.click;
 w.HTMLAnchorElement.prototype.click = function () { if (!this.download) anchorClick.call(this); };
 const old = { schemaVersion: 1, exam: "both", read: ["logic"], favorites: ["solid-views"], notes: { logic: "测试旧条件笔记", "solid-views": "测试旧柱高笔记", "figure-features": "测试图形笔记", remainders: "测试旧余数笔记", "geometry-scale": "测试旧几何笔记", arrangement: "测试旧排列笔记", "growth-contribution": "测试旧贡献笔记", "multi-table": "测试旧表格笔记", "context-blanks": "测试旧多空笔记", "title-choice": "测试旧标题笔记", cpi: "测试旧CPI笔记", "fujian-geography": "测试旧福建笔记", "constitutional-rights": "测试新宪法笔记", "admin-review": "测试新复议笔记", "estimation-boundary": "测试旧估算笔记", "without-replacement": "测试旧抽取笔记", "three-set-counting": "测试旧三集合笔记", "next-paragraph": "测试旧下文笔记", "practice-cognition": "测试新实践笔记", "contradiction-method": "测试新矛盾笔记", "productive-relations": "测试新生产关系笔记", "mao-thought-context": "测试新思想背景笔记" }, attempts: [{ qid: "q07", choice: 0, at: "2026-11-04T12:00:00Z", seconds: 10 }], drafts: { w01: "测试早期草稿", ...Object.fromEntries(Array.from({ length: 15 }, (_, i) => ["w" + (33 + i), "测试保留写作" + (33 + i)])) }, checks: { w01: [0], w37: [1], w47: [0, 2] } };
-w.localStorage.setItem("zhixu-study-v1", JSON.stringify(old));
+const legacyRaw = JSON.stringify(old);
+w.localStorage.setItem("zhixu-study-v1", legacyRaw);
 for (const m of html.matchAll(/src="\.\/([^\"]+)"/g)) w.eval(fs.readFileSync(path.join(root, "docs", m[1]), "utf8") + "\n//# sourceURL=" + m[1]);
 const C = w.STUDY_CONTENT, questions = Object.fromEntries(C.questions.map(q => [q.id, q]));
 const plain = v => JSON.parse(JSON.stringify(v));
 const pause = () => new Promise(resolve => setTimeout(resolve, 10));
-async function route(hash) { w.location.hash = hash; await pause(); }
-async function click(selector) { const el = d.querySelector(selector); assert.ok(el, selector); el.click(); await pause(); }
+async function route(hash) { await navigateHash(w,hash,()=>{w.location.hash=hash;}); await pause(); }
+async function click(selector) { const el=d.querySelector(selector);assert.ok(el,selector);if(el.tagName==="A"&&el.hash)await navigateHash(w,el.hash,()=>el.click());else el.click();await pause(); }
 async function action(name, id) { await click(`[data-action="${name}"]${id === undefined ? "" : `[data-id="${id}"]`}`); }
 function text(selector) { assert.ok(d.querySelector(selector), selector); return d.querySelector(selector).textContent; }
 function input(selector, value) { const el = d.querySelector(selector); el.value = value; el.dispatchEvent(new w.Event("input", { bubbles: true })); }
@@ -50,10 +53,10 @@ function select(selector, value) { const el = d.querySelector(selector); el.valu
     const link = d.querySelector('.level-guide a[href^="#quiz/"]');
     assert.ok(link, id + ":" + level);
     assert.deepEqual(link.getAttribute("href").split("/").at(-1).split(","), plain(group.questionIds));
-    link.click(); await pause();
+    await navigateHash(w,link.hash,()=>link.click()); await pause();
     assert.match(text(".quiz-header"), /1 \/ 2/);
   }
-  console.log("PASS DOM: all 79 full lessons, every existing learning path and sixty-nine exact recent quiz paths");
+  console.log("PASS DOM: all 88 full lessons, every existing learning path and sixty-nine exact recent quiz paths");
   await route("#lesson/figure-features/practice");
   await action("feature-example", 1);
   assert.match(text(".diagram-caption"), /黑格 5 · 连通部分 1 · 孔洞 0/);
@@ -168,7 +171,10 @@ function select(selector, value) { const el = d.querySelector(selector); el.valu
     await route("#lesson/"+id+"/advanced"); assert.equal(d.querySelector("#lesson-note").value,old.notes[id]);
   }
   console.log("PASS DOM: all 138 recent actual answer flows, four-option feedback, targeted mistakes and old writing drafts");
-  const saved = JSON.parse(w.localStorage.getItem("zhixu-study-v1"));
+  const saved = JSON.parse(w.localStorage.getItem("zhixu-study-v2"));
+  assertV2Snapshot(saved);
+  assert.ok(saved.revision > 0);
+  assert.equal(w.localStorage.getItem("zhixu-study-v1"), legacyRaw);
   assert.deepEqual(saved.drafts, old.drafts);
   assert.deepEqual(saved.checks, old.checks);
   assert.deepEqual(saved.attempts[0], old.attempts[0]);
@@ -176,16 +182,25 @@ function select(selector, value) { const el = d.querySelector(selector); el.valu
   await click('button[data-action="backup"]');
   assert.ok(exported instanceof Blob);
   const backup = await exported.text();
-  assert.equal(JSON.parse(backup).schemaVersion, 1);
-  w.localStorage.removeItem("zhixu-study-v1");
+  const exportedState = JSON.parse(backup);
+  assertV2Snapshot(exportedState);
+  assert.ok(Number.isFinite(Date.parse(exportedState.exportedAt)));
+  delete exportedState.exportedAt;
+  assert.deepEqual(exportedState, saved);
+  await action("reset");
+  const reset = JSON.parse(w.localStorage.getItem("zhixu-study-v2"));
+  assertEmptySnapshot(reset);
+  assert.equal(reset.revision, saved.revision + 1);
+  assert.equal(w.localStorage.getItem("zhixu-study-v1"), legacyRaw);
   const fileInput = d.querySelector("#import-file");
   Object.defineProperty(fileInput, "files", { configurable: true, value: [new w.File([backup], "test-v024-backup.json", { type: "application/json" })] });
   fileInput.dispatchEvent(new w.Event("change", { bubbles: true }));
   await pause(); await pause();
-  assert.deepEqual(JSON.parse(w.localStorage.getItem("zhixu-study-v1")), saved);
+  assertRestored(JSON.parse(w.localStorage.getItem("zhixu-study-v2")), saved, reset.revision);
+  assert.equal(w.localStorage.getItem("zhixu-study-v1"), legacyRaw);
   assert.deepEqual(errors, []);
   assert.deepEqual(outgoing, []);
-  console.log("PASS DOM: actual Blob export and File.text import restore v1 notes, all drafts, checks and attempts exactly");
+  console.log("PASS DOM: v1 migration preserves source bytes; v2 Blob export, UI reset and File.text restore preserve all fields with increasing revisions");
   console.log("NOT TESTED: browser rendering, CSS widths, real touch, browser-native downloads and screenshots");
   dom.window.close();
 })().catch(e => { console.error(e); dom.window.close(); process.exit(1); });

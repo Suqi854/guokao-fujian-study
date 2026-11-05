@@ -1,3 +1,4 @@
+const { readPageProgress, resetPageProgress, assertPageRestored, assertV2Snapshot } = require("./progress-dom-support.cjs");
 const { chromium } = require("@playwright/test");
 const assert = require("node:assert/strict"),
   fs = require("node:fs"),
@@ -27,7 +28,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   const topics = C.coverageMatrix.flatMap((g) => g.topics),
     gaps = C.coverageMatrix.flatMap((g) => g.gaps);
   assert.equal(C.coverageMatrix.length, 8);
-  assert.equal(topics.length, 79);
+  assert.equal(topics.length, 88);
   assert.equal(gaps.length, 24);
   for (const [field, items] of [
     ["lessonIds", C.lessons],
@@ -128,14 +129,12 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   await p.locator("#draft").fill("测试草稿：落实编号、检查与交接。");
   await p.goto(base + "/#write/w17");
   assert.match(await p.locator("#draft").inputValue(), /记录冲突/);
-  const saved = await p.evaluate(() =>
-    JSON.parse(localStorage.getItem("zhixu-study-v1")),
-  );
+  const saved = await readPageProgress(p);
   assert.equal(saved.attempts.at(-1).qid, "q124");
   await p.goto(base + "/#coverage");
   await p.locator("#coverage-module").selectOption("申论方法");
   assert.deepEqual(
-    await p.evaluate(() => JSON.parse(localStorage.getItem("zhixu-study-v1"))),
+    await readPageProgress(p),
     saved,
   );
   console.log(
@@ -146,15 +145,12 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   await p.getByRole("button", { name: "导出完整备份" }).tap();
   const backup = path.join(__dirname, "../test-results/v07-backup.json");
   await (await download).saveAs(backup);
-  await p.evaluate(() => localStorage.removeItem("zhixu-study-v1"));
-  await p.reload();
+  assertV2Snapshot(JSON.parse(fs.readFileSync(backup, "utf8")));
+  const reset = await resetPageProgress(p);
   p.once("dialog", (d) => d.accept());
   await p.locator("#import-file").setInputFiles(backup);
-  await p.getByText("备份已恢复。", { exact: true }).waitFor();
-  assert.deepEqual(
-    await p.evaluate(() => JSON.parse(localStorage.getItem("zhixu-study-v1"))),
-    saved,
-  );
+  await p.getByText("备份已恢复，活动计时保持暂停。", { exact: true }).waitFor();
+  await assertPageRestored(p, saved, reset.revision);
   console.log(
     "PASS v07 mistakes, drafts and checks survive backup restoration",
   );
@@ -179,7 +175,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
       );
     }
   }
-  await p.evaluate(() => localStorage.removeItem("zhixu-study-v1"));
+  await resetPageProgress(p);
   await p.goto(base + "/#coverage");
   await p.reload();
   await p.setViewportSize({ width: 390, height: 1000 });

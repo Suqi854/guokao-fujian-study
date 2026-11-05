@@ -1,3 +1,4 @@
+const { readPageProgress, seedPageLegacy, resetPageProgress, assertPageRestored, assertV2Snapshot } = require("./progress-dom-support.cjs");
 const { chromium } = require("@playwright/test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
@@ -122,10 +123,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
     drafts: { w01: "旧草稿" },
     checks: {},
   };
-  await p.evaluate(
-    (s) => localStorage.setItem("zhixu-study-v1", JSON.stringify(s)),
-    original,
-  );
+  await seedPageLegacy(p, original);
   await p.reload();
   const href = await p
     .getByRole("link", { name: /开始这组/ })
@@ -171,27 +169,22 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
     assert.equal(await p.locator("#draft").inputValue(), "新增申论草稿 " + id);
   }
   await p.goto(base + "/#settings");
-  const saved = await p.evaluate(() =>
-    JSON.parse(localStorage.getItem("zhixu-study-v1")),
-  );
+  const saved = await readPageProgress(p);
   const downloadPromise = p.waitForEvent("download");
   await p.getByRole("button", { name: "导出完整备份" }).tap();
   const d = await downloadPromise;
   const backup = path.join(__dirname, "../test-results/v05-backup.json");
   await d.saveAs(backup);
+  assertV2Snapshot(JSON.parse(fs.readFileSync(backup, "utf8")));
   const exported = JSON.parse(fs.readFileSync(backup));
   assert.ok(!Number.isNaN(Date.parse(exported.exportedAt)));
   delete exported.exportedAt;
   assert.deepEqual(exported, saved);
-  await p.evaluate(() => localStorage.removeItem("zhixu-study-v1"));
-  await p.reload();
+  const reset = await resetPageProgress(p);
   p.once("dialog", (d) => d.accept());
   await p.locator("#import-file").setInputFiles(backup);
-  await p.getByText("备份已恢复。", { exact: true }).waitFor();
-  assert.deepEqual(
-    await p.evaluate(() => JSON.parse(localStorage.getItem("zhixu-study-v1"))),
-    saved,
-  );
+  await p.getByText("备份已恢复，活动计时保持暂停。", { exact: true }).waitFor();
+  await assertPageRestored(p, saved, reset.revision);
   console.log(
     "PASS Old and new notes, attempts and three writing drafts survive backup round-trip",
   );
@@ -204,10 +197,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
       seconds: 1,
     })),
   };
-  await p.evaluate(
-    (s) => localStorage.setItem("zhixu-study-v1", JSON.stringify(s)),
-    allDone,
-  );
+  await seedPageLegacy(p, allDone);
   await p.goto(base + "/#targeted");
   await p.reload();
   await p.getByRole("heading", { name: "当前筛选下没有待选题" }).waitFor();
@@ -233,7 +223,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
       );
     }
   }
-  await p.evaluate(() => localStorage.removeItem("zhixu-study-v1"));
+  await resetPageProgress(p);
   await p.goto(base + "/#targeted");
   await p.reload();
   await p.setViewportSize({ width: 390, height: 1000 });
@@ -253,7 +243,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   for (const name of [
     "v05 independent answer audit",
     "Local targeted queue behavior",
-    "v1 backup round-trip with new content",
+    "v2 backup round-trip with new content",
     "v05 responsive privacy and empty states",
   ])
     results.tests.push({ name, status: "passed" });

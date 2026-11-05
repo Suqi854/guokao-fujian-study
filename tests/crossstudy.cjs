@@ -1,3 +1,4 @@
+const { readPageProgress, seedPageLegacy, assertLegacyPageUnchanged } = require("./progress-dom-support.cjs");
 const { chromium } = require("@playwright/test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
@@ -43,7 +44,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   for (const stage of ["识别概念", "迁移运用", "检查边界"])
     assert.equal(
       C.questions.filter((q) => q.meta.trainingStage === stage).length,
-      79,
+      145,
     );
   assert.ok(
     C.questions.every(
@@ -192,23 +193,24 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
     drafts: { w08: "v0.3旧草稿" },
     checks: { w08: [0] },
   };
-  await p.evaluate(
-    (s) => localStorage.setItem("zhixu-study-v1", JSON.stringify(s)),
-    old,
-  );
+  await seedPageLegacy(p, old);
   await p.goto(base + "/#write/w08");
   await p.reload();
   assert.equal(await p.locator("#draft").inputValue(), old.drafts.w08);
   await p.goto(base + "/#mistakes");
   assert.equal(await p.locator(".wrong-row").count(), 1);
-  assert.deepEqual(
-    await p.evaluate(() => JSON.parse(localStorage.getItem("zhixu-study-v1"))),
-    old,
-  );
+  await assertLegacyPageUnchanged(p);
+  assert.equal(await p.evaluate(() => localStorage.getItem("zhixu-study-v2")), null);
+
   await p.goto(base + "/#write/w09");
   await p.locator("#draft").fill("只写已实施的三项做法");
+  await readPageProgress(p);
   await p.reload();
   assert.equal(await p.locator("#draft").inputValue(), "只写已实施的三项做法");
+  const migrated = await readPageProgress(p);
+  assert.deepEqual(migrated, { ...old, schemaVersion: 2, revision: 1,
+    drafts: { ...old.drafts, w09: "只写已实施的三项做法" }, runs: [], activeRun: null });
+  await assertLegacyPageUnchanged(p);
   assert.deepEqual(errors, []);
   assert.deepEqual(external, []);
   console.log(

@@ -1,7 +1,7 @@
 "use strict";
 (() => {
-  const C = window.STUDY_CONTENT,
-    KEY = "zhixu-study-v1";
+  const C = window.STUDY_CONTENT, T = window.STUDY_TRAINING,
+    KEY = "zhixu-study-v2", LEGACY_KEY = "zhixu-study-v1";
   const $ = (s) => document.querySelector(s),
     esc = (s) =>
       String(s).replace(
@@ -41,7 +41,8 @@
     question = (id) => C.questions.find((q) => q.id === id),
     writing = (id) => C.writing.find((w) => w.id === id);
   const fresh = () => ({
-    schemaVersion: 1,
+    schemaVersion: 2,
+    revision: 0,
     exam: "both",
     read: [],
     favorites: [],
@@ -49,6 +50,7 @@
     attempts: [],
     drafts: {},
     checks: {},
+    ...T.empty(),
   });
   let state = fresh(),
     storageError = "",
@@ -57,9 +59,11 @@
     onlySaved = false,
     learningPath = "",
     quiz = null,
-    toastTimer;
+    toastTimer, progressStore = null, trainingUI = null, pendingSaves = 0, replacing = false;
+  const replacementControls = new Map();
   function validate(raw) {
-    if (!raw || raw.schemaVersion !== 1) throw Error("备份版本不支持");
+    if (!raw || ![1,2].includes(raw.schemaVersion)) throw Error("备份版本不支持");
+    if (raw.schemaVersion === 2 && (!Number.isSafeInteger(raw.revision) || raw.revision < 0)) throw Error("记录版本号无效");
     const out = fresh();
     if (!["both", "national", "fujian"].includes(raw.exam))
       throw Error("备考方向无效");
@@ -122,26 +126,57 @@
         throw Error("自查记录内容无效");
       out.checks[id] = [...new Set(values)];
     }
+    if (raw.schemaVersion === 2) { out.revision = raw.revision; Object.assign(out,T.validate(raw)); }
     return out;
   }
-  try {
-    const raw = localStorage.getItem(KEY);
-    if (raw) state = validate(JSON.parse(raw));
-  } catch (e) {
-    storageError =
-      "本机记录无法读取。为保护原记录，暂不覆盖；请到备份页导出原始记录后再重置。";
+  function savingStatus() {
+    const text = storageError ? "未能保存，请导出本页副本" : pendingSaves ? "正在安全保存…" : "已保存到本机";
+    for (const el of document.querySelectorAll("#note-status,#draft-status")) el.textContent = text;
   }
-  function persist() {
-    if (storageError) return false;
+  function reportStorageError(message) {
+    storageError = message;
+    if (trainingUI) trainingUI.suspendForStorageError();
+    savingStatus();
+    const main = document.querySelector("#main");
+    if(main){let alert=main.querySelector("#storage-save-error");if(!alert){alert=document.createElement("div");alert.id="storage-save-error";alert.className="storage-alert";alert.setAttribute("role","alert");main.prepend(alert);}alert.textContent=message;}
+    if (document.querySelector("#toast")) showToast(message);
+  }
+  try {
+    progressStore = window.STUDY_PROGRESS_STORE.create({ key:KEY,legacyKey:LEGACY_KEY,normalize:validate,onError:reportStorageError });
+    const loaded = progressStore.read();
+    if (loaded.value) state = loaded.value;
+    if (loaded.error) storageError = loaded.error;
+    if (!loaded.writeSupported && !storageError) storageError = "此浏览器缺少安全的跨标签保存支持，当前只读。请先导出本页副本，不要依赖自动保存。";
+  } catch (e) {
+    storageError = "本机记录无法读取。原文未覆盖，请到备份页导出原文后再处理。";
+  }
+  async function persist() {
+    if (replacing) return false;
+    if (storageError || !progressStore) { savingStatus();return false; }
+    const reference = state;
+    pendingSaves++;savingStatus();
     try {
-      localStorage.setItem(KEY, JSON.stringify(state));
-      return true;
-    } catch (e) {
-      storageError =
-        "浏览器未能保存记录，可能已满或禁用存储。请立即导出备份；关闭页面前请勿依赖自动保存。";
-      showToast(storageError);
+      const result = await progressStore.save(state);
+      if (result.ok) { if(state===reference)state.revision=result.value.revision;return true; }
+      if (!result.cancelled) reportStorageError(result.error || "本机保存失败，请导出本页副本。");
       return false;
-    }
+    } catch (e) { reportStorageError("本机保存失败，原记录保留；请导出本页副本。");return false; }
+    finally { pendingSaves--;savingStatus(); }
+  }
+  function lockForReplacement() {
+    for(const el of document.querySelectorAll("input,textarea,select,button")){if(!replacementControls.has(el))replacementControls.set(el,el.disabled);el.disabled=true;}
+    const main=document.querySelector("#main");
+    if(main&&!main.querySelector("#replace-status")){const info=document.createElement("div");info.id="replace-status";info.className="storage-alert";info.setAttribute("role","status");info.textContent="正在安全替换记录，暂时停止编辑。写入成功后才切换数据。";main.prepend(info);}
+  }
+  async function replaceProgress(next) {
+    if(replacing)return {ok:false,cancelled:true};
+    replacing=true;lockForReplacement();
+    try {
+      const result=await progressStore.replace(next);
+      if(result.ok){state=result.value;storageError="";quiz=null;trainingUI?.resetView();}
+      else if(!result.cancelled)reportStorageError(result.error||"替换未完成，原记录保留。");
+      return result;
+    } finally {replacing=false;for(const [el,disabled] of replacementControls)if(el.isConnected)el.disabled=disabled;replacementControls.clear();render();}
   }
   function showToast(t) {
     $("#toast").textContent = t;
@@ -189,7 +224,12 @@
   }
   function studyRoutes() {
     if (!C.theoryTrack) return "";
-    return `<section class="panel" data-study-routes><h2>练习与理解，两条学习线</h2><p>应试线继续分类练习、错题复盘与申论输出；理论线按概念、原文背景与迁移问题循序读，不用一条线替代另一条。</p><div class="actions">${btn("应试：分类与错题", "#targeted", true)}${btn("申论：材料输出", "#writing", true)}${btn("长期：政治理论入门", "#theory")}</div></section>`;
+    return `<section class="panel" data-study-routes><h2>练习与理解，两条学习线</h2><p>应试线继续分类练习、错题复盘与申论输出；理论线按概念、原文背景与迁移问题循序读，不用一条线替代另一条。</p><div class="actions">${btn("应试：分类与错题", "#targeted", true)}${btn("计时记录与复盘", "#training", true)}${btn("申论：材料输出", "#writing", true)}${btn("长期：政治理论入门", "#theory")}</div></section>`;
+  }
+  function theoryLearningGuide(l) {
+    const a = C.theoryLearningAids?.[l.id];
+    if (!a) return "";
+    return `<div class="theory-learning-aids" data-theory-aids="${esc(l.id)}"><span class="pill">理解与记忆</span><h2>先抓住这几件事</h2><p class="stat-foot">本站按理解顺序提炼的学习重点，不是官方考频排序；请连同下面的条件和论证一起读。</p><ul class="theory-key-points">${a.keyPoints.map(p=>`<li><strong>${esc(p.title)}</strong><span>${esc(p.text)}</span></li>`).join("")}</ul><p class="theory-memory-cue"><strong>理解线索：</strong>${esc(a.memoryCue)}</p><details><summary>看白话例子，分清容易混的概念</summary><h3>${esc(a.plainExample.title)}</h3><p>${esc(a.plainExample.text)}</p>${a.contrasts.map(c=>`<div class="theory-contrast"><p><strong>${esc(c.left.term)}：</strong>${esc(c.left.text)}</p><p><strong>${esc(c.right.term)}：</strong>${esc(c.right.text)}</p><p class="stat-foot">${esc(c.cue)}</p></div>`).join("")}</details><details data-theory-recall><summary>读后合上讲义，用自己的话回忆</summary><p>先自己作答，再展开核对。可把遗漏或易混处写入右侧笔记；这里不自动判定掌握，也不生成复习周期。</p>${a.recall.map((r,i)=>`<div class="theory-recall-item"><p><strong>${i+1}. ${esc(r.question)}</strong></p><details><summary>展开核对线索</summary><ul>${r.checkpoints.map(t=>`<li>${esc(t)}</li>`).join("")}</ul></details></div>`).join("")}</details><p class="stat-foot">${esc(a.scope)}</p></div>`;
   }
   function theoryPage() {
     const track = C.theoryTrack;
@@ -606,7 +646,7 @@
     const selected=Object.keys(C.learningPaths).includes(pathId) && l.learningLevels?.[pathId]?pathId:"";
     const sections=(selected ? l.learningLevels[selected].sections.map(i=>l.sections[i]) : l.sections).filter(item=>item && !/来源|归属|出处/.test(item[0]));
     const inTheory = C.theoryTrack?.steps.some(s => s.lessonId === l.id);
-    return `<a class="back-link" href="#learn">${icon("back")}知识地图</a>${inTheory ? '<span class="muted" aria-hidden="true"> · </span><a class="back-link" href="#theory">返回政治理论路线</a>' : ""}<div class="reading-grid"><article class="panel reading"><span class="pill">${esc(l.category)} · 学习讲义</span><h1>${esc(l.title)}</h1><p class="subtitle">${esc(l.subtitle)}</p><span class="muted" style="font-size:12px">约 ${l.minutes} 分钟 · ${l.tags.map(esc).join(" / ")} · 更新 ${esc(l.updated || "2026-11-05")}${l.versionNote ? " · "+esc(l.versionNote):""}</span>${l.learningLevels ? pathChoices("#lesson/"+l.id,selected)+levelGuide(l,selected):""}<div class="formula">${esc(l.formula)}</div>${diagram(l)}${sections.map((s) => `<section><h2>${esc(s[0])}</h2><p>${esc(s[1])}</p></section>`).join("")}<p class="stat-foot"><a href="#sources">资料说明</a> · <a href="#methods">方法对照</a></p><div class="note">学习讲义并非官方教材。请结合题目限定条件使用；阅读完成不代表已经掌握。</div><div class="actions"><button class="btn" data-action="read" data-id="${l.id}">${icon("check")}${state.read.includes(l.id) ? "已读 · 点击取消" : "标记已读"}</button><button class="btn secondary" data-action="favorite" data-id="${l.id}" aria-pressed="${state.favorites.includes(l.id)}">${icon("star")}${state.favorites.includes(l.id) ? "已收藏" : "收藏讲义"}</button></div></article><aside class="stack sticky"><div class="panel"><h2>把方法用起来</h2><p class="subtitle">${l.practice.length ? `用 ${l.practice.length} 道原创示例题检验理解。` : "读完方法，选一个材料开始写。"}</p><div class="actions">${btn(l.practice.length ? "练配套题" : "去申论写作", l.practice.length ? "#quiz/lesson/" + l.id : "#write/" + (C.writing.find((w) => w.lesson === l.id)?.id || "w01"))}</div></div><div class="panel"><label class="field-label" for="lesson-note">我的笔记</label><textarea id="lesson-note" data-note="${l.id}" rows="7" maxlength="10000" placeholder="记下卡住的地方、适用条件或自己的解法…">${esc(state.notes[l.id] || "")}</textarea><div class="field-meta"><span id="note-status">仅保存在当前浏览器</span></div></div></aside></div>`;
+    return `<a class="back-link" href="#learn">${icon("back")}知识地图</a>${inTheory ? '<span class="muted" aria-hidden="true"> · </span><a class="back-link" href="#theory">返回政治理论路线</a>' : ""}<div class="reading-grid"><article class="panel reading"><span class="pill">${esc(l.category)} · 学习讲义</span><h1>${esc(l.title)}</h1><p class="subtitle">${esc(l.subtitle)}</p><span class="muted" style="font-size:12px">约 ${l.minutes} 分钟 · ${l.tags.map(esc).join(" / ")} · 更新 ${esc(l.updated || "2026-11-05")}${l.versionNote ? " · "+esc(l.versionNote):""}</span>${l.learningLevels ? pathChoices("#lesson/"+l.id,selected)+levelGuide(l,selected):""}<div class="formula">${esc(l.formula)}</div>${theoryLearningGuide(l)}${diagram(l)}${sections.map((s) => `<section><h2>${esc(s[0])}</h2><p>${esc(s[1])}</p></section>`).join("")}<p class="stat-foot"><a href="#sources">资料说明</a> · <a href="#methods">方法对照</a></p><div class="note">学习讲义并非官方教材。请结合题目限定条件使用；阅读完成不代表已经掌握。</div><div class="actions"><button class="btn" data-action="read" data-id="${l.id}">${icon("check")}${state.read.includes(l.id) ? "已读 · 点击取消" : "标记已读"}</button><button class="btn secondary" data-action="favorite" data-id="${l.id}" aria-pressed="${state.favorites.includes(l.id)}">${icon("star")}${state.favorites.includes(l.id) ? "已收藏" : "收藏讲义"}</button></div></article><aside class="stack sticky"><div class="panel"><h2>把方法用起来</h2><p class="subtitle">${l.practice.length ? `用 ${l.practice.length} 道原创示例题检验理解。` : "读完方法，选一个材料开始写。"}</p><div class="actions">${btn(l.practice.length ? "练配套题" : "去申论写作", l.practice.length ? "#quiz/lesson/" + l.id : "#write/" + (C.writing.find((w) => w.lesson === l.id)?.id || "w01"))}</div></div><div class="panel"><label class="field-label" for="lesson-note">我的笔记</label><textarea id="lesson-note" data-note="${l.id}" rows="7" maxlength="10000" placeholder="记下卡住的地方、适用条件或自己的解法…">${esc(state.notes[l.id] || "")}</textarea><div class="field-meta"><span id="note-status">仅保存在当前浏览器</span></div></div></aside></div>`;
   }
 
   const bankDefaults = () => ({
@@ -826,7 +866,7 @@
         )
         .join(
           "",
-        )}</select></label><label class="bank-field">训练目标<select id="target-stage"><option value="all">全部训练目标</option>${["识别概念", "迁移运用", "检查边界", "未分层"].map((t) => `<option ${targetStage === t ? "selected" : ""}>${esc(t)}</option>`).join("")}</select></label></div><p class="stat-foot">训练目标是编写目的，不是难度等级。以下题组仅从所选模块与目标中选取。</p><div class="actions"><span class="pill">${wrong} 道最近答错</span><span class="pill gray">${freshCount} 道尚未练习</span></div><p>未做过不等于薄弱，答对一次也不等于掌握。当前题目均为原创，难度尚未经样本标定。</p>${ids.length ? btn(`开始这组 · ${ids.length} 题`, targetLink(ids)) : btn("自主选择重练", "#bank", true)}<details class="roadmap"><summary>这组题怎样选出来</summary><p>先按模块与训练目标筛选，再选最近一次答错的题，用未做题补足，最多12题。知识点按错题数量、再按未做数量排序，同数按目录顺序；每轮每个知识点取一题，避免单一知识点占满。进入后题号固定，刷新会从本组首题重新开始，已提交记录保留。练完回到本页会重新计算。</p><p>这里不推断能力、考试得分或遗忘周期；申论草稿不自动评分，可到申论写作页训练。</p></details></section><div class="practice-grid">${rows.map((r) => `<section class="card practice-card target-card" data-lesson="${r.lesson.id}"><span class="pill gray">${esc(r.lesson.category)}</span><h2>${esc(r.lesson.title)}</h2><p class="target-reason">${r.wrong.length ? `最近答错 ${r.wrong.length} 道，建议回看解析。` : "还有未练题，可继续检验理解。"}未练 ${r.fresh.length} 道。</p><div class="actions">${btn("练这个知识点", targetLink(targetQueue([r])))}${btn("先读讲义", "#lesson/" + r.lesson.id, true)}</div></section>`).join("")}</div>${!rows.length ? empty("当前筛选下没有待选题", "所选范围可能暂无题目，或最近一次作答均正确。可以调整筛选、自行重练或继续申论写作。", btn("练申论", "#writing")) : ""}`
+        )}</select></label><label class="bank-field">训练目标<select id="target-stage"><option value="all">全部训练目标</option>${["识别概念", "迁移运用", "检查边界", "未分层"].map((t) => `<option ${targetStage === t ? "selected" : ""}>${esc(t)}</option>`).join("")}</select></label></div><p class="stat-foot">训练目标是编写目的，不是难度等级。以下题组仅从所选模块与目标中选取。</p><div class="actions"><span class="pill">${wrong} 道最近答错</span><span class="pill gray">${freshCount} 道尚未练习</span></div><p>未做过不等于薄弱，答对一次也不等于掌握。当前题目均为原创，难度尚未经样本标定。</p>${ids.length ? btn(`开始这组 · ${ids.length} 题`, targetLink(ids))+btn("限时记录这组", "#training/ids/"+ids.join(","), true) : btn("自主选择重练", "#bank", true)}<details class="roadmap"><summary>这组题怎样选出来</summary><p>先按模块与训练目标筛选，再选最近一次答错的题，用未做题补足，最多12题。知识点按错题数量、再按未做数量排序，同数按目录顺序；每轮每个知识点取一题，避免单一知识点占满。进入后题号固定，刷新会从本组首题重新开始，已提交记录保留。练完回到本页会重新计算。</p><p>这里不推断能力、考试得分或遗忘周期；申论草稿不自动评分，可到申论写作页训练。</p></details></section><div class="practice-grid">${rows.map((r) => `<section class="card practice-card target-card" data-lesson="${r.lesson.id}"><span class="pill gray">${esc(r.lesson.category)}</span><h2>${esc(r.lesson.title)}</h2><p class="target-reason">${r.wrong.length ? `最近答错 ${r.wrong.length} 道，建议回看解析。` : "还有未练题，可继续检验理解。"}未练 ${r.fresh.length} 道。</p><div class="actions">${btn("练这个知识点", targetLink(targetQueue([r])))}${btn("先读讲义", "#lesson/" + r.lesson.id, true)}</div></section>`).join("")}</div>${!rows.length ? empty("当前筛选下没有待选题", "所选范围可能暂无题目，或最近一次作答均正确。可以调整筛选、自行重练或继续申论写作。", btn("练申论", "#writing")) : ""}`
     );
   }
   function practice() {
@@ -839,7 +879,7 @@
         "用练习，检验理解。",
         `${C.questions.length} 道原创练习题，每次提交后展开解析。不是历年真题库。`,
       ) +
-      `<section class="panel bank-entry"><div><h2>根据本机记录练下一组</h2><p class="subtitle">最近答错优先 · 未练补充 · 最多12题</p></div>${btn("打开针对性练习", "#targeted")}</section><section class="panel bank-entry"><div><h2>按题型与知识点找题</h2><p class="subtitle">组合筛选 · 本机错题 · 题源与年份</p></div>${btn("打开题库检索", "#bank")}</section><div class="practice-grid"><section class="card practice-card"><div class="tile-icon">${icon("chart")}</div><h3>综合练习</h3><p>覆盖当前全部选择题，顺序作答。已做过的题也可以重练。</p><span class="pill">${C.questions.length} 道 · 基础</span>${btn("开始综合练习", "#quiz/all")}</section>${categories
+      `<section class="panel bank-entry"><div><h2>自选限时与本机复盘</h2><p class="subtitle">固定题组 · 未提交分开记 · 申论用时</p></div>${btn("打开训练记录", "#training")}</section><section class="panel bank-entry"><div><h2>根据本机记录练下一组</h2><p class="subtitle">最近答错优先 · 未练补充 · 最多12题</p></div>${btn("打开针对性练习", "#targeted")}</section><section class="panel bank-entry"><div><h2>按题型与知识点找题</h2><p class="subtitle">组合筛选 · 本机错题 · 题源与年份</p></div>${btn("打开题库检索", "#bank")}</section><div class="practice-grid"><section class="card practice-card"><div class="tile-icon">${icon("chart")}</div><h3>综合练习</h3><p>覆盖当前全部选择题，顺序作答。已做过的题也可以重练。</p><span class="pill">${C.questions.length} 道 · 基础</span>${btn("开始综合练习", "#quiz/all")}</section>${categories
         .map((c) => {
           const count = C.questions.filter(
             (q) => lesson(q.lesson).category === c,
@@ -884,6 +924,7 @@
     };
   }
   function quizPage(parts) {
+    if(parts[1] === "timed") return trainingUI.quizPage(parts[2]);
     if (!quiz || quiz.route !== location.hash) quiz = makeQuiz(parts);
     if (!quiz.ids.length)
       return empty(
@@ -893,12 +934,12 @@
       );
     if (quiz.complete) {
       const n = quiz.results.filter((r) => r.correct).length;
-      return `<div class="quiz-wrap">${heading("SESSION COMPLETE", "这一组，完成了。", "把没弄懂的地方，再带回知识点。")}<section class="panel result"><div class="result-number">${n}<small> / ${quiz.ids.length}</small></div><h2>本次答对 ${n} 题</h2><p class="subtitle">共用时 ${Math.max(1, Math.round((Date.now() - quiz.started) / 1000))} 秒 · 所有记录留在本机</p><div class="actions">${btn("查看错题", "#mistakes")}${btn("继续学习", "#learn", true)}<button class="btn secondary" data-action="restart">再练这组</button></div></section></div>`;
+      return `<div class="quiz-wrap">${heading("SESSION COMPLETE", "这一组，完成了。", "把没弄懂的地方，再带回知识点。")}<section class="panel result"><div class="result-number">${n}<small> / ${quiz.ids.length}</small></div><h2>本次答对 ${n} 题</h2><p class="subtitle">共用时 ${Math.max(1, Math.round(((quiz.finishedAt || Date.now()) - quiz.started) / 1000))} 秒 · 所有记录留在本机</p><div class="actions">${btn("查看错题", "#mistakes")}${btn("继续学习", "#learn", true)}<button class="btn secondary" data-action="restart">再练这组</button></div></section></div>`;
     }
     const q = question(quiz.ids[quiz.index]),
       l = lesson(q.lesson),
       correct = quiz.choice === q.answer;
-    return `<div class="quiz-wrap"><div class="quiz-header"><a class="back-link" href="#practice" style="margin:0">${icon("back")}退出本组</a><span>${quiz.index + 1} / ${quiz.ids.length} 题 · <span id="elapsed">${Math.floor((Date.now() - quiz.questionStart) / 1000)}</span> 秒</span></div><div class="mini-progress"><span style="width:${(quiz.index / quiz.ids.length) * 100}%"></span></div><section class="panel quiz-card"><span class="pill">${esc(l.category)} · 原创示例</span><h1>${esc(q.stem)}</h1>${questionMaterial(q)}${questionGraphic(q)}${questionMeta(q)}<div class="options" role="group" aria-label="选择一个答案">${q.options.map((o, i) => `<button class="option ${quiz.choice === i ? "selected" : ""} ${quiz.submitted && i === q.answer ? "correct" : ""} ${quiz.submitted && quiz.choice === i && !correct ? "incorrect" : ""}" data-action="choose" data-id="${i}" aria-pressed="${quiz.choice === i}" ${quiz.submitted ? "disabled" : ""}><span>${String.fromCharCode(65 + i)}</span><span>${esc(o)}${quiz.submitted && i === q.answer ? " ✓ 正确答案" : ""}${quiz.submitted && quiz.choice === i && !correct ? " · 你的选择" : ""}</span></button>`).join("")}</div>${quiz.submitted ? `<div class="feedback ${correct ? "" : "wrong"}" role="status"><strong>${correct ? "答对了，继续保持。" : "这道题，值得再看一遍。"}</strong><p>${esc(q.explanation)}</p>${optionReview(q)}<a href="#lesson/${l.id}">回看知识点：${esc(l.title)} →</a></div>` : ""}<div class="quiz-actions"><span class="muted" style="font-size:12px">${quiz.submitted ? "提交已记录；答错会进入错题集。" : "选择后提交，即可查看解析。"}</span><button class="btn" data-action="${quiz.submitted ? "next" : "submit"}" ${quiz.choice === null ? "disabled" : ""}>${quiz.submitted ? (quiz.index === quiz.ids.length - 1 ? "查看本组结果" : "下一题") : "提交答案"}${icon("arrow")}</button></div></section></div>`;
+    return `<div class="quiz-wrap"><div class="quiz-header"><a class="back-link" href="#practice" style="margin:0">${icon("back")}退出本组</a><span>${quiz.index + 1} / ${quiz.ids.length} 题 · <span id="elapsed">${Math.floor((Date.now() - quiz.questionStart) / 1000)}</span> 秒</span></div><div class="mini-progress"><span style="width:${(quiz.index / quiz.ids.length) * 100}%"></span></div><section class="panel quiz-card"><span class="pill">${esc(l.category)} · 原创示例</span><h1 class="${q.stem.includes("\n") ? "passage-stem" : ""}">${esc(q.stem)}</h1>${questionMaterial(q)}${questionGraphic(q)}${questionMeta(q)}<div class="options" role="group" aria-label="选择一个答案">${q.options.map((o, i) => `<button class="option ${quiz.choice === i ? "selected" : ""} ${quiz.submitted && i === q.answer ? "correct" : ""} ${quiz.submitted && quiz.choice === i && !correct ? "incorrect" : ""}" data-action="choose" data-id="${i}" aria-pressed="${quiz.choice === i}" ${quiz.submitted ? "disabled" : ""}><span>${String.fromCharCode(65 + i)}</span><span>${esc(o)}${quiz.submitted && i === q.answer ? " ✓ 正确答案" : ""}${quiz.submitted && quiz.choice === i && !correct ? " · 你的选择" : ""}</span></button>`).join("")}</div>${quiz.submitted ? `<div class="feedback ${correct ? "" : "wrong"}" role="status"><strong>${correct ? "答对了，继续保持。" : "这道题，值得再看一遍。"}</strong><p>${esc(q.explanation)}</p>${optionReview(q)}<a href="#lesson/${l.id}">回看知识点：${esc(l.title)} →</a></div>` : ""}<div class="quiz-actions"><span class="muted" style="font-size:12px">${quiz.submitted ? (quiz.saved === null ? "正在安全保存本次提交…" : quiz.saved ? "提交已保存到本机；答错会进入错题集。" : "提交仅在本页，未保存；请先导出本页副本。") : "选择后提交，即可查看解析。"}</span><button class="btn" data-action="${quiz.submitted ? "next" : "submit"}" ${quiz.choice === null || (quiz.submitted && quiz.saved === null) ? "disabled" : ""}>${quiz.submitted ? (quiz.index === quiz.ids.length - 1 ? "查看本组结果" : "下一题") : "提交答案"}${icon("arrow")}</button></div></section></div>`;
   }
   function mistakes() {
     const ids = wrongIds();
@@ -975,16 +1016,16 @@
     if (!w) return missing();
     const value = state.drafts[id] || "",
       count = countWords(value);
-    return `<a class="back-link" href="#writing">${icon("back")}申论写作</a>${heading(w.type, w.title, `原创虚构材料 · 建议练习 ${w.minutes} 分钟 · 字数仅作自查`)}<div class="writing-grid"><div class="stack"><section class="panel"><h2>给定材料</h2><p class="material">${esc(w.material)}</p><div class="task"><strong>作答任务</strong><br>${esc(w.task)}</div>${relatedWriting(w)}<a class="text-button" href="#lesson/${w.lesson}${w.learningLevel ? "/" + w.learningLevel : ""}">先看对应方法 →</a></section><section class="panel"><h2>写完后，逐项自查</h2>${w.points.map((p, i) => `<label class="check-item"><input type="checkbox" data-check="${id}" value="${i}" ${(state.checks[id] || []).includes(i) ? "checked" : ""}>${esc(p)}</label>`).join("")}<p class="stat-foot">自查勾选只记录你的判断，不代表评分。</p></section></div><section class="panel"><label class="field-label" for="draft">我的答案</label><textarea id="draft" class="writing-area" data-draft="${id}" maxlength="20000" placeholder="先列关键词，再组织成完整答案。输入会自动保存在本机。">${esc(value)}</textarea><div class="field-meta"><span id="draft-status">本机自动保存</span><span id="word-count" class="${count > w.limit ? "over-limit" : ""}">${count} / ${w.limit} 字${w.minLength && count < w.minLength ? ` · 尚不足${w.minLength}字` : ""}</span></div><p class="stat-foot">统计非空白字符，包含标点；不等同于答题纸格数。</p><div class="actions"><button class="btn secondary" data-action="export-draft" data-id="${id}">${icon("download")}导出这篇草稿</button></div><details><summary>展开参考要点与表达示例</summary><div class="note">建议先独立作答，再对照查漏。以下是编写者参考，不是官方答案或评分标准。</div><ul>${w.points.map((p) => `<li>${esc(p)}</li>`).join("")}</ul><div class="reference">${esc(w.sample)}</div></details></section></div>`;
+    return `<a class="back-link" href="#writing">${icon("back")}申论写作</a>${heading(w.type, w.title, `原创虚构材料 · 建议练习 ${w.minutes} 分钟 · 字数仅作自查`)}${trainingUI.writingPanel(id)}<div class="writing-grid"><div class="stack"><section class="panel"><h2>给定材料</h2><p class="material">${esc(w.material)}</p><div class="task"><strong>作答任务</strong><br>${esc(w.task)}</div>${relatedWriting(w)}<a class="text-button" href="#lesson/${w.lesson}${w.learningLevel ? "/" + w.learningLevel : ""}">先看对应方法 →</a></section><section class="panel"><h2>写完后，逐项自查</h2>${w.points.map((p, i) => `<label class="check-item"><input type="checkbox" data-check="${id}" value="${i}" ${(state.checks[id] || []).includes(i) ? "checked" : ""}>${esc(p)}</label>`).join("")}<p class="stat-foot">自查勾选只记录你的判断，不代表评分。</p></section></div><section class="panel"><label class="field-label" for="draft">我的答案</label><textarea id="draft" class="writing-area" data-draft="${id}" maxlength="20000" placeholder="先列关键词，再组织成完整答案。输入会自动保存在本机。">${esc(value)}</textarea><div class="field-meta"><span id="draft-status">本机自动保存</span><span id="word-count" class="${count > w.limit ? "over-limit" : ""}">${count} / ${w.limit} 字${w.minLength && count < w.minLength ? ` · 尚不足${w.minLength}字` : ""}</span></div><p class="stat-foot">统计非空白字符，包含标点；不等同于答题纸格数。</p><div class="actions"><button class="btn secondary" data-action="export-draft" data-id="${id}">${icon("download")}导出这篇草稿</button></div><details><summary>展开参考要点与表达示例</summary><div class="note">建议先独立作答，再对照查漏。以下是编写者参考，不是官方答案或评分标准。</div><ul>${w.points.map((p) => `<li>${esc(p)}</li>`).join("")}</ul><div class="reference">${esc(w.sample)}</div>${window.SHENLUN_FEEDBACK?.render(w) || ""}</details></section></div>`;
   }
   function settings() {
     return (
       heading(
         "YOUR DATA, YOUR PACE",
         "把进度，留在自己手里。",
-        "备份包含笔记、草稿和作答记录。请保存在私人位置，不要上传公开仓库。",
+        "备份包含笔记、草稿、作答和计时训练记录。请保存在私人位置，不要上传公开仓库。",
       ) +
-      `<div class="settings-grid"><div class="stack"><section class="panel"><h2>备份与恢复</h2><p>记录只保存在当前设备、浏览器及网站地址下。清除网站数据、换设备或更换网址后不会自动同步，请定期导出。</p><div class="actions"><button class="btn" data-action="backup">${icon("download")}导出完整备份</button><label class="btn secondary file-button" for="import-file">导入备份</label><input class="sr-only" type="file" id="import-file" accept="application/json,.json"></div><p class="stat-foot">导入前会校验文件，并要求确认替换当前记录。建议先导出一次。</p><div id="import-status" role="status"></div>${storageError ? '<button class="btn secondary" data-action="raw-backup">导出当前存储原文</button>' : ""}</section><section class="panel"><h2>当前记录</h2><p>已读 ${state.read.length} 篇 · 收藏 ${state.favorites.length} 篇<br>作答 ${state.attempts.length} 次 · 草稿 ${Object.values(state.drafts).filter(Boolean).length} 篇</p><div class="note">网站无账号、广告、分析追踪或远程同步。打开页面时托管方仍可处理常规访问请求。公开代码中不包含你的学习记录。</div></section><section class="panel danger-zone"><h2>重置本机记录</h2><p>此操作清空本工具的学习记录。其他网站的数据不受影响。请先备份。</p><button class="btn danger" data-action="reset">清空学习记录</button></section></div><div class="stack"><section class="panel"><h2>内容范围 · 知识基础版</h2><p>当前提供 ${C.lessons.length} 篇基础讲义、${C.questions.length} 道原创选择题、${C.writing.length} 个原创虚构材料写作练习。适用于通用方法入门，不声称覆盖国考或福建省考全部大纲。</p><ul><li>已扩展到政治理论、常识、福建地理、平面图形、更多言语数量资料题型，以及材料分析、对策落实、应用文和论证段方法。</li><li>仍未覆盖完整理论与时政、断代史与文学全体系、复杂空间重构、全部言语数量题型和福建文化政策专题。<a class="source" href="#sources">查看逐模块覆盖与来源 →</a></li><li>尚无历年真题库；已有原型和知识手册尚未成功取回，未并入本版。</li><li>备考方向选项仅用于记录目标，不会把同一内容包装成两套专属题库。</li></ul><p>申论参考要点与框架是学习提示，不是官方评分。不要把模板当成固定答案。</p></section><section class="panel"><h2>官方信息入口</h2><p><a class="source" href="#sources">讲义来源、年份与编写边界 →</a>以下是官方招录信息入口，供核对公告与考试要求；它们不是本站原创题目的出处。请以报考年度和具体职位公告为准。</p><a class="source" href="https://bm.scs.gov.cn/pp/gkweb/core/web/ui/business/home/gkhome.html" target="_blank" rel="noopener noreferrer">国家公务员考试专题 ↗</a><a class="source" href="https://gwykl.fujian.gov.cn/" target="_blank" rel="noopener noreferrer">福建省公务员考试录用网 ↗</a><p class="stat-foot">入口检索核对：2026-11-05。本站没有提供报名时间、资格判断或最新政策解读。</p></section></div></div>`
+      `<div class="settings-grid"><div class="stack"><section class="panel"><h2>备份与恢复</h2><p>记录只保存在当前设备、浏览器及网站地址下。清除网站数据、换设备或更换网址后不会自动同步，请定期导出。</p><div class="actions"><button class="btn" data-action="backup">${icon("download")}导出完整备份</button><label class="btn secondary file-button" for="import-file">导入备份</label><input class="sr-only" type="file" id="import-file" accept="application/json,.json"></div><p class="stat-foot">可导入旧v1和新v2备份；导出为包含训练记录的v2，旧版网页不能完整读取。导入先校验再确认，运行中计时按暂停快照恢复。建议先导出。</p><div id="import-status" role="status"></div>${storageError ? '<button class="btn secondary" data-action="raw-backup">导出存储原文（受限时用缓存）</button><p class="stat-foot">缓存副本不保证最新，文件名会注明；可另导出完整本页副本。</p>' : ""}</section><section class="panel"><h2>当前记录</h2><p>已读 ${state.read.length} 篇 · 收藏 ${state.favorites.length} 篇<br>作答 ${state.attempts.length} 次 · 草稿 ${Object.values(state.drafts).filter(Boolean).length} 篇 · 计时训练 ${state.runs.length} 组</p><div class="note">网站无账号、广告、分析追踪或远程同步。打开页面时托管方仍可处理常规访问请求。公开代码中不包含你的学习记录。</div></section><section class="panel danger-zone"><h2>重置本机记录</h2><p>重置当前v2记录，其他网站不受影响。首次迁移保留的v1原文不改动，也不会在重置后自动恢复。旧标签页后续修改不会同步到新版；需要彻底清除本站数据时，可在浏览器清除站点数据，务必先备份。</p><button class="btn danger" data-action="reset">重置当前新版记录</button></section></div><div class="stack"><section class="panel"><h2>内容范围 · 知识基础版</h2><p>当前提供 ${C.lessons.length} 篇基础讲义、${C.questions.length} 道原创选择题、${C.writing.length} 个原创虚构材料写作练习。适用于通用方法入门，不声称覆盖国考或福建省考全部大纲。</p><ul><li>已扩展到政治理论、常识、福建地理、平面图形、更多言语数量资料题型，以及材料分析、对策落实、应用文和论证段方法。</li><li>仍未覆盖完整理论与时政、断代史与文学全体系、复杂空间重构、全部言语数量题型和福建文化政策专题。<a class="source" href="#sources">查看逐模块覆盖与来源 →</a></li><li>尚无历年真题库；已有原型和知识手册尚未成功取回，未并入本版。</li><li>备考方向选项仅用于记录目标，不会把同一内容包装成两套专属题库。</li></ul><p>申论参考要点与框架是学习提示，不是官方评分。不要把模板当成固定答案。</p></section><section class="panel"><h2>官方信息入口</h2><p><a class="source" href="#sources">讲义来源、年份与编写边界 →</a>以下是官方招录信息入口，供核对公告与考试要求；它们不是本站原创题目的出处。请以报考年度和具体职位公告为准。</p><a class="source" href="https://bm.scs.gov.cn/pp/gkweb/core/web/ui/business/home/gkhome.html" target="_blank" rel="noopener noreferrer">国家公务员考试专题 ↗</a><a class="source" href="https://gwykl.fujian.gov.cn/" target="_blank" rel="noopener noreferrer">福建省公务员考试录用网 ↗</a><p class="stat-foot">入口检索核对：2026-11-05。本站没有提供报名时间、资格判断或最新政策解读。</p></section></div></div>`
     );
   }
   function missing() {
@@ -1011,6 +1052,7 @@
         quiz: "practice",
         bank: "practice",
         targeted: "practice",
+        training: "practice",
         coverage: "learn",
         methods: "learn",
         fujian: "learn",
@@ -1035,6 +1077,7 @@
       lesson: () => lessonPage(parts[1],parts[2]),
       practice,
       targeted,
+      training: () => trainingUI.page(parts),
       bank,
       quiz: () => quizPage(parts),
       mistakes,
@@ -1048,20 +1091,25 @@
     };
     $("#main").innerHTML =
       (storageError
-        ? `<div class="storage-alert" role="alert">${esc(storageError)}</div>`
+        ? `<div id="storage-save-error" class="storage-alert" role="alert">${esc(storageError)}</div>`
         : "") + (views[page] || missing)();
     if (focus) {
       window.scrollTo({ top: 0 });
       $("#main").focus({ preventScroll: true });
     }
     if (page === "theory") $("#page-title").textContent = "政治理论入门";
+    if (page === "training") $("#page-title").textContent = "训练记录与复盘";
+    if (storageError || pendingSaves) savingStatus();
+    if(replacing)lockForReplacement();
     document.title = $("#page-title").textContent + " · 知序";
   }
-  function saveChoice() {
+  async function saveChoice() {
+    if (replacing) return;
     if (!quiz || quiz.choice === null || quiz.submitted) return;
     const q = question(quiz.ids[quiz.index]);
-    quiz.submitted = true;
-    const seconds = Math.round((Date.now() - quiz.questionStart) / 1000);
+    const currentQuiz = quiz;
+    quiz.submitted = true;quiz.saved = null;
+    const seconds = Math.max(0,Math.round((Date.now() - quiz.questionStart) / 1000));
     const a = {
       qid: q.id,
       choice: quiz.choice,
@@ -1070,8 +1118,9 @@
     };
     state.attempts.push(a);
     quiz.results.push({ qid: q.id, correct: quiz.choice === q.answer });
-    persist();
     render();
+    const ok=await persist();
+    if(quiz===currentQuiz){quiz.saved=ok;render();}
   }
   function download(name, data, type = "application/json") {
     const blob = new Blob([data], { type }),
@@ -1084,22 +1133,28 @@
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 30000);
   }
-  function exportBackup() {
-    download(
-      `zhixu-backup-${new Date().toISOString().slice(0, 10)}.json`,
-      JSON.stringify(
-        { ...state, exportedAt: new Date().toISOString() },
-        null,
-        2,
-      ),
-    );
-    showToast("已生成备份文件，请保存在私人位置。");
+  function backupSnapshot() {
+    const copy = validate(state);
+    if(copy.activeRun && copy.activeRun.status === "running") {
+      T.pause(copy.activeRun,Date.now());
+      if(T.isTerminal(copy.activeRun)){copy.runs.push(copy.activeRun);copy.activeRun=null;}
+    }
+    return validate(copy);
   }
-  document.addEventListener("click", (e) => {
+  function exportBackup() {
+    try { download(`zhixu-backup-${new Date().toISOString().slice(0,10)}.json`,JSON.stringify({...backupSnapshot(),exportedAt:new Date().toISOString()},null,2));showToast("已生成含训练记录的v2备份，请保存在私人位置。"); }
+    catch(e){showToast("本页副本未能通过校验，请先导出存储原文。");}
+  }
+  trainingUI = window.STUDY_TRAINING_UI.create({ C,T,getState:()=>state,save:persist,render,notify:showToast,getError:()=>storageError,questionMaterial,questionGraphic,questionMeta,optionReview,
+    recordAttempt: event => state.attempts.push({qid:event.qid,choice:event.choice,at:event.at,seconds:event.seconds}) });
+  if(storageError)trainingUI.suspendForStorageError();
+  document.addEventListener("click", async (e) => {
     const b = e.target.closest("[data-action]");
     if (!b) return;
     const id = b.dataset.id,
       a = b.dataset.action;
+    if(replacing&&!["backup","raw-backup","export-draft"].includes(a))return;
+    if (await trainingUI.handle(a,id)) return;
     if (a === "writing-clear") {
       writingQuery = "";
       writingType = "all";
@@ -1187,7 +1242,7 @@
     }
     if (a === "submit") saveChoice();
     if (a === "next" && quiz && quiz.submitted) {
-      if (quiz.index === quiz.ids.length - 1) quiz.complete = true;
+      if (quiz.index === quiz.ids.length - 1) { quiz.complete = true;quiz.finishedAt=Date.now(); }
       else {
         quiz.index++;
         quiz.choice = null;
@@ -1203,14 +1258,20 @@
     }
     if (a === "backup") exportBackup();
     if (a === "raw-backup") {
-      try {
-        download(
-          "zhixu-recovery-raw.txt",
-          localStorage.getItem(KEY) || "",
-          "text/plain",
-        );
-      } catch {
-        showToast("浏览器拒绝读取存储，无法导出原文。");
+      let raw = null, cached = false;
+      try { raw = progressStore?.getRaw(); }
+      catch { /* Permission can fail after the last successful read. */ }
+      if (raw === null || raw === undefined) {
+        raw = progressStore?.loadedRaw;
+        cached = raw !== null && raw !== undefined;
+      }
+      if (raw === null || raw === undefined) {
+        showToast("无法取得存储原文，也没有可用缓存。未生成原文文件；可尝试导出本页副本。");
+      } else {
+        try {
+          download(cached ? "zhixu-recovery-cached-not-latest.txt" : "zhixu-recovery-raw.txt", raw, "text/plain");
+          showToast(cached ? "已生成缓存原文副本，不保证是最新存储内容；文件名已注明。" : "已生成当前可读取的存储原文副本。");
+        } catch { showToast("浏览器未能生成原文文件，请保留本页并检查下载权限。"); }
       }
     }
     if (a === "export-draft") {
@@ -1221,24 +1282,16 @@
         "text/plain;charset=utf-8",
       );
     }
-    if (
-      a === "reset" &&
-      confirm("确定清空本机所有学习记录吗？此操作无法撤销。请确认已导出备份。")
-    ) {
-      try {
-        localStorage.removeItem(KEY);
-        state = fresh();
-        storageError = "";
-        quiz = null;
-        render();
-        showToast("学习记录已清空。");
-      } catch {
-        showToast("浏览器拒绝修改存储，未能清空。");
-      }
+    if (a === "reset" && confirm("确定重置当前新版学习与训练记录吗？请先导出备份。旧版原文副本会保留，不会自动恢复到新版。")) {
+      const result = await replaceProgress(fresh());
+      if(result.ok)showToast("当前新版记录已重置，旧版原文副本未改动。");
     }
+
   });
   document.addEventListener("input", (e) => {
+    if(replacing)return;
     const t = e.target;
+    if(trainingUI.change(t)) return;
     if (t.id === "writing-search") {
       writingQuery = t.value.trim();
       $("#writing-results").innerHTML = writingResults();
@@ -1254,15 +1307,11 @@
     }
     if (t.dataset.note) {
       state.notes[t.dataset.note] = t.value;
-      $("#note-status").textContent = persist()
-        ? "已保存到本机"
-        : "未能保存，请立即备份";
+      persist();
     }
     if (t.dataset.draft) {
       state.drafts[t.dataset.draft] = t.value;
-      $("#draft-status").textContent = persist()
-        ? "已保存到本机"
-        : "未能保存，请立即备份";
+      persist();
       const w = writing(t.dataset.draft),
         n = countWords(t.value);
       $("#word-count").textContent =
@@ -1271,7 +1320,9 @@
     }
   });
   document.addEventListener("change", async (e) => {
+    if(replacing)return;
     const t = e.target;
+    if(trainingUI.change(t)) return;
     if (["coverage-module", "coverage-status"].includes(t.id)) {
       if (t.id === "coverage-module") coverageModule = t.value;
       else coverageStatus = t.value;
@@ -1320,21 +1371,15 @@
       try {
         if (f.size > 10 * 1024 * 1024) throw Error("文件超过 10 MB");
         const parsed = validate(JSON.parse(await f.text()));
+        if(parsed.activeRun?.status === "running"){parsed.activeRun.status="paused";parsed.activeRun.anchorMs=null;}
         if (
           confirm(
-            `已校验：${parsed.attempts.length} 次作答、${parsed.read.length} 篇已读。是否用这份备份替换本机记录？建议先导出当前备份。`,
+            `已校验：${parsed.attempts.length} 次作答、${parsed.read.length} 篇已读、${parsed.runs.length} 组计时记录。是否替换当前新版记录？建议先导出；进行中计时将保持暂停。`,
           )
         ) {
-          try {
-            localStorage.setItem(KEY, JSON.stringify(parsed));
-          } catch {
-            throw Error("浏览器拒绝保存，原记录未替换");
-          }
-          state = parsed;
-          storageError = "";
-          quiz = null;
-          render();
-          showToast("备份已恢复。");
+          const result=await replaceProgress(parsed);
+          if(!result.ok)throw Error(result.error||"本机保存未完成，原记录保留");
+          showToast("备份已恢复，活动计时保持暂停。");
         }
       } catch (err) {
         const msg = "导入失败：" + err.message;
@@ -1345,16 +1390,21 @@
       }
     }
   });
-  window.addEventListener("hashchange", () => {
-    if (!location.hash.startsWith("#quiz/")) quiz = null;
-    render({ focus: true });
+  window.addEventListener("hashchange", async () => {
+    if(replacing)return;
+    if (!location.hash.startsWith("#quiz/") || location.hash.startsWith("#quiz/timed/")) quiz = null;
+    await trainingUI.routeChanged(location.hash);
+    render({focus:true});
   });
   setInterval(() => {
+    if(replacing)return;
+    trainingUI.tick();
     if (quiz && !quiz.complete && !quiz.submitted && $("#elapsed"))
       $("#elapsed").textContent = Math.floor(
         (Date.now() - quiz.questionStart) / 1000,
       );
   }, 1000);
   $("#settings-link").innerHTML = icon("settings");
+  trainingUI.routeChanged(location.hash).then(()=>render());
   render();
 })();

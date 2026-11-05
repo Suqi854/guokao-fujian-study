@@ -1,3 +1,4 @@
+const { readPageProgress, seedPageLegacy, assertLegacyPageUnchanged } = require("./progress-dom-support.cjs");
 const { chromium } = require("@playwright/test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
@@ -19,9 +20,9 @@ const evidence = path.join(__dirname, "..", "test-results");
   p.on("pageerror", (e) => errors.push(e.message));
   await p.goto(base);
   const data = await p.evaluate(() => window.STUDY_CONTENT);
-  assert.equal(data.lessons.length, 79);
-  assert.equal(data.questions.length, 459);
-  assert.equal(data.writing.length, 47);
+  assert.equal(data.lessons.length, 88);
+  assert.equal(data.questions.length, 519);
+  assert.equal(data.writing.length, 62);
   for (const key of ["lessons", "questions", "writing"])
     assert.equal(new Set(data[key].map((x) => x.id)).size, data[key].length);
   for (const l of data.lessons) {
@@ -128,8 +129,8 @@ const evidence = path.join(__dirname, "..", "test-results");
     assert.deepEqual(await p.locator('.reading > section:not(.level-guide):not(.diagram-box) > p').allTextContents(), expected.map(s => s[1]));
   }
   await p.goto(base + "/#sources");
-  assert.equal(await p.locator(".source-grid article").count(), 28);
-  console.log("PASS All 79 lesson pages keep provenance in the separate archive");
+  assert.equal(await p.locator(".source-grid article").count(), 35);
+  console.log("PASS All 88 lesson pages keep provenance in the separate archive");
   // Existing v1 records remain readable after adding content.
   const old = {
     schemaVersion: 1,
@@ -143,21 +144,21 @@ const evidence = path.join(__dirname, "..", "test-results");
     drafts: { w01: "旧草稿" },
     checks: { w01: [0] },
   };
-  await p.evaluate(
-    (v) => localStorage.setItem("zhixu-study-v1", JSON.stringify(v)),
-    old,
-  );
+  await seedPageLegacy(p, old);
   await p.goto(base + "/#write/w01");
   await p.reload();
   assert.equal(await p.locator("#draft").inputValue(), "旧草稿");
   await p.goto(base + "/#mistakes");
   assert.equal(await p.locator(".wrong-row").count(), 1);
-  assert.equal(
-    await p.evaluate(
-      () => JSON.parse(localStorage.getItem("zhixu-study-v1")).notes.growth,
-    ),
-    "旧笔记",
-  );
+  await assertLegacyPageUnchanged(p);
+  assert.equal(await p.evaluate(() => localStorage.getItem("zhixu-study-v2")), null);
+  await p.goto(base + "/#lesson/growth");
+  assert.equal(await p.locator("#lesson-note").inputValue(), "旧笔记");
+  await p.locator("#lesson-note").fill("旧笔记：迁移后续写");
+  const migrated = await readPageProgress(p);
+  assert.deepEqual(migrated, { ...old, schemaVersion: 2, revision: 1,
+    notes: { ...old.notes, growth: "旧笔记：迁移后续写" }, runs: [], activeRun: null });
+  await assertLegacyPageUnchanged(p);
   assert.deepEqual(errors, []);
   console.log("PASS v1 data compatibility and no JS errors");
   const r = JSON.parse(

@@ -952,6 +952,7 @@ textarea {
   align-items: start;
 }
 .material {
+  font-family: "Noto Sans CJK SC", "Noto Sans SC", "WenQuanYi Micro Hei", system-ui, sans-serif;
   font-size: 14px;
   line-height: 2.2;
   white-space: pre-line;
@@ -2033,3 +2034,22 @@ footer a {
 .rotation-height-map b { display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid #a1a7cd; background: #e4e6fc; border-radius: 4px; font-size: 18px; }
 .rotation-caption { font-size: 14px; line-height: 1.8; }
 @media (max-width: 640px) { .question-features { gap: 8px; } .feature-grid { width: 150px; } }
+
+/* Understanding and recall cues are editorial aids, not frequency or mastery ratings. */
+.theory-learning-aids { margin: 24px 0; padding: 20px; border: 1px solid var(--line); border-radius: 14px; background: var(--bg); }
+.theory-learning-aids h2 { margin: 12px 0; font-size: 20px; }
+.theory-learning-aids h3 { margin: 16px 0 8px; font-size: 16px; }
+.theory-key-points { margin: 14px 0; padding-left: 20px; }
+.theory-key-points li { margin: 12px 0; line-height: 1.8; }
+.theory-key-points li span { display: block; color: var(--muted); }
+.theory-memory-cue { line-height: 1.9; }
+.theory-contrast, .theory-recall-item { padding: 10px 0; border-top: 1px solid var(--line); }
+.theory-learning-aids p { line-height: 1.9; }
+.theory-learning-aids summary { cursor: pointer; line-height: 1.8; }
+@media (max-width: 640px) { .theory-learning-aids { padding: 14px; } }
+
+.shenlun-feedback { padding-top: 12px; border-top: 1px solid var(--line); }
+.shenlun-feedback h3 { margin: 22px 0 10px; font-size: 17px; }
+.shenlun-feedback li { margin: 14px 0; line-height: 1.9; }
+.shenlun-feedback li p { margin: 6px 0; }
+.quiz-card h1.passage-stem { white-space: pre-line; font-size: 18px; line-height: 1.95; }

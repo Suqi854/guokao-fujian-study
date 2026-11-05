@@ -1,12 +1,14 @@
 "use strict";
 // Text must be checked after HTML parsing, not only in the authored data or headings.
 const { JSDOM, VirtualConsole } = require("jsdom");
+const { navigateHash, installSerialLocks } = require("./progress-dom-support.cjs");
 const assert = require("node:assert/strict"), fs = require("node:fs"), path = require("node:path");
 const root = path.join(__dirname, ".."), html = fs.readFileSync(path.join(root, "docs/index.html"), "utf8");
 const errors = [], vc = new VirtualConsole();
 vc.on("jsdomError", e => errors.push(e.message));
 const dom = new JSDOM(html, { url: "https://study.example/", runScripts: "outside-only", pretendToBeVisual: true, virtualConsole: vc });
 const w = dom.window, d = w.document;
+installSerialLocks(w);
 w.scrollTo = () => {};
 w.HTMLElement.prototype.scrollIntoView = () => {};
 let downloadBlob, downloadName;
@@ -18,7 +20,7 @@ w.HTMLAnchorElement.prototype.click = function () { if (this.download) downloadN
 for (const m of html.matchAll(/src="\.\/([^\"]+)"/g)) w.eval(fs.readFileSync(path.join(root, "docs", m[1]), "utf8"));
 const C = w.STUDY_CONTENT;
 const pause = () => new Promise(resolve => setTimeout(resolve, 10));
-async function route(hash) { w.location.hash = hash; await pause(); }
+async function route(hash) { await navigateHash(w,hash,()=>{w.location.hash=hash;}); await pause(); }
 async function action(name, id) { const el = d.querySelector(`[data-action="${name}"]${id === undefined ? "" : `[data-id="${id}"]`}`); assert.ok(el); el.click(); await pause(); }
 function exactText(el, expected, label) {
   assert.ok(el, label);
@@ -87,7 +89,7 @@ function assertLesson(l, sections, label) {
     exactText(d.querySelector(".material"), task.material, task.id + " material");
     assert.equal(d.querySelector(".task").textContent, "作答任务" + task.task, task.id + " task");
     [...d.querySelectorAll(".check-item")].forEach((el, i) => assert.equal(el.textContent, task.points[i], task.id + " check point " + i));
-    [...d.querySelectorAll("details ul li")].forEach((el, i) => exactText(el, task.points[i], task.id + " reference point " + i));
+    [...d.querySelectorAll("details > ul > li")].forEach((el, i) => exactText(el, task.points[i], task.id + " reference point " + i));
     exactText(d.querySelector(".reference"), task.sample, task.id + " reference sample");
   }
   console.log("PASS All " + C.writing.length + " writing materials, tasks, points and samples retain their text and renderer structure");
@@ -143,7 +145,7 @@ function assertLesson(l, sections, label) {
   group.writingIds = oldIds;
   C.writing.pop();
   await route('#coverage');
-  assert.ok(d.querySelector('main').textContent.includes('当前61课已逐层编写，18课仍待分层'));
+  assert.ok(d.querySelector('main').textContent.includes('当前70课已逐层编写，18课仍待分层'));
   await route("#lesson/figure-features/practice");
   assert.equal(d.querySelectorAll(".feature-grid rect").length,9);
   await action("feature-turn");
