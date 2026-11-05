@@ -95,7 +95,7 @@
     申论方法: [
       [
         "完整文章训练与多材料论证",
-        "新增一组完整文章任务与704字参考表达；跨主题长文和复杂论据训练仍不足。",
+        "已有完整文章、论证段与提纲训练；材料主要围绕公共服务，跨主题长文和复杂论据仍不足。",
       ],
       [
         "更多文种与复杂身份约束",
@@ -108,7 +108,7 @@
     ],
   };
   C.coverageAdded = [];
-  C.coverageDeepened = ["growth", "rate-amount-order", "compound-growth", "detail-reading", "sentence-order"];
+  C.coverageDeepened = ["summary", "analysis-writing", "proposal", "document", "essay"];
 
   C.coverageMatrix = C.categories
     .filter((c) => c !== "全部")
