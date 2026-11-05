@@ -86,7 +86,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
     "PASS Disjoint-person enumeration, staged-work checks, six semantic answers and historical identity boundaries",
   );
   await p.goto(base + "/#writing");
-  assert.equal(await p.locator(".writing-card").count(), 19);
+  assert.equal(await p.locator(".writing-card").count(), 20);
   await p.locator("#writing-search").fill("预约上门");
   assert.equal(await p.locator(".writing-card").count(), 2);
   await p.locator("#writing-type").selectOption("归纳概括");
@@ -98,7 +98,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   await p.locator("#writing-status").selectOption("draft");
   await p.getByRole("heading", { name: "没有匹配的写作练习" }).waitFor();
   await p.getByRole("button", { name: "清除筛选" }).tap();
-  assert.equal(await p.locator(".writing-card").count(), 19);
+  assert.equal(await p.locator(".writing-card").count(), 20);
   await p.locator("#writing-search").fill("<img src=x onerror=alert(1)>");
   assert.equal(await p.locator("#writing-results img").count(), 0);
   await p.getByRole("button", { name: "清除筛选" }).tap();
