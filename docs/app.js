@@ -251,14 +251,55 @@
       ? `<section class="source-panel"><h2>方法出处与对照</h2><p>以下是历史公开资料的阅读索引。本站讲义与题目独立编写，不代表作者授权、认可或提供官方答案。</p>${entries.map((m) => `<p><a href="${esc(m.url)}" target="_blank" rel="noopener noreferrer">${esc(m.name)} · ${esc(m.date)} ↗</a> · ${esc(m.topic)}</p>`).join("")}<a class="text-button" href="#methods">比较适用任务与方法边界 →</a></section>`
       : "";
   }
-  function methodsPage() {
+
+  let methodFilter = "all",
+    fjClass = "A",
+    fjScope = "general",
+    fjPolice = false;
+  function methodsPage(topicId) {
+    if (topicId && C.comparisons.some((t) => t.id === topicId))
+      methodFilter = topicId;
+    const topics = C.comparisons.filter(
+      (t) => methodFilter === "all" || t.id === methodFilter,
+    );
+    const ids = new Set(topics.flatMap((t) => t.refs));
+    const records = C.methods.filter((m) => ids.has(m.id));
     return (
       heading(
-        "METHOD NOTES",
-        "把方法放回适用的题目。",
-        "历史公开资料的出处索引与本站独立评论；不把个人观点当作官方评分。",
+        "COMPARE & PRACTICE",
+        "同一个知识点，交叉看方法。",
+        "先核对出处，再比较共识与边界，最后用原创练习验证。",
       ) +
-      `<a class="back-link" href="#learn">${icon("back")}知识地图</a><section class="panel"><h2>先看任务，再选方法</h2><div class="method-comparison"><article><h3>言语：找语义对应</h3><p>顾斐资料与本站言语讲义可对照阅读。本站建议：既检查阅读任务，也检查选项是否改变对象、范围和强弱；相似词语只是线索。</p></article><article><h3>定义：逐项查条件</h3><p>蔡金龙资料面向定义判断。本站建议：先用题干建立条件，再核选项；这种逐项检查不能代替言语题对整体主旨的理解。</p></article><article><h3>申论：结构与对象相互检查</h3><p>钟君访谈关注材料关系，曹德伟文章关注作答对象。本站综合：先理解材料结构，再按题目对象筛选；只列全文提纲可能答非所问，只摘零散词又可能漏掉因果。</p></article></div><p class="stat-foot">以上比较是本站的独立判断，并非作者之间公开论辩，也不是声称某种方法必然更快、得分更高。</p></section><div class="section-head"><h2>核实到具体页面</h2><span class="pill gray">${C.methods.length} 份历史资料</span></div><div class="source-grid method-grid">${C.methods.map((m) => `<article class="panel method-card"><span class="pill gray">${esc(m.topic)} · ${esc(m.date)}</span><h2>${esc(m.name)}</h2><p class="stat-foot">${esc(m.identity)}</p><h3>页面主题</h3><p>${esc(m.observation)}</p><h3>本站练法</h3><p>${esc(m.application)}</p><h3>使用边界</h3><p>${esc(m.boundary)}</p><a href="${esc(m.url)}" target="_blank" rel="noopener noreferrer">${esc(m.title)} ↗</a><p class="stat-foot">${esc(m.publisher)} · 核对 ${esc(m.checked)}</p><div class="actions"><a class="text-button" href="#lesson/${m.lessons[0]}">进入配套讲义 →</a></div></article>`).join("")}</div><div class="note">保留原站链接，不转载课程、商业题目、模板或大段表达；这些历史称谓不表示当前任职或主管部门认证。原站<a href="https://www.huatu.com/z/privacy.html" target="_blank" rel="noopener noreferrer">版权说明</a>须尊重。更多教师与同题型对照仍待核验。</div>`
+      `<div class="filters" aria-label="方法模块"><button class="chip ${methodFilter === "all" ? "active" : ""}" data-action="method-filter" data-id="all">全部</button>${C.comparisons.map((t) => `<button class="chip ${methodFilter === t.id ? "active" : ""}" data-action="method-filter" data-id="${t.id}">${t.module}</button>`).join("")}</div><details class="roadmap"><summary>五模块来源盘点 · 哪些还没有两位具名教师</summary>${C.comparisons.map((t) => `<div class="coverage-row"><strong>${t.module}<small>同一知识点 · ${t.refs.length} 份出处</small></strong><p>${esc(t.gap)}</p></div>`).join("")}<p class="stat-foot">当前10份资料中，3份有历史教师身份介绍、2份只核实到作者署名、5份只核实到机构。尚未达到每个知识点两位具名教师的覆盖。</p></details><div class="comparison-list">${topics
+        .map(
+          (t) =>
+            `<section class="panel comparison-card"><span class="pill gray">${t.module} · 两个可核查出处</span><h2>${esc(t.title)}</h2><div class="comparison-sources">${t.refs
+              .map((id) => {
+                const m = C.methods.find((m) => m.id === id);
+                return `<article><h3>${esc(m.name)}</h3><p>${esc(m.observation)}</p><a href="${esc(m.url)}" target="_blank" rel="noopener noreferrer">${esc(m.title)} ↗</a><small>${esc(m.date)} · ${esc(m.publisher)}</small></article>`;
+              })
+              .join(
+                "",
+              )}</div><h3>共通之处</h3><p>${esc(t.agreement)}</p><h3>侧重点与差异</h3><p>${esc(t.difference)}</p><h3>本站独立结论</h3><p>${esc(t.conclusion)}</p><div class="note">适用边界：${esc(t.boundary)}</div><p class="stat-foot">待补：${esc(t.gap)}</p><div class="actions">${btn("学专题与配套训练", "#lesson/" + t.lesson)}${btn(t.module === "申论方法" ? "写作训练" : "练本专题", t.module === "申论方法" ? "#write/w09" : "#quiz/lesson/" + t.lesson, true)}</div></section>`,
+        )
+        .join(
+          "",
+        )}</div><details class="roadmap"><summary>展开本页出处档案 · 身份、年代与使用范围</summary><div class="source-grid method-grid">${records.map((m) => `<article class="panel method-card"><span class="pill gray">${esc(m.topic)} · ${esc(m.date)}</span><h2>${esc(m.name)}</h2><p>${esc(m.identity)}</p><p>${esc(m.application)}</p><p>${esc(m.boundary)}</p><a href="${esc(m.url)}" target="_blank" rel="noopener noreferrer">${esc(m.title)} ↗</a><p class="stat-foot">核对 ${m.checked} · ${esc(m.rights)}</p></article>`).join("")}</div></details><p class="stat-foot">比较为本站独立评论，不是原作者公开论辩或共同结论。原文、商业例题、模板与图片未转载；[<a href="https://www.huatu.com/z/privacy.html" target="_blank" rel="noopener noreferrer">原站版权说明</a>]。资料日期未知处保持未知。</p>`
+    );
+  }
+  function fujianResult() {
+    const group = C.fujian.thresholds[fjScope],
+      row = group[fjClass];
+    return `<section class="panel" id="fujian-result" aria-live="polite"><span class="pill gray">仅2026年度 · ${fjClass}类</span><h2>公告中的最低合格要求</h2><div class="threshold-grid">${row.total === null ? "" : `<div><small>公共科目总分</small><strong>≥ ${row.total}</strong></div>`}<div><small>行政职业能力测验</small><strong>≥ ${row.xingce}</strong></div>${fjPolice ? `<div><small>公安专业科目</small><strong>≥ ${group.police}</strong></div>` : ""}</div><p>以上是合格线，不是某职位进面分数或录用保证。是否适用倾斜政策及专业科目，请核对原通知与具体职位。</p></section>`;
+  }
+  function fujianPage() {
+    return (
+      heading(
+        "FUJIAN · 2026 SNAPSHOT",
+        "福建考情，按年份核对。",
+        "2026年度已发布信息的学习快照；不作为2027年度报名或考试安排。",
+      ) +
+      `<section class="panel"><h2>已核实与待核实分开看</h2><p>2026公告安排：3月14日行测、申论；3月15日公安专业科目。需要其他专业加试的职位另有通知。具体是否参加某科目以职位要求为准。</p><p>2026合格线通知区分A类、B类及加考公安专业科目；下方按通知演示最低合格要求。不是用字母类别猜题型或难度。</p><div class="note">待补：报考指南正文直接读取超时，尚未完整核验2026职位类别与申论卷种对应。因此本页不把A/B、机关层级或国考卷种强行互相映射。</div><a href="${C.fujian.guideUrl}" target="_blank" rel="noopener noreferrer">查看官方2026报考指南 ↗</a></section><section class="panel"><h2>查看2026分类合格线</h2><div class="bank-filters"><label class="bank-field">职位类别<select id="fj-class"><option value="A" ${fjClass === "A" ? "selected" : ""}>A类</option><option value="B" ${fjClass === "B" ? "selected" : ""}>B类</option></select></label><label class="bank-field">通知适用范围<select id="fj-scope"><option value="general" ${fjScope === "general" ? "selected" : ""}>普通标准</option><option value="eligible" ${fjScope === "eligible" ? "selected" : ""}>符合23县倾斜政策的职位</option></select></label></div><label><input type="checkbox" id="fj-police" ${fjPolice ? "checked" : ""}> 职位要求加考公安专业科目</label><p class="stat-foot">倾斜范围包括通知所列县及规定范围内职位，不能只凭居住地选择；请逐条核对原通知。</p></section>${fujianResult()}<section class="panel"><h2>如何安排本站练习</h2><p>先根据目标年份职位表核对笔试科目，再选择需要训练的模块。本网站当前没有福建历年真题库；通用原创练习不等于对应年份原卷。</p><div class="actions">${btn("练通用行测", "#practice")}${btn("练申论方法", "#writing", true)}${btn("福建自然地理", "#lesson/fujian-geography", true)}</div></section><section class="panel"><h2>官方依据与核验边界</h2>${C.fujian.sources.map((x) => `<article class="source-item"><a href="${x.url}" target="_blank" rel="noopener noreferrer">${esc(x.title)} ↗</a><small>${esc(x.publisher)} · ${esc(x.date)}</small><p>${esc(x.scope)}</p></article>`).join("")}<p class="stat-foot">核对 ${C.fujian.checked}；新年度、补充通知和具体职位条件须另查。本页不替代官方报考资格判断。</p></section>`
     );
   }
   function sourcePanel(l) {
@@ -473,6 +514,7 @@
     year: "",
     difficulty: "",
     status: "",
+    stage: "",
   });
   let bankFilter = bankDefaults(),
     bankPage = 0;
@@ -494,6 +536,7 @@
       return (
         (!f.search || haystack.includes(f.search.toLowerCase())) &&
         (!f.module || m.module === f.module) &&
+        (!f.stage || m.trainingStage === f.stage) &&
         (!f.type || m.type === f.type) &&
         (!f.knowledge || m.knowledgeIds.includes(f.knowledge)) &&
         (!f.target || m.applicableExams.includes(f.target)) &&
@@ -537,7 +580,7 @@
             .slice(bankPage * 12, (bankPage + 1) * 12)
             .map(
               (q) =>
-                `<article class="panel bank-question"><div class="bank-tags"><span class="pill gray">${q.id.toUpperCase()} · ${esc(q.meta.module)}</span><span class="pill ${wrong.has(q.id) ? "" : "gray"}">${wrong.has(q.id) ? "待巩固" : done.has(q.id) ? "已练习" : "未练习"}</span></div><h3>${esc(q.stem)}</h3><p class="stat-foot">${esc(q.meta.type)} · ${q.meta.tags.map(esc).join(" / ")}</p><p class="stat-foot">原创 · 无真题年份 · 难度未标定</p><div class="actions">${btn("做这道题", "#quiz/one/" + q.id)}<a class="text-button" href="#lesson/${q.lesson}">先学知识点 →</a></div></article>`,
+                `<article class="panel bank-question"><div class="bank-tags"><span class="pill gray">${q.id.toUpperCase()} · ${esc(q.meta.module)}</span><span class="pill ${wrong.has(q.id) ? "" : "gray"}">${wrong.has(q.id) ? "待巩固" : done.has(q.id) ? "已练习" : "未练习"}</span></div><h3>${esc(q.stem)}</h3><p class="stat-foot">${esc(q.meta.type)} · ${esc(q.meta.trainingStage)} · ${q.meta.tags.map(esc).join(" / ")}</p><p class="stat-foot">原创 · 无真题年份 · 难度未标定</p><div class="actions">${btn("做这道题", "#quiz/one/" + q.id)}<a class="text-button" href="#lesson/${q.lesson}">先学知识点 →</a></div></article>`,
             )
             .join(
               "",
@@ -572,7 +615,16 @@
         "找到此刻需要练的题。",
         "按知识点与题型组合筛选，再用错题记录决定下一步。",
       ) +
-      `<a class="back-link" href="#practice">${icon("back")}专项练习</a><section class="panel"><label class="field-label" for="bank-search">搜索题目、知识点或题号</label><input id="bank-search" class="bank-search" type="search" value="${esc(bankFilter.search)}" placeholder="试试：相对面、浓度、q64" maxlength="100"><div class="bank-filters">${bankSelect("module", "模块", uniques("module"))}${bankSelect("type", "题型", uniques("type"))}</div><details class="bank-advanced"><summary>更多筛选 · 知识点、错题、来源与年份</summary><div class="bank-filters">${bankSelect(
+      `<a class="back-link" href="#practice">${icon("back")}专项练习</a><section class="panel"><label class="field-label" for="bank-search">搜索题目、知识点或题号</label><input id="bank-search" class="bank-search" type="search" value="${esc(bankFilter.search)}" placeholder="试试：相对面、浓度、q64" maxlength="100"><div class="bank-filters">${bankSelect("module", "模块", uniques("module"))}${bankSelect("type", "题型", uniques("type"))}${bankSelect(
+        "stage",
+        "训练层次",
+        [
+          ["识别概念", "识别概念"],
+          ["迁移运用", "迁移运用"],
+          ["检查边界", "检查边界"],
+          ["未分层", "此前题目（未分层）"],
+        ],
+      )}</div><details class="bank-advanced"><summary>更多筛选 · 知识点、错题、来源与年份</summary><div class="bank-filters">${bankSelect(
         "knowledge",
         "知识点",
         C.lessons.filter((l) => l.practice.length).map((l) => [l.id, l.title]),
@@ -591,13 +643,13 @@
           ["wrong", "当前错题"],
           ["done", "已练习"],
         ],
-      )}</div></details><div class="actions"><button class="btn secondary" data-action="bank-reset">清除筛选</button></div><p class="stat-foot">学习方向是适用建议，不是真题出处或必考承诺。现有 ${C.questions.length} 道均为原创，无真题年份，难度尚无样本标定。</p></section><div id="bank-results">${bankResults()}</div>`
+      )}</div></details><div class="actions"><button class="btn secondary" data-action="bank-reset">清除筛选</button></div><p class="stat-foot">训练层次表示编写目标，不是实测难度。学习方向是适用建议，不是真题出处。现有 ${C.questions.length} 道均为原创，无真题年份，难度尚无样本标定。</p></section><div id="bank-results">${bankResults()}</div>`
     );
   }
   function questionMeta(q) {
     const m = q.meta,
       year = m.examSource.year === null ? "无考试年份" : m.examSource.year;
-    return `<details class="question-meta"><summary>题目档案 · 来源、条件与难度</summary><p>${esc(m.type)} · ${esc(m.module)} · ${m.tags.map(esc).join(" / ")}</p><p>出处：${esc(m.source.title)}；${esc(year)}。难度：${esc(m.difficulty.level || "未标定")}。用途：${esc(m.purpose)}。</p><p>${esc(m.rights.note)}</p><p>答案核对：${esc(m.answerReview.date)}；${esc(m.answerReview.basis)}</p><p>本题独立编写；<a href="#methods">可查看方法出处与独立对照</a>，相关作者未参与本题或认可其答案。事实依据见<a href="#lesson/${q.lesson}">配套讲义的来源说明</a>。</p></details>`;
+    return `<details class="question-meta"><summary>题目档案 · 来源、条件与难度</summary><p>${esc(m.type)} · ${esc(m.module)} · ${m.tags.map(esc).join(" / ")}</p><p>训练层次：${esc(m.trainingStage)}；目标：${esc(m.trainingGoal)}。</p><p>出处：${esc(m.source.title)}；${esc(year)}。难度：${esc(m.difficulty.level || "未标定")}。用途：${esc(m.purpose)}。</p><p>${esc(m.rights.note)}</p><p>答案核对：${esc(m.answerReview.date)}；${esc(m.answerReview.basis)}</p><p>本题独立编写；<a href="#methods">可查看方法出处与独立对照</a>，相关作者未参与本题或认可其答案。事实依据见<a href="#lesson/${q.lesson}">配套讲义的来源说明</a>。</p></details>`;
   }
 
   function practice() {
@@ -748,6 +800,7 @@
         quiz: "practice",
         bank: "practice",
         methods: "learn",
+        fujian: "learn",
         write: "writing",
       }[page] || page;
     nav(active);
@@ -774,7 +827,8 @@
       write: () => writePage(parts[1]),
       settings,
       sources: sourcesPage,
-      methods: methodsPage,
+      methods: () => methodsPage(parts[1]),
+      fujian: fujianPage,
     };
     $("#main").innerHTML =
       (storageError
@@ -873,6 +927,11 @@
       query = "";
       onlySaved = false;
       render();
+    }
+    if (a === "method-filter") {
+      methodFilter = id;
+      if (location.hash.includes("methods/")) location.hash = "#methods";
+      else render();
     }
     if (a === "bank-reset") {
       bankFilter = bankDefaults();
@@ -974,6 +1033,12 @@
       bankFilter[t.dataset.bank] = t.value;
       bankPage = 0;
       $("#bank-results").innerHTML = bankResults();
+    }
+    if (["fj-class", "fj-scope", "fj-police"].includes(t.id)) {
+      if (t.id === "fj-class") fjClass = t.value;
+      if (t.id === "fj-scope") fjScope = t.value;
+      if (t.id === "fj-police") fjPolice = t.checked;
+      $("#fujian-result").outerHTML = fujianResult();
     }
     if (t.id === "exam") {
       state.exam = t.value;

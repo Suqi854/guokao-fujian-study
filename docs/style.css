@@ -1879,3 +1879,61 @@ footer a {
   font-size: 13px;
   padding: 5px 0;
 }
+.comparison-list {
+  display: grid;
+  gap: 20px;
+  margin: 20px 0;
+}
+.comparison-card h2 {
+  margin: 14px 0 20px;
+}
+.comparison-card h3 {
+  font-size: 13px;
+  margin: 18px 0 6px;
+}
+.comparison-card p {
+  font-size: 14px;
+  line-height: 1.9;
+}
+.comparison-sources {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.comparison-sources article {
+  background: #f7f8fd;
+  padding: 16px;
+  border-radius: 12px;
+}
+.comparison-sources small {
+  display: block;
+  color: #717b94;
+  font-size: 11px;
+  margin-top: 10px;
+}
+.comparison-sources a {
+  font-size: 13px;
+}
+.threshold-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px;
+  margin: 24px 0;
+}
+.threshold-grid small,
+.threshold-grid strong {
+  display: block;
+}
+.threshold-grid strong {
+  font-size: 30px;
+  color: #5559dc;
+  margin-top: 8px;
+}
+@media (max-width: 640px) {
+  .comparison-sources {
+    grid-template-columns: 1fr;
+  }
+  .comparison-card h2 {
+    font-size: 20px;
+  }
+}

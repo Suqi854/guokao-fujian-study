@@ -49,7 +49,9 @@
     const l = C.lessons.find((x) => x.id === q.lesson);
     q.meta = {
       module: l.category,
-      type: types[l.id] || "基础练习",
+      type: l.questionType || types[l.id] || "基础练习",
+      trainingStage: q.trainingStage || "未分层",
+      trainingGoal: q.trainingGoal || "此前版本基础练习，尚未逐题分层",
       knowledgeIds: [l.id],
       tags: [...l.tags],
       applicableExams:
