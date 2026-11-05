@@ -65,8 +65,31 @@
   g.lessons.push("detail-boundaries");
   C.writing.find((w) => w.id === "w15").materialGroup = "service-modes";
   C.writing.find((w) => w.id === "w16").materialGroup = "service-modes";
+  C.methods.push({
+  "id": "luozhixiang-2021",
+  "name": "罗志祥",
+  "kind": "author",
+  "identity": "页面署名罗志祥并标示青岛分院；仅确认历史文章署名，未据此认定现任教师职务，也不关联同名其他人士。",
+  "title": "2022国家公务员备考之行程问题中的平均速度",
+  "date": "2021-10-25",
+  "publisher": "华图教育（页面来源青岛分院）",
+  "url": "https://www.huatu.com/2021/1025/2313233.html",
+  "topic": "等距与等时平均速率",
+  "observation": "正文明确区分按路程分半与按时间分半的条件。",
+  "application": "本站独立推导：先将每段路程与时间写清，再用总路程除总时间；在条件满足时与简式交叉核对。",
+  "boundary": "只关联等距/等时两题，不作为相遇、追及或停留题的出处。页面公式多为图片，本站未声称逐图核验；公式与例题独立推导，未复制商业原题。尚无第二位具名教师来源，不能视作双教师交叉核验。",
+  "lessons": [
+    "travel"
+  ],
+  "questionIds": [
+    "q163",
+    "q164"
+  ],
+  "checked": "2026-11-05",
+  "rights": "仅提供出处链接与独立评论；无全文、例题、图片或课程转载授权。"
+});
   for (const q of C.questions)
     q.meta.methodIds = C.methods
-      .filter((m) => m.lessons.includes(q.lesson))
+      .filter((m) => m.questionIds ? m.questionIds.includes(q.id) : m.lessons.includes(q.lesson))
       .map((m) => m.id);
 })();

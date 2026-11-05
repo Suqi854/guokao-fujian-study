@@ -108,7 +108,7 @@
     ],
   };
   C.coverageAdded = [];
-  C.coverageDeepened = ["growth", "argument"];
+  C.coverageDeepened = ["travel", "count"];
 
   C.coverageMatrix = C.categories
     .filter((c) => c !== "全部")
@@ -144,7 +144,7 @@
       title: "李委明过河问题历史资料",
       url: "https://www.huatu.com/a/ziliao/gwy/xingce/2009/1223/36320.html",
       date: "2009-12-23",
-      identity: "页面署名李委明，并称其为当时辅导老师；本轮直接读到正文。",
+      identity: "页面署名李委明，并称其为当时辅导老师；v0.8直接读到正文。",
       result:
         "只有一位具名出处，未找到同题型第二位可核实教师。页面过河次数表述还需区分去程与总单程，未采用原题或公式。",
     },

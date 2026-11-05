@@ -34,7 +34,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
     C.methods.filter((m) => m.kind === "historical-teacher").length,
     7,
   );
-  assert.equal(C.methods.filter((m) => m.kind === "author").length, 3);
+  assert.equal(C.methods.filter((m) => m.kind === "author").length, 4);
   assert.equal(C.methods.filter((m) => m.kind === "institution").length, 5);
   assert.equal(
     C.questions.filter((q) => q.meta.trainingStage === "未分层").length,
@@ -43,7 +43,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   for (const stage of ["识别概念", "迁移运用", "检查边界"])
     assert.equal(
       C.questions.filter((q) => q.meta.trainingStage === stage).length,
-      26,
+      28,
     );
   assert.ok(
     C.questions.every(
