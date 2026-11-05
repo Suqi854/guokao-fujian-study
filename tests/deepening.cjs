@@ -170,7 +170,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   await p.goto(base + "/#bank");
   assert.match(
     await p.locator("#bank-results [role=status]").textContent(),
-    /345/,
+    /363/,
   );
   assert.equal(await p.locator(".bank-question").count(), 12);
   await p.getByRole("button", { name: "下一页", exact: true }).tap();
@@ -212,7 +212,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   await p.locator("#bank-target").selectOption("fujian");
   assert.match(
     await p.locator("#bank-results [role=status]").textContent(),
-    /345/,
+    /363/,
   );
   await p.locator("#bank-search").fill("q64");
   assert.equal(await p.locator(".bank-question").count(), 1);

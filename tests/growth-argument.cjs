@@ -34,7 +34,7 @@ const base = process.env.STUDY_BASE_URL || 'http://127.0.0.1:4173';
   assert.equal(q.q162.answer,2);
   // q161's semantic evidence-to-conclusion review is documented separately; this is regression only.
   assert.equal(q.q161.answer,3);
-  assert.equal(C.questions.length,345);assert.equal(C.writing.length,47);
+  assert.equal(C.questions.length,363);assert.equal(C.writing.length,47);
   for(const id of ['growth','argument'])assert.ok(C.lessons.find(l=>l.id===id).sections.map(s=>s[1]).join('').length>=1300);
   for(const id of ['q157','q158','q159','q160','q161','q162']){
     assert.equal(q[id].optionReviews.length,4);assert.equal(q[id].meta.source.kind,'original');

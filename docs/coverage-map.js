@@ -107,8 +107,8 @@
       ],
     ],
   };
-  C.coverageAdded = ["figure-features"];
-  C.coverageDeepened = ["logic", "quantified-logic", "solid-views"];
+  C.coverageAdded = [];
+  C.coverageDeepened = ["arrangement", "remainders", "geometry-scale"];
 
   C.coverageMatrix = C.categories
     .filter((c) => c !== "全部")
