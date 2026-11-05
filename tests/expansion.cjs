@@ -20,9 +20,9 @@ const evidence = path.join(__dirname, "..", "test-results");
   p.on("pageerror", (e) => errors.push(e.message));
   await p.goto(base);
   const data = await p.evaluate(() => window.STUDY_CONTENT);
-  assert.equal(data.lessons.length, 88);
-  assert.equal(data.questions.length, 519);
-  assert.equal(data.writing.length, 62);
+  assert.equal(data.lessons.length, 91);
+  assert.equal(data.questions.length, 567);
+  assert.equal(data.writing.length, 65);
   for (const key of ["lessons", "questions", "writing"])
     assert.equal(new Set(data[key].map((x) => x.id)).size, data[key].length);
   for (const l of data.lessons) {
@@ -129,7 +129,7 @@ const evidence = path.join(__dirname, "..", "test-results");
     assert.deepEqual(await p.locator('.reading > section:not(.level-guide):not(.diagram-box) > p').allTextContents(), expected.map(s => s[1]));
   }
   await p.goto(base + "/#sources");
-  assert.equal(await p.locator(".source-grid article").count(), 35);
+  assert.equal(await p.locator(".source-grid article").count(), 40);
   console.log("PASS All 88 lesson pages keep provenance in the separate archive");
   // Existing v1 records remain readable after adding content.
   const old = {

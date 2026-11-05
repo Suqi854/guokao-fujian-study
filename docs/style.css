@@ -2048,8 +2048,14 @@ footer a {
 .theory-learning-aids summary { cursor: pointer; line-height: 1.8; }
 @media (max-width: 640px) { .theory-learning-aids { padding: 14px; } }
 
-.shenlun-feedback { padding-top: 12px; border-top: 1px solid var(--line); }
+.shenlun-feedback { padding-top: 12px; border-top: 1px solid var(--line); font-family: "Noto Sans CJK SC", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif; }
 .shenlun-feedback h3 { margin: 22px 0 10px; font-size: 17px; }
 .shenlun-feedback li { margin: 14px 0; line-height: 1.9; }
 .shenlun-feedback li p { margin: 6px 0; }
 .quiz-card h1.passage-stem { white-space: pre-line; font-size: 18px; line-height: 1.95; }
+
+/* Local evidence is plain text, with expandable reasoning instead of inferred scores. */
+.diagnostic-card, .diagnostic-writing { overflow-wrap: anywhere; }
+.diagnostic-card details { margin-top: 14px; }
+.diagnostic-card details > ol > li { margin: 12px 0; }
+.diagnostic-writing { margin: 18px 0; padding-top: 12px; border-top: 1px solid var(--line, #e5e7ef); }

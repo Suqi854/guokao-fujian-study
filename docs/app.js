@@ -240,7 +240,7 @@
     return heading("POLITICAL FOUNDATIONS", track.title, track.intro) +
       `<section class="panel"><p>${esc(track.scope)}</p><p class="stat-foot">更新 ${esc(track.updated)} · 已标记已读 ${read} / ${steps.length} 个主题；已读不等于掌握，不据此预测考试分数。</p><div class="actions">${next ? btn(read === steps.length ? "重读第一个主题" : "从尚未标记的主题开始", "#lesson/" + next.lessonId + "/intro") : ""}${btn("返回应试练习", "#targeted", true)}${btn("进入申论输出", "#writing", true)}</div></section><div class="stack" data-theory-steps>${steps.map((step, i) => {
         const l = lesson(step.lessonId);
-        return `<section class="panel" data-theory-lesson="${esc(l.id)}"><span class="pill ${state.read.includes(l.id) ? "green" : "gray"}">主题 ${i + 1} · ${state.read.includes(l.id) ? "已标记已读" : "待阅读"}</span><h2>${esc(l.title)}</h2><p>${esc(step.purpose)}</p><p><strong>迁移时问：</strong>${esc(step.bridge)}</p><div class="actions">${Object.entries(C.learningPaths).map(([id, path]) => btn(path.label, "#lesson/" + l.id + "/" + id, id !== "intro")).join("")}${btn("练这课的 " + l.practice.length + " 道原创题", "#quiz/lesson/" + l.id, true)}</div><p class="stat-foot">${esc(l.versionNote)}。三个层次是教学安排，题目难度未经样本标定。</p></section>`;
+        return `<section class="panel" data-theory-lesson="${esc(l.id)}"><span class="pill ${state.read.includes(l.id) ? "green" : "gray"}">主题 ${i + 1} · ${state.read.includes(l.id) ? "已标记已读" : "待阅读"}</span><h2>${esc(l.title)}</h2><p>${esc(step.purpose)}</p><p><strong>迁移时问：</strong>${esc(step.bridge)}</p><div class="actions">${Object.entries(C.learningPaths).map(([id, path]) => btn(path.label, "#lesson/" + l.id + "/" + id, id !== "intro")).join("")}${btn("练这课的 " + l.practice.length + " 道原创题", "#quiz/lesson/" + l.id, true)}</div><p class="stat-foot">${esc(l.versionNote).replace(/[。]+$/, "")}。三个层次是教学安排，题目难度未经样本标定。</p></section>`;
       }).join("")}</div><section class="panel"><h2>读完后，用自己的话说清楚</h2><ol>${track.reflection.map(t => `<li>${esc(t)}</li>`).join("")}</ol><p>可把回答写入对应讲义的个人笔记，只保存在当前浏览器；没有自动评分或上传。</p><a class="text-button" href="#sources">集中查看原文年代、官方来源与核验边界 →</a></section><details class="roadmap"><summary>本阶段的范围与待补内容</summary><ul>${track.gaps.map(t => `<li>${esc(t)}</li>`).join("")}</ul></details>`;
   }
   function home() {
@@ -866,7 +866,7 @@
         )
         .join(
           "",
-        )}</select></label><label class="bank-field">训练目标<select id="target-stage"><option value="all">全部训练目标</option>${["识别概念", "迁移运用", "检查边界", "未分层"].map((t) => `<option ${targetStage === t ? "selected" : ""}>${esc(t)}</option>`).join("")}</select></label></div><p class="stat-foot">训练目标是编写目的，不是难度等级。以下题组仅从所选模块与目标中选取。</p><div class="actions"><span class="pill">${wrong} 道最近答错</span><span class="pill gray">${freshCount} 道尚未练习</span></div><p>未做过不等于薄弱，答对一次也不等于掌握。当前题目均为原创，难度尚未经样本标定。</p>${ids.length ? btn(`开始这组 · ${ids.length} 题`, targetLink(ids))+btn("限时记录这组", "#training/ids/"+ids.join(","), true) : btn("自主选择重练", "#bank", true)}<details class="roadmap"><summary>这组题怎样选出来</summary><p>先按模块与训练目标筛选，再选最近一次答错的题，用未做题补足，最多12题。知识点按错题数量、再按未做数量排序，同数按目录顺序；每轮每个知识点取一题，避免单一知识点占满。进入后题号固定，刷新会从本组首题重新开始，已提交记录保留。练完回到本页会重新计算。</p><p>这里不推断能力、考试得分或遗忘周期；申论草稿不自动评分，可到申论写作页训练。</p></details></section><div class="practice-grid">${rows.map((r) => `<section class="card practice-card target-card" data-lesson="${r.lesson.id}"><span class="pill gray">${esc(r.lesson.category)}</span><h2>${esc(r.lesson.title)}</h2><p class="target-reason">${r.wrong.length ? `最近答错 ${r.wrong.length} 道，建议回看解析。` : "还有未练题，可继续检验理解。"}未练 ${r.fresh.length} 道。</p><div class="actions">${btn("练这个知识点", targetLink(targetQueue([r])))}${btn("先读讲义", "#lesson/" + r.lesson.id, true)}</div></section>`).join("")}</div>${!rows.length ? empty("当前筛选下没有待选题", "所选范围可能暂无题目，或最近一次作答均正确。可以调整筛选、自行重练或继续申论写作。", btn("练申论", "#writing")) : ""}`
+        )}</select></label><label class="bank-field">训练目标<select id="target-stage"><option value="all">全部训练目标</option>${["识别概念", "迁移运用", "检查边界", "未分层"].map((t) => `<option ${targetStage === t ? "selected" : ""}>${esc(t)}</option>`).join("")}</select></label></div><p class="stat-foot">训练目标是编写目的，不是难度等级。以下题组仅从所选模块与目标中选取。</p><div class="actions"><span class="pill">${wrong} 道最近答错</span><span class="pill gray">${freshCount} 道尚未练习</span></div><p>未做过不等于薄弱，答对一次也不等于掌握。当前题目均为原创，难度尚未经样本标定。</p>${ids.length ? btn(`开始这组 · ${ids.length} 题`, targetLink(ids))+btn("限时记录这组", "#training/ids/"+ids.join(","), true) : btn("自主选择重练", "#bank", true)}${btn("看本机线索", "#diagnostics", true)}<details class="roadmap"><summary>这组题怎样选出来</summary><p>先按模块与训练目标筛选，再选最近一次答错的题，用未做题补足，最多12题。知识点按错题数量、再按未做数量排序，同数按目录顺序；每轮每个知识点取一题，避免单一知识点占满。进入后题号固定，刷新会从本组首题重新开始，已提交记录保留。练完回到本页会重新计算。</p><p>这里不推断能力、考试得分或遗忘周期；申论草稿不自动评分，可到申论写作页训练。</p></details></section><div class="practice-grid">${rows.map((r) => `<section class="card practice-card target-card" data-lesson="${r.lesson.id}"><span class="pill gray">${esc(r.lesson.category)}</span><h2>${esc(r.lesson.title)}</h2><p class="target-reason">${r.wrong.length ? `最近答错 ${r.wrong.length} 道，建议回看解析。` : "还有未练题，可继续检验理解。"}未练 ${r.fresh.length} 道。</p><div class="actions">${btn("练这个知识点", targetLink(targetQueue([r])))}${btn("先读讲义", "#lesson/" + r.lesson.id, true)}</div></section>`).join("")}</div>${!rows.length ? empty("当前筛选下没有待选题", "所选范围可能暂无题目，或最近一次作答均正确。可以调整筛选、自行重练或继续申论写作。", btn("练申论", "#writing")) : ""}`
     );
   }
   function practice() {
@@ -879,7 +879,7 @@
         "用练习，检验理解。",
         `${C.questions.length} 道原创练习题，每次提交后展开解析。不是历年真题库。`,
       ) +
-      `<section class="panel bank-entry"><div><h2>自选限时与本机复盘</h2><p class="subtitle">固定题组 · 未提交分开记 · 申论用时</p></div>${btn("打开训练记录", "#training")}</section><section class="panel bank-entry"><div><h2>根据本机记录练下一组</h2><p class="subtitle">最近答错优先 · 未练补充 · 最多12题</p></div>${btn("打开针对性练习", "#targeted")}</section><section class="panel bank-entry"><div><h2>按题型与知识点找题</h2><p class="subtitle">组合筛选 · 本机错题 · 题源与年份</p></div>${btn("打开题库检索", "#bank")}</section><div class="practice-grid"><section class="card practice-card"><div class="tile-icon">${icon("chart")}</div><h3>综合练习</h3><p>覆盖当前全部选择题，顺序作答。已做过的题也可以重练。</p><span class="pill">${C.questions.length} 道 · 基础</span>${btn("开始综合练习", "#quiz/all")}</section>${categories
+      `<section class="panel bank-entry"><div><h2>自选限时与本机复盘</h2><p class="subtitle">固定题组 · 未提交分开记 · 申论用时</p></div>${btn("打开训练记录", "#training")}</section><section class="panel bank-entry"><div><h2>薄弱点线索与下一步</h2><p class="subtitle">说明样本和版本 · 回看讲义 · 换题检验</p></div>${btn("看看下一步练什么", "#diagnostics")}</section><section class="panel bank-entry"><div><h2>根据本机记录练下一组</h2><p class="subtitle">最近答错优先 · 未练补充 · 最多12题</p></div>${btn("打开针对性练习", "#targeted")}</section><section class="panel bank-entry"><div><h2>按题型与知识点找题</h2><p class="subtitle">组合筛选 · 本机错题 · 题源与年份</p></div>${btn("打开题库检索", "#bank")}</section><div class="practice-grid"><section class="card practice-card"><div class="tile-icon">${icon("chart")}</div><h3>综合练习</h3><p>覆盖当前全部选择题，顺序作答。已做过的题也可以重练。</p><span class="pill">${C.questions.length} 道 · 基础</span>${btn("开始综合练习", "#quiz/all")}</section>${categories
         .map((c) => {
           const count = C.questions.filter(
             (q) => lesson(q.lesson).category === c,
@@ -1052,6 +1052,7 @@
         quiz: "practice",
         bank: "practice",
         targeted: "practice",
+        diagnostics: "practice",
         training: "practice",
         coverage: "learn",
         methods: "learn",
@@ -1077,6 +1078,7 @@
       lesson: () => lessonPage(parts[1],parts[2]),
       practice,
       targeted,
+      diagnostics: () => adaptiveUI.page(parts),
       training: () => trainingUI.page(parts),
       bank,
       quiz: () => quizPage(parts),
@@ -1098,11 +1100,13 @@
       $("#main").focus({ preventScroll: true });
     }
     if (page === "theory") $("#page-title").textContent = "政治理论入门";
+    if (page === "diagnostics") $("#page-title").textContent = "薄弱点线索";
     if (page === "training") $("#page-title").textContent = "训练记录与复盘";
     if (storageError || pendingSaves) savingStatus();
     if(replacing)lockForReplacement();
     document.title = $("#page-title").textContent + " · 知序";
   }
+  const adaptiveUI=window.STUDY_ADAPTIVE_UI.create({C,T,A:window.STUDY_ADAPTIVE,esc,btn,heading,getState:()=>state,getError:()=>storageError,isSaving:()=>pendingSaves>0});
   async function saveChoice() {
     if (replacing) return;
     if (!quiz || quiz.choice === null || quiz.submitted) return;

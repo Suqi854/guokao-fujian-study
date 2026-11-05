@@ -35,7 +35,7 @@ const base = process.env.STUDY_BASE_URL || 'http://127.0.0.1:4173';
   assert.equal(q.q162.answer,2);
   // q161's semantic evidence-to-conclusion review is documented separately; this is regression only.
   assert.equal(q.q161.answer,3);
-  assert.equal(C.questions.length,519);assert.equal(C.writing.length,62);
+  assert.equal(C.questions.length,567);assert.equal(C.writing.length,65);
   for(const id of ['growth','argument'])assert.ok(C.lessons.find(l=>l.id===id).sections.map(s=>s[1]).join('').length>=1300);
   for(const id of ['q157','q158','q159','q160','q161','q162']){
     assert.equal(q[id].optionReviews.length,4);assert.equal(q[id].meta.source.kind,'original');
@@ -45,7 +45,7 @@ const base = process.env.STUDY_BASE_URL || 'http://127.0.0.1:4173';
   const a=C.writing.find(w=>w.id==='w23'),b=C.writing.find(w=>w.id==='w24');
   assert.equal(a.material,b.material);assert.equal(a.materialGroup,b.materialGroup);assert.ok(a.material.length>1600);
   for(const w of [a,b])assert.ok(w.sample.replace(/\s/g,'').length<=w.limit);
-  assert.equal(new Set(C.writing.map(w=>w.material)).size,30);
+  assert.equal(new Set(C.writing.map(w=>w.material)).size,31);
   console.log('PASS Independent unit enumeration, weighted-range and causality countermodels; original provenance and material scope');
   const old={schemaVersion:1,exam:'both',read:['growth','argument'],favorites:['growth'],notes:{growth:'测试旧增长笔记',argument:'测试旧论证笔记'},attempts:[{qid:'q09',choice:0,at:'2026-11-04T12:00:00Z',seconds:11}],drafts:{w21:'测试旧概括草稿'},checks:{w21:[1]}};
   await seedPageLegacy(p, old);await p.reload();

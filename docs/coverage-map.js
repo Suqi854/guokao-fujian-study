@@ -60,14 +60,14 @@
       ],
     ],
     政治理论: [
-      ["理论体系与党史专题", "已有八主题理论路线及原有两个主题；完整马原体系、思想发展史与党史仍不足。"],
+      ["理论体系与党史专题", "已有十主题理论路线及原有两个主题；完整马原体系、思想发展史与党史仍不足。"],
       [
         "年度时政与文件更新",
         "新增四课只核到2022—2025年指定文本；未覆盖2026完整时政、十五五正式纲要或福建专项政策，部署不等于实施状态。",
       ],
       [
         "理论联系材料的情境题",
-        "八主题共48道概念与迁移题；跨主题长材料、现行政策实施核对和更多变式仍缺。",
+        "十主题共60道概念与迁移题；跨主题长材料、现行政策实施核对和更多变式仍缺。",
       ],
     ],
     常识判断: [
@@ -95,7 +95,7 @@
     申论方法: [
       [
         "完整文章训练与多材料论证",
-        "新增农业、工艺与海岸3组24段虚构材料、15任务及两篇完整长文；真实长材料、多来源论据与连续模考仍不足。",
+        "已有农业、工艺与海岸3组24段材料，新增10段服务比较材料与3项比较/迁移任务；保留两篇完整长文；真实长材料、多来源论据与连续模考仍不足。",
       ],
       [
         "更多文种与复杂身份约束",
@@ -107,8 +107,8 @@
       ],
     ],
   };
-  C.coverageAdded = ["fq-dynamic-stock", "fq-integer-count", "fq-index-caliber", "fq-multi-paragraph", "social-being-people", "six-method-principles", "new-quality-productivity", "reform-framework-2024", "writing-transfer"];
-  C.coverageDeepened = [];
+  C.coverageAdded = ["mao-living-soul", "unified-market-rules", "compare-transfer-writing"];
+  C.coverageDeepened = ["scoped-reading", "profit-bases", "mixed-weights", "work-stages"];
 
   C.coverageMatrix = C.categories
     .filter((c) => c !== "全部")

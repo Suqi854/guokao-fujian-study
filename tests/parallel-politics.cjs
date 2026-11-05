@@ -85,12 +85,12 @@ const questions = Object.fromEntries(C.questions.map(question => [question.id, q
 assert.equal(Object.keys(lessons).length, C.lessons.length, "unique lesson IDs across the loaded site");
 assert.equal(Object.keys(questions).length, C.questions.length, "unique question IDs across the loaded site");
 assert.deepEqual(C.questions.filter(question => question.id.startsWith("pol2-")).map(question => question.id), questionIds);
-assert.deepEqual(C.theoryTrack.steps.map(step => step.lessonId), [...originalIds, ...newIds]);
-assert.deepEqual(Object.keys(C.theoryLearningAids), [...originalIds, ...newIds]);
-assert.equal(C.theoryTrack.steps.length, 8);
-assert.equal(Object.keys(C.theoryLearningAids).length, 8);
-assert.match(C.theoryTrack.intro, /八个主题/);
-assert.match(C.theoryTrack.scope, /八主题/);
+assert.deepEqual(C.theoryTrack.steps.map(step => step.lessonId), [...originalIds, 'social-being-people', 'mao-living-soul', 'six-method-principles', 'new-quality-productivity', 'reform-framework-2024', 'unified-market-rules']);
+assert.deepEqual(Object.keys(C.theoryLearningAids), [...originalIds, ...newIds, 'mao-living-soul', 'unified-market-rules']);
+assert.equal(C.theoryTrack.steps.length, 10);
+assert.equal(Object.keys(C.theoryLearningAids).length, 10);
+assert.match(C.theoryTrack.intro, /十个主题/);
+assert.match(C.theoryTrack.scope, /十主题/);
 for (const phrase of ["2026年完整时政", "十五五正式纲要", "福建专项政策", "福建新年度考试规则", "不是完整", "没有官方评分"]) {
   assert.ok(C.theoryTrack.gaps.join("\n").includes(phrase), `retain coverage boundary: ${phrase}`);
 }
