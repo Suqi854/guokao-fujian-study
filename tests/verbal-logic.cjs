@@ -124,7 +124,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
     old.notes.definition,
   );
   await p.getByRole("link", { name: "练配套题", exact: true }).tap();
-  assert.match(await p.locator(".quiz-header").textContent(), /1 \/ 4/);
+  assert.match(await p.locator(".quiz-header").textContent(), /1 \/ 7/);
   await p.goto(base + "/#quiz/one/q156");
   await p.locator('[data-action="choose"][data-id="0"]').tap();
   await p.locator('[data-action="submit"]').tap();
