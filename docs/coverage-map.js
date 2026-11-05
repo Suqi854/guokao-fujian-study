@@ -78,7 +78,7 @@
       ["地理生物化学与科技", "当前生活物理仅物态变化，缺其他科学常识专题。"],
       [
         "法律经济进阶",
-        "国家机构、行为能力、CPI只是入门，其他法律经济范围待核验。",
+        "已有国家机构、民事行为能力、宪法权利义务、行政复议和CPI基础，其他法律经济范围仍待扩展核验。",
       ],
     ],
     福建专题: [
@@ -107,8 +107,8 @@
       ],
     ],
   };
-  C.coverageAdded = [];
-  C.coverageDeepened = ["growth-contribution", "multi-table", "context-blanks", "title-choice"];
+  C.coverageAdded = ["constitutional-rights", "admin-review"];
+  C.coverageDeepened = ["cpi", "fujian-geography"];
 
   C.coverageMatrix = C.categories
     .filter((c) => c !== "全部")

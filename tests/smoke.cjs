@@ -29,7 +29,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   await test("Empty first-run dashboard", async () => {
     assert.equal(
       await page.locator(".stat-value").nth(0).innerText(),
-      "0/ 73 篇",
+      "0/ 75 篇",
     );
     await page.screenshot({
       path: path.join(evidence, "desktop-home.png"),
