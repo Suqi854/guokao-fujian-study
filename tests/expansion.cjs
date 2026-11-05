@@ -19,13 +19,13 @@ const evidence = path.join(__dirname, "..", "test-results");
   p.on("pageerror", (e) => errors.push(e.message));
   await p.goto(base);
   const data = await p.evaluate(() => window.STUDY_CONTENT);
-  assert.equal(data.lessons.length, 72);
-  assert.equal(data.questions.length, 321);
+  assert.equal(data.lessons.length, 73);
+  assert.equal(data.questions.length, 345);
   assert.equal(data.writing.length, 47);
   for (const key of ["lessons", "questions", "writing"])
     assert.equal(new Set(data[key].map((x) => x.id)).size, data[key].length);
   for (const l of data.lessons) {
-    assert.ok(l.sources.length);
+    assert.ok(l.sources.length || l.basis === "原创离散图形模型与独立推导");
     for (const s of l.sources) assert.ok(data.sources[s]);
     for (const id of l.practice)
       assert.equal(data.questions.find((q) => q.id === id)?.lesson, l.id);
@@ -125,7 +125,7 @@ const evidence = path.join(__dirname, "..", "test-results");
   }
   await p.goto(base + "/#sources");
   assert.equal(await p.locator(".source-grid article").count(), 20);
-  console.log("PASS All 72 lesson pages keep provenance in the separate archive");
+  console.log("PASS All 73 lesson pages keep provenance in the separate archive");
   // Existing v1 records remain readable after adding content.
   const old = {
     schemaVersion: 1,

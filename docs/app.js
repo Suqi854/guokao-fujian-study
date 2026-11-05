@@ -325,6 +325,32 @@
     return `<div class="bit-figure" role="img" aria-label="${esc(label)}：${bits}">${[...bits].map((bit) => `<span class="bit ${bit === "1" ? "filled" : ""}"></span>`).join("")}</div>`;
   }
 
+  const visual = window.STUDY_VISUAL;
+  let featureExample = 0, featureTurns = 0, featureMirrored = false, solidTurns = 0;
+  const featureExamples = [
+    { name: "外圈与孔洞", rows: ["111", "101", "111"] },
+    { name: "中心对称与轴对称", rows: ["110", "010", "011"] },
+    { name: "角点接触", rows: ["101", "010", "101"] },
+    { name: "共边连通", rows: ["100", "100", "110"] },
+  ];
+  function featureFigure(rows, label) {
+    const size = rows.length, cell = 84 / size;
+    return `<svg class="feature-grid" viewBox="0 0 100 100" role="img" aria-label="${esc(label)}：上到下各行为${rows.join("、")}，1为黑格，0为白格">${rows.map((row, y) => [...row].map((bit, x) => `<rect x="${8 + x * cell}" y="${8 + y * cell}" width="${cell}" height="${cell}" fill="${bit === "1" ? "#282e46" : "white"}" stroke="#c9cfdf" stroke-width="0.8"/>`).join("")).join("")}</svg>`;
+  }
+  function featureDemo() {
+    const sample = featureExamples[featureExample];
+    let rows = featureMirrored ? visual.mirror(sample.rows) : sample.rows;
+    for (let i = 0; i < featureTurns; i++) rows = visual.rotate(rows);
+    const f = visual.features(rows);
+    return `<section class="diagram-box" id="lesson-demo"><div class="panel-head"><h2>动手观察 · 数量与属性</h2><span class="pill gray">共边才相连</span></div><div class="filters" aria-label="选择方格示例">${featureExamples.map((v, i) => `<button class="chip ${i === featureExample ? "active" : ""}" data-action="feature-example" data-id="${i}" aria-pressed="${i === featureExample}">${v.name}</button>`).join("")}</div><div class="feature-demo-figure">${featureFigure(rows, sample.name)}</div><p class="diagram-caption" aria-live="polite">黑格 ${f.black} · 连通部分 ${f.parts} · 孔洞 ${f.holes}<br>中心对称：${f.central ? "是" : "否"}；四条候选轴中，${f.axes.length ? f.axes.join("、") + "对称" : "没有对称轴"}。<br>已顺时针转 ${featureTurns * 90}°${featureMirrored ? "，并先做左右镜像" : ""}。</p><div class="actions"><button class="btn" data-action="feature-turn">顺时针转90°</button><button class="btn secondary" data-action="feature-mirror">左右镜像</button><button class="btn secondary" data-action="feature-reset">重置图形</button></div><p class="stat-foot">灰线只辅助定位；孔洞按上下左右的白格通路判断。水平、竖直与两条对角线均过外框中心；这里不统计其他模型的对称轴。</p></section>`;
+  }
+  function solidRotationDemo() {
+    let rows = ["23", "10"];
+    for (let i = 0; i < solidTurns; i++) rows = visual.rotate(rows);
+    const heights = [0, 1].map(c => Math.max(...rows.map(row => Number(row[c]))));
+    return `<div class="solid-rotation-demo"><h3>整体旋转后，再从固定近侧看</h3><p class="stat-foot">俯视纸面上方为远、下方为近；固定观察方向不动。</p><div class="rotation-height-map" role="img" aria-label="旋转${solidTurns * 90}度后柱高：远排${rows[0].split("").join("、")}；近排${rows[1].split("").join("、")}"><span>远排</span>${[...rows[0]].map(v => `<b>${v}</b>`).join("")}<span>近排</span>${[...rows[1]].map(v => `<b>${v}</b>`).join("")}</div><p class="rotation-caption" aria-live="polite">顺时针 ${solidTurns * 90}° · 正视高度从左到右 ${heights.join("、")}；总块数始终为6。</p><div class="actions"><button class="btn" data-action="solid-turn">柱高整体转90°</button><button class="btn secondary" data-action="solid-reset">重置柱高方向</button></div></div>`;
+  }
+
   let cubeFace = "C",
     cubeBack = false,
     solidView = "front";
@@ -414,11 +440,12 @@
       )
       .join(
         "",
-      )}</div><p class="diagram-caption" aria-live="polite">${solidView === "front" ? "正视：每列取前后最大值，高度依次 2、3、1。" : solidView === "top" ? "俯视：五个位置有柱子，所以投影占 5 格。" : "侧视：按近排到远排展示，各排最高分别为 2、3。"}</p><p class="stat-foot">柱高表数字是完整高度。总块数为 8；投影格数不是总块数。</p></section>`;
+      )}</div><p class="diagram-caption" aria-live="polite">${solidView === "front" ? "正视：每列取前后最大值，高度依次 2、3、1。" : solidView === "top" ? "俯视：五个位置有柱子，所以投影占 5 格。" : "侧视：按近排到远排展示，各排最高分别为 2、3。"}</p><p class="stat-foot">柱高表数字是完整高度。总块数为 8；投影格数不是总块数。</p>${solidRotationDemo()}</section>`;
   }
 
   function diagram(l) {
     if (!l.diagram) return "";
+    if (l.diagram === "figure-features") return featureDemo();
     if (["cube-net", "solid-views"].includes(l.diagram)) return spatialDemo(l);
     if (l.diagram === "rotation")
       return `<section class="diagram-box" id="lesson-demo"><div class="panel-head"><h2>动手观察 · 旋转</h2><span class="pill gray">原创示意</span></div><div class="figure-row">${arrowFigure(0, "起始：箭头向上，黑点左上", true)}<span>→</span>${arrowFigure(diagramStep * 90, `第${diagramStep}步`, true)}</div><p class="diagram-caption" aria-live="polite">已转 ${diagramStep} 步，每步顺时针90°；箭头与黑点一起旋转。</p><div class="actions"><button class="btn" data-action="rotate-demo">下一步 ↻</button><button class="btn secondary" data-action="reset-demo">重置</button></div></section>`;
@@ -441,6 +468,10 @@
   }
   function questionGraphic(q) {
     if (!q.graphic) return "";
+    if (q.graphic.type === "feature-grid")
+      return `<div class="question-features">${featureFigure(q.graphic.values, q.graphic.label || "题目方格图")}</div>`;
+    if (q.graphic.type === "feature-pair")
+      return `<div class="question-features">${q.graphic.values.map((rows, i) => `<div><strong>${i === 0 ? "甲" : "乙"}</strong>${featureFigure(rows, i === 0 ? "甲图" : "乙图")}</div>`).join("")}</div>`;
     if (q.graphic.type === "cube-net")
       return `<div class="question-spatial">${cubeNet()}</div>`;
     if (q.graphic.type === "height-map")
@@ -1060,6 +1091,20 @@
       const activeLesson = lesson(location.hash.split("/")[1]);
       if (activeLesson && $("#lesson-demo"))
         $("#lesson-demo").outerHTML = diagram(activeLesson);
+    }
+    if (["feature-example", "feature-turn", "feature-mirror", "feature-reset", "solid-turn", "solid-reset"].includes(a)) {
+      if (a === "feature-example" && featureExamples[Number(id)]) { featureExample = Number(id); featureTurns = 0; featureMirrored = false; }
+      if (a === "feature-turn") featureTurns = (featureTurns + 1) % 4;
+      if (a === "feature-mirror") featureMirrored = !featureMirrored;
+      if (a === "feature-reset") { featureTurns = 0; featureMirrored = false; }
+      if (a === "solid-turn") solidTurns = (solidTurns + 1) % 4;
+      if (a === "solid-reset") solidTurns = 0;
+      const current = lesson(location.hash.split("/")[1]);
+      const keepFocus = document.activeElement === b;
+      if (current && $("#lesson-demo")) {
+        $("#lesson-demo").outerHTML = diagram(current);
+        if (keepFocus) $("#lesson-demo").querySelector(`[data-action="${a}"]${a === "feature-example" ? `[data-id="${id}"]` : ""}`)?.focus();
+      }
     }
     if (["cube-face", "cube-turn", "solid-view"].includes(a)) {
       if (a === "cube-face" && opposite[id]) cubeFace = id;

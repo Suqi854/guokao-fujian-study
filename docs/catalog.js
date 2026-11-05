@@ -37,6 +37,7 @@
     "paper-printing": "古代科技",
     "cube-net": "空间重构",
     "solid-views": "立体投影",
+    "figure-features": "图形数量与属性",
     "sentence-link": "语句衔接",
     "context-blanks": "逻辑填空",
     "geometry-scale": "几何计算",

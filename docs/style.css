@@ -2020,3 +2020,16 @@ footer a {
 }
 
 .learning-paths{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0}.learning-paths a{text-decoration:none}.level-guide{padding:18px;border:1px solid var(--line,#ddd);border-radius:16px;background:#f6f5ff;margin:16px 0}.level-guide h2{font-size:20px;line-height:1.6}.level-guide p{font-size:15px;line-height:1.8}
+
+/* Explicit finite-grid examples, with no hidden answer data in question drawings. */
+.feature-grid { width: 180px; max-width: 100%; height: auto; display: block; }
+.feature-demo-figure { display: flex; justify-content: center; margin: 16px 0; }
+.question-features { display: flex; justify-content: center; gap: 18px; margin: 18px 0; }
+.question-features > div { min-width: 0; flex: 0 1 160px; text-align: center; }
+.question-features > .feature-grid { width: 180px; }
+.solid-rotation-demo { border-top: 1px solid var(--line); margin-top: 20px; padding-top: 16px; }
+.solid-rotation-demo h3 { font-size: 16px; }
+.rotation-height-map { display: grid; grid-template-columns: 36px repeat(2, 36px); gap: 4px; align-items: center; width: max-content; margin: 16px auto; font-size: 12px; }
+.rotation-height-map b { display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid #a1a7cd; background: #e4e6fc; border-radius: 4px; font-size: 18px; }
+.rotation-caption { font-size: 14px; line-height: 1.8; }
+@media (max-width: 640px) { .question-features { gap: 8px; } .feature-grid { width: 150px; } }

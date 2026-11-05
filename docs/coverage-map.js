@@ -20,11 +20,11 @@
     判断推理: [
       [
         "图形数量与属性系统训练",
-        "缺点线面角、对称、曲直及复合规律的成套图形题。",
+        "已有方格计数、共边连通、孔洞和四轴/中心对称基础课；点线面角、曲直及复杂复合规律仍缺。",
       ],
       [
         "空间方向与截面重构",
-        "已有相对面和柱高视图；图案方向、截面与遮挡还无专题。",
+        "已有相对面、柱高投影与竖直轴旋转；其他转轴、图案朝向、截面与复杂遮挡仍缺。",
       ],
       [
         "复合论证与多约束逻辑",
@@ -107,8 +107,8 @@
       ],
     ],
   };
-  C.coverageAdded = [];
-  C.coverageDeepened = ["profit-discount", "mixture", "probability", "inclusion", "guarantee-count"];
+  C.coverageAdded = ["figure-features"];
+  C.coverageDeepened = ["logic", "quantified-logic", "solid-views"];
 
   C.coverageMatrix = C.categories
     .filter((c) => c !== "全部")
