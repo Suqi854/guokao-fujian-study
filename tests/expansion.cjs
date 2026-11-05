@@ -122,6 +122,10 @@ const evidence = path.join(__dirname, "..", "test-results");
       0,
     );
     await p.getByRole("heading", { name: l.title, exact: true }).waitFor();
+    const expected = l.sections.filter(s => !/来源|归属|出处/.test(s[0]));
+    assert.equal(await p.locator('.reading > .formula').textContent(), l.formula);
+    assert.deepEqual(await p.locator('.reading > section:not(.level-guide):not(.diagram-box) > h2').allTextContents(), expected.map(s => s[0]));
+    assert.deepEqual(await p.locator('.reading > section:not(.level-guide):not(.diagram-box) > p').allTextContents(), expected.map(s => s[1]));
   }
   await p.goto(base + "/#sources");
   assert.equal(await p.locator(".source-grid article").count(), 20);
