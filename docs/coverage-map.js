@@ -108,7 +108,7 @@
     ],
   };
   C.coverageAdded = [];
-  C.coverageDeepened = ["travel", "count"];
+  C.coverageDeepened = ["average", "mixed-growth"];
 
   C.coverageMatrix = C.categories
     .filter((c) => c !== "全部")
