@@ -89,13 +89,13 @@
       ],
       [
         "地方政策经济与授权真题",
-        "尚无系统地方政策材料，也未取得可确认的历年真题转载授权。",
+        "已有福建2025“四通四到”指定文本历史学习样本，未确认现行有效性；系统地方政策、经济材料及真题授权仍缺。",
       ],
     ],
     申论方法: [
       [
         "完整文章训练与多材料论证",
-        "已有农业、工艺与海岸3组24段材料，新增10段服务比较材料与3项比较/迁移任务；保留两篇完整长文；真实长材料、多来源论据与连续模考仍不足。",
+        "保留农业、工艺、海岸及服务比较等材料和两篇完整长文；本轮新增材料拆解/修改2组虚构材料6短写，实练证据与二稿；真实长材料、多来源论据与连续模考仍不足。",
       ],
       [
         "更多文种与复杂身份约束",
@@ -107,8 +107,8 @@
       ],
     ],
   };
-  C.coverageAdded = ["new-development-pattern", "education-strong-2035"];
-  C.coverageDeepened = ["phase-change", "historiography"];
+  C.coverageAdded = ["fujian-enterprise-service-2025"];
+  C.coverageDeepened = ["material-mapping", "answer-revision"];
 
   C.coverageMatrix = C.categories
     .filter((c) => c !== "全部")

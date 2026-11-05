@@ -14,7 +14,7 @@ const C=w.STUDY_CONTENT,pause=()=>new Promise(r=>setTimeout(r,10));
 async function route(h){await navigateHash(w,h,()=>{w.location.hash=h;});await pause();}
 const plain=x=>JSON.parse(JSON.stringify(x));
 (async()=>{
- const expectedIds=['practice-cognition','contradiction-method','productive-relations','mao-thought-context','social-being-people','six-method-principles','new-quality-productivity','reform-framework-2024','mao-living-soul','unified-market-rules','new-development-pattern','education-strong-2035','phase-change','historiography'];
+ const expectedIds=['practice-cognition','contradiction-method','productive-relations','mao-thought-context','social-being-people','six-method-principles','new-quality-productivity','reform-framework-2024','mao-living-soul','unified-market-rules','new-development-pattern','education-strong-2035','phase-change','historiography','material-mapping','answer-revision','fujian-enterprise-service-2025'];
  assert.deepEqual(Object.keys(C.theoryLearningAids),expectedIds);assert.deepEqual(plain(C.theoryTrack.steps.map(step=>step.lessonId)),['practice-cognition','contradiction-method','productive-relations','mao-thought-context','social-being-people','mao-living-soul','six-method-principles','new-quality-productivity','reform-framework-2024','unified-market-rules','new-development-pattern','education-strong-2035']);
  for(const [id,a] of Object.entries(C.theoryLearningAids))for(const level of ['', '/intro','/practice','/advanced']){
   await route('#lesson/'+id+level);
@@ -41,6 +41,6 @@ const plain=x=>JSON.parse(JSON.stringify(x));
  assert.equal(el.querySelector('.theory-key-points strong').textContent,payload);assert.equal(el.querySelector('.theory-key-points span').textContent,payload);
  assert.equal(el.querySelectorAll('img,script,[onerror],m').length,0,'all authored aid fields remain literal text');
  assert.ok(el.querySelector('details > summary'));assert.equal(w.localStorage.getItem('zhixu-study-v2'),null);assert.deepEqual(errors,[]);
- console.log('PASS Theory aids: fourteen topic aids × four views, exact key points, examples, contrasts and recall, no fabricated progress, legacy note and literal-text safety');
+ console.log('PASS Theory aids: seventeen topic aids × four views, exact key points, examples, contrasts and recall, no fabricated progress, legacy note and literal-text safety');
  console.log('NOT TESTED: real browser details interaction, CSS/mobile width or touch');dom.window.close();
 })().catch(e=>{console.error(e);dom.window.close();process.exit(1);});

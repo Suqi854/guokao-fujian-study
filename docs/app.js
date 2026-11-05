@@ -625,7 +625,7 @@
     if(!path) return "";
     const ids=[...new Set(path.questionIds || l.practice.filter(id=>question(id)?.meta.trainingStage===path.stage))].filter(id=>l.practice.includes(id) && question(id)?.lesson===l.id);
     const tasks=[...new Set(path.writingIds || [])].map(writing).filter(w=>w && w.lesson===l.id);
-    return `<section class="level-guide"><span class="pill">${esc(path.label)}</span><h2>${esc(path.goal)}</h2><p>先读下面的对应讲解，再${tasks.length?`完成${tasks.length}个原创写作任务`:`做${ids.length}道${esc(path.stage)}练习`}。路径由你选择，不是能力诊断或实测难度。</p>${ids.length?btn("练本路径 · "+ids.length+"题", "#quiz/target/"+ids.join(",")):""}${tasks.map((w,i)=>btn(tasks.length===1?"写本路径 · 1个任务":`写作任务 ${i+1} · ${w.title}`,"#write/"+w.id)).join("")}${!ids.length&&!tasks.length?"<p>本路径配套训练待补，可先阅读讲解。</p>":""}</section>`;
+    return `<section class="level-guide"><span class="pill">${esc(path.label)}</span><h2>${esc(path.goal)}</h2><p>先读下面的对应讲解，再${tasks.length?`完成${tasks.length}个原创写作任务`:`做${ids.length}道${esc(path.stage)}练习`}。路径由你选择，不是能力诊断或实测难度。</p><div class="actions">${ids.length?btn("练本路径 · "+ids.length+"题", "#quiz/target/"+ids.join(",")):""}${tasks.map((w,i)=>btn(tasks.length===1?"写本路径 · 1个任务":`写作任务 ${i+1} · ${w.title}`,"#write/"+w.id)).join("")}</div>${!ids.length&&!tasks.length?"<p>本路径配套训练待补，可先阅读讲解。</p>":""}</section>`;
   }
   function lessonCards() {
     const list = C.lessons.filter(

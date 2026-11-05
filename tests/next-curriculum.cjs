@@ -2,7 +2,7 @@
 // Atomic integration and compatibility guards, not a claim of full semantic review.
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict'),crypto=require('node:crypto');
 const root=path.join(__dirname,'..'),html=fs.readFileSync(path.join(root,'docs/index.html'),'utf8');
-const scripts=[...html.matchAll(/src="\.\/([^\"]+)"/g)].map(m=>m[1]).filter(f=>!['app.js','curriculum-v036.js','politics-v036.js'].includes(f)),adapter='next-curriculum.js';
+const scripts=[...html.matchAll(/src="\.\/([^\"]+)"/g)].map(m=>m[1]).filter(f=>!['app.js','curriculum-v036.js','politics-v036.js','curriculum-v037.js','policy-v037.js'].includes(f)),adapter='next-curriculum.js';
 assert.equal(scripts.filter(f=>f===adapter).length,1);assert.ok(scripts.indexOf(adapter)<scripts.indexOf('catalog.js'));
 const execute=(c,f)=>vm.runInContext(fs.readFileSync(path.join(root,'docs',f),'utf8'),c,{filename:f});
 const context=()=>vm.createContext({window:{}}),plain=x=>JSON.parse(JSON.stringify(x));

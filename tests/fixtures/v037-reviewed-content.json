@@ -1,0 +1,64 @@
+{
+  "baseCommit": "912ebe1cc73d69a58b3f1fb1f55555494dc1aef6",
+  "reviewDate": "2026-11-05",
+  "reviewScope": "Independent editorial review of the v0.37 additions only, including task facts, option explanations, writing evidence, and the specified 2025 policy text. Not blind testing, expert certification, learner testing, official scoring, or calibrated difficulty.",
+  "sourceInputs": [
+    {
+      "filename": "curriculum-v037.data.json",
+      "adapter": "curriculum-v037.js",
+      "sha256": "744b4d0e34ff7b77fabc19a822a232bfe5047fb5247735f3a1b8837282214249"
+    },
+    {
+      "filename": "content.json",
+      "adapter": "policy-v037.js",
+      "sha256": "ded8bd52a4c6a6369d1a623a55bf196afe4c3ba645b2d19a6e6648bac217d890"
+    }
+  ],
+  "adapterPayloads": {
+    "curriculum-v037.js": "f4f344f3fa3c24c99ba9cedf2dfd88c277d3466eff55a0f856d801a33c574495",
+    "policy-v037.js": "6f9ffbb514d38c0754c44fab47e259743ec5d52c31ebc9488a85a3e9ba6266d2"
+  },
+  "collections": {
+    "lessons": {
+      "material-mapping": "21d9964b1aef8d3d3cad25674fc7a52bc5f90c52a34c6126181ad54c278c7711",
+      "answer-revision": "3b7acc57a81050817ac485f646c8ef379136c259874a69d1d902780d803fa64c",
+      "fujian-enterprise-service-2025": "c140dcc45fd29cce46e7c9a9f64f673c7e970f0ad33e3ead1fa022edf4a50d07"
+    },
+    "questions": {
+      "c37-01": "9b738124589a6277f6d7aa3cfca152b06b989dc5a8585379677bfc4ecb9fe151",
+      "c37-02": "07d8f0bb0b9f4afbf0458320b42447818c74a02d2cf4a1d8bb157658bd9fba2e",
+      "c37-03": "bef5e60d191608f0e469be61d0aa49558f3fe43c0d332698e3eb4037ffcc40cd",
+      "c37-04": "a3918d7c2bf583be3be75c4e3e57effdd7ab425a4d267ccd4108aecfa6111646",
+      "c37-05": "78c9a9dbfc3eb3204b082b11572ea19f119e22f0b235c513c8fcd39a667810d2",
+      "c37-06": "6806a7aecc0d7e308acd3414aae0587461602b2ddea0c9adc1652432b622960d",
+      "c37-07": "3e64e67a172862c0c76bad2a4a72ad32dd527c8586a08aa78f50c5475a8ba324",
+      "c37-08": "487fe902f9de3872543bfe9d0517fcc2a39f53a018f4ce8f18b55d4bc2a23219",
+      "c37-09": "d854eb5c063743c7c5eca0ad16cd7c7bf885def3ce38873347ae671c831fc506",
+      "c37-10": "b862ceb465bd06f526d2bb2e4fb7dc3a33584024d166ab82262de8e292e076c6",
+      "c37-11": "ef7a7245baeb3d51dc1c5195e41a1f9a0e90d5fb5bca6495b3399b337fee2d6e",
+      "c37-12": "539a3c07b7989dce6d8a5a9ab50917b629f2dcb02bcbf7092d9c9ffb765c116c",
+      "pol37-01": "bb41ec504180037e51d0f184efd7de3a618a977a891c66d7a50050490a4647d6",
+      "pol37-02": "f42b334a32d9082fdf7690a6a911293e84767ba75b424725ebee0b21664a0ece",
+      "pol37-03": "8e11d75e14d03a184735be0c90f3ea39bf13958295e5220c2fa5f519043cd4f0",
+      "pol37-04": "df7d21d1e7a7c903ebb98786d47a6cbe7f388eb92ac25f92611b37c442f5e496",
+      "pol37-05": "0e37b2dc3f8057ef13d4152f32c4d2da6674cd60432ad8587e71f1a1d38169f8",
+      "pol37-06": "770ba55590356c05e9895e44601ed71df7994df80285418e5e221a9ece093d3e"
+    },
+    "writing": {
+      "w_c37_mapping_intro": "2f4c9db1835e43bb4bbb4e9e00e01bdc32afb09e3351123185c394a67fae3eb1",
+      "w_c37_mapping_practice": "3970842269e2b68333bdb2243435c26b6c5c45441346865635bd0f5430be30ba",
+      "w_c37_mapping_advanced": "61f3a28a65edbef5a405bfdf891c521aa32eef460b760e5cfcd6bc34451b5d84",
+      "w_c37_revision_intro": "f5acfd5635f4229567c268e75e0bb9cd081c2abbe34200de7c0cd87891da9a81",
+      "w_c37_revision_practice": "1c14fe9d835f65e37a27b42adfd8e98908c4e1d6147ac9abaf6444855fcb287f",
+      "w_c37_revision_advanced": "a1a3394eff618ecae462c0e0c118e7a9e8138371d35ba1e0e5395ba25ed0ac62"
+    }
+  },
+  "sources": {
+    "fujian-four-access-2025": "c658521268b8ab6517366d1c179d37f896655c35eb3b15ae33ce7bbd1eb1b678"
+  },
+  "learningAids": {
+    "material-mapping": "ec20fdc22819e1abd92a650feb987462beffe74652fc32b33dc9bec8701ed6bc",
+    "answer-revision": "aa3ab6e2066ccde6600d0ee8303376d4972c4dc85f61fa033a7c53e9f9a4a2a7",
+    "fujian-enterprise-service-2025": "89f4ef798af87bd61460dd697a2dbf074fca107f1bcf8144884ba558a4493889"
+  }
+}

@@ -8,10 +8,10 @@ const storage={get length(){return data.size;},key(i){return [...data.keys()][i]
 let queue=Promise.resolve();const locks={request(name,options,callback){const p=queue.then(async()=>{if(hold)await new Promise(r=>{release=r;});return callback();});queue=p.catch(()=>{});return p;}};
 function env(){const w={localStorage:storage,navigator:{locks},crypto:{randomUUID:crypto.randomUUID},addEventListener:(t,fn)=>{if(t==='storage')listeners.add(fn);},removeEventListener:(t,fn)=>listeners.delete(fn)};const c=vm.createContext({window:w,TextEncoder});for(const f of scripts)vm.runInContext(fs.readFileSync(root+'/docs/'+f,'utf8'),c,{filename:f});return w;}
 const w=env(),M=w.LONG_MOCK_MODEL,S=w.LONG_MOCK_STORE;
-const requests=M.modules().filter(m=>m.name!=='福建专题').map(m=>({module:m.name,count:10}));
+const requests=M.modules().filter(m=>!['福建专题','申论方法'].includes(m.name)).map(m=>({module:m.name,count:10}));
 const build=(id='test-run',minutes=60,offset=0)=>M.build({id,title:'原创测试',requests,minutes,now:NOW,offset});
 (async()=>{
- assert.equal(w.STUDY_CONTENT.questions.length,699);assert.equal(M.pool().length,676);assert.equal(M.modules().length,7);
+ assert.equal(w.STUDY_CONTENT.questions.length,717);assert.equal(M.pool().length,694);assert.equal(M.modules().length,8);
  const twoHundred=M.build({id:'boundary-200',title:'200题边界',requests:[{module:'数量关系',count:100},{module:'资料分析',count:100}],minutes:480,now:NOW});assert.equal(M.summary(twoHundred).total.planned,200);assert.throws(()=>M.build({id:'over-200',title:'201题',requests:[{module:'数量关系',count:101},{module:'资料分析',count:100}],minutes:60,now:NOW}),/200/);
  const ids=new Set();for(let i=0;i<3;i++){const r=build('preset-'+i,60,i*10);assert.equal(M.summary(r).total.planned,60);for(const id of r.sections.flatMap(s=>s.items.map(q=>q.qid))){assert.ok(!ids.has(id),'three presets are disjoint');ids.add(id);}}assert.equal(ids.size,180);
  let r=build();assert.equal(r.status,'paused');r=M.action(r,{type:'resume'},NOW);r=M.action(r,{type:'answer',choice:r.sections[0].items[0].answer},NOW+1000);r=M.action(r,{type:'navigate',section:1,cursor:5},NOW+2500);r=M.action(r,{type:'answer',choice:(r.sections[1].items[5].answer+1)%4},NOW+4500);r=M.action(r,{type:'pause'},NOW+7000);
@@ -24,7 +24,7 @@ const build=(id='test-run',minutes=60,offset=0)=>M.build({id,title:'原创测试
  assert.throws(()=>M.prepareImport(JSON.stringify({schemaVersion:2,runs:[]}),doc));assert.throws(()=>M.prepareImport(JSON.stringify({format:'zhixu-private-library-backup',version:1}),doc));
  const imp=M.backup(doc,NOW+50000);assert.equal(M.prepareImport(JSON.stringify(imp),doc).skipped,1);imp.records.sessions[0].title+=' changed';assert.throws(()=>M.prepareImport(JSON.stringify(imp),doc),/冲突/);const split=M.prepareImport(JSON.stringify(imp),doc,{copyConflicts:true,newId:()=>crypto.randomUUID()});assert.equal(split.added,1);assert.equal(split.state.sessions.length,2);assert.match(split.state.sessions[1].title,/恢复副本/);
  const q=w.STUDY_CONTENT.questions.find(q=>q.id===running.sections[0].items[0].qid),stem=q.stem;q.stem+=' changed';assert.equal(M.compatibility(running).length,1);assert.throws(()=>M.action({...running,status:'paused',anchorMs:null},{type:'resume'},NOW+1000));assert.equal(M.prepareImport(JSON.stringify(exported),M.empty()).missing,1);q.stem=stem;
- assert.throws(()=>build('bad',0));assert.throws(()=>M.build({id:'x',title:'x',requests:[{module:'福建专题',count:20}],minutes:5,now:NOW}));const over=plain(doc);over.sessions[0].sections[0].items.push(over.sessions[0].sections[0].items[0]);assert.throws(()=>M.validate(over));
+ assert.throws(()=>build('bad',0));assert.throws(()=>M.build({id:'x',title:'x',requests:[{module:'福建专题',count:M.modules().find(m=>m.name==='福建专题').available+1}],minutes:5,now:NOW}),/可用题目不足/);const over=plain(doc);over.sessions[0].sections[0].items.push(over.sessions[0].sections[0].items[0]);assert.throws(()=>M.validate(over));
  data.set('zhixu-study-v1','v1 sentinel');data.set('zhixu-study-v2','v2 sentinel');data.set('zhixu-private-library-v1','private sentinel');calls.length=0;
  const a=S.create();a.read();assert.equal(await a.save(doc).then(r=>r.ok),true);assert.equal(a.pendings().length,0);const committed=data.get(S.KEY);
  // Stage journal is synchronous even while a browser lock is delayed; simulate close before callback.
@@ -38,6 +38,6 @@ const build=(id='test-run',minutes=60,offset=0)=>M.build({id,title:'原创测试
  assert.ok(calls.every(([,key])=>key===S.KEY||key.startsWith(S.PREFIX)),'old and private keys neither read nor written');assert.equal(data.get('zhixu-study-v1'),'v1 sentinel');assert.equal(data.get('zhixu-study-v2'),'v2 sentinel');assert.equal(data.get('zhixu-private-library-v1'),'private sentinel');
  const prior=data.get(S.KEY);data.set(S.KEY,'{broken');const broken=S.create();assert.equal(broken.read().ok,false);assert.equal(broken.raw,'{broken');assert.equal(data.get(S.KEY),'{broken');data.set(S.KEY,prior);
  const noLocks=env();noLocks.navigator.locks=undefined;const ro=noLocks.LONG_MOCK_STORE.create();ro.read();assert.match(ro.error,/只读/);assert.equal((await ro.save(doc)).ok,false);assert.equal(data.get(S.KEY),prior);
- console.log('PASS model: 3 x 60 distinct references, 676 eligible/699 current, modules, deadline, pause/resume, refresh anchor, missing content, backup isolation, conflicts');
+ console.log('PASS model: 3 x 60 distinct references, 694 eligible/717 current, modules, deadline, pause/resume, refresh anchor, missing content, backup isolation, conflicts');
  console.log('PASS storage: synchronous journal, close before lock, cross-tab conflict preservation, staging/commit quotas, read denial, corrupt source, unsupported locks, untouched v1/v2/private');
 })().catch(e=>{console.error(e);process.exit(1);});

@@ -5,6 +5,8 @@
 const assert=require('node:assert/strict'),base=require('./fixtures/v035-public-identities.json');
 const plain=x=>JSON.parse(JSON.stringify(x));
 module.exports=function projection(C){
+ // Undo only the separately constrained v0.37 revisions before older comparisons.
+ C=require('./v037-identity-projection.cjs')(C);
  const ids=['phase-change','historiography'],additions=['new-development-pattern','education-strong-2035'];
  if(!additions.some(id=>C.lessons.some(l=>l.id===id)))return C;
  assert.ok(additions.every(id=>C.lessons.some(l=>l.id===id)),'Both v0.36 theory lessons must be present');
