@@ -77,14 +77,15 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   });
   await test("Multi-question quiz completion and restart", async () => {
     await page.goto(base + "/#quiz/lesson/growth");
-    for (let i = 0; i < 6; i++) {
-      await page.locator(".option").nth([1, 1, 2, 3, 0, 2][i]).click();
+    const choices = [1, 1, 2, 3, 0, 2, 0, 0, 3];
+    for (let i = 0; i < choices.length; i++) {
+      await page.locator(".option").nth(choices[i]).click();
       await page.getByRole("button", { name: "提交答案" }).click();
       await page
-        .getByRole("button", { name: i === 5 ? "查看本组结果" : "下一题" })
+        .getByRole("button", { name: i === choices.length - 1 ? "查看本组结果" : "下一题" })
         .click();
     }
-    await page.getByRole("heading", { name: "本次答对 6 题" }).waitFor();
+    await page.getByRole("heading", { name: "本次答对 9 题" }).waitFor();
     await page.getByRole("button", { name: "再练这组" }).click();
     assert.equal(await page.locator(".option").count(), 4);
   });
@@ -116,7 +117,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
     backupPath = path.join(evidence, "test-backup.json");
     await dl.saveAs(backupPath);
     const before = JSON.parse(fs.readFileSync(backupPath));
-    assert.equal(before.attempts.length, 8);
+    assert.equal(before.attempts.length, 11);
     page.once("dialog", (d) => d.accept());
     await page.getByRole("button", { name: "清空学习记录" }).click();
     assert.equal(
