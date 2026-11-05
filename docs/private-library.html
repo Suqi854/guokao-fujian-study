@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'none'; connect-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>本机私人题库 · 实验性功能</title>
+  <link rel="stylesheet" href="./private-library.css">
+  <script src="./local-progress-store.js" defer></script>
+  <script src="./private-library.js" defer></script>
+  <script src="./private-workspace.js" defer></script>
+</head>
+<body>
+<main id="private-workspace">
+  <h1>本机私人题库</h1>
+  <p class="private-warning">这是独立实验性功能，不属于公开原创题库。仅导入自己合法取得、可用于个人学习的内容。本站不会核验来源或答案，也不会据此取得公开转载许可。</p>
+  <section aria-labelledby="private-limits">
+    <h2 id="private-limits">先了解保存边界</h2>
+    <ul>
+      <li>文件内容只在本页读取，题库保存在当前设备、浏览器和网站来源（协议、域名、端口）的 localStorage，不自动上传或跨设备同步。</li>
+      <li>清理网站数据、隐私模式关闭或浏览器清理可能导致丢失。换网址/设备前，分别导出私人题库和主站学习记录两个备份。</li>
+      <li>主站 v1/v2 备份不含私人题库。私人备份不含主站记录，也不含本页临时选择和草稿。</li>
+      <li>本机存储并非加密保险箱，同源网页脚本及有权限的浏览器扩展可能读取。请勿在不可信同源页面使用，备份不要放进公开仓库。</li>
+      <li>页面需要正常加载，没有实现离线缓存。只支持 UTF-8 JSON 纯文本，不支持 PDF/OCR、图片、HTML、外链材料下载或抓取题库。</li>
+      <li>单题包最多 1 MiB、1000 题；备份最多 2 MiB；合计最多 30 个题包、3000 题及约 2 MiB。浏览器剩余额度仍可能不足。</li>
+    </ul>
+  </section>
+  <section aria-labelledby="private-import-title">
+    <h2 id="private-import-title">导入与备份</h2>
+    <p><a href="./private-format-example.json" download>下载原创格式样例</a> · <a href="./index.html#settings">返回主站备份与设置</a></p>
+    <label for="private-file">选择私人题包或私人题库备份（JSON）</label>
+    <input id="private-file" type="file" accept="application/json,.json">
+    <div id="private-preview" hidden>
+      <p id="private-preview-text"></p>
+      <label><input id="private-rights" type="checkbox">我确认仅导入合法取得、可用于个人学习的内容；这不代表可以公开转载。</label>
+      <div class="private-actions"><button id="private-confirm" disabled>确认导入本机</button></div>
+    </div>
+    <div class="private-actions">
+      <button id="private-cancel">取消读取/预览</button>
+      <button id="private-export">导出私人题库备份</button>
+      <button id="private-raw">导出存储原文</button>
+      <button id="private-reload">重新读取本机题库</button>
+    </div>
+    <p id="private-status" role="status" aria-live="polite"></p>
+  </section>
+  <section aria-labelledby="private-study-title">
+    <h2 id="private-study-title">私人阅读与自查</h2>
+    <p id="private-summary"></p>
+    <p>选择和草稿仅暂存在本页内存，切题后可回看；刷新、离开或关闭页面即丢失，不形成主站错题或训练记录。没有正式套卷计时、分值或自动评分。</p>
+    <div class="private-actions">
+      <label>题包 <select id="private-pack"></select></label>
+      <label>阅读范围 <select id="private-paper"></select></label>
+      <button id="private-remove" hidden>删除此题包</button>
+    </div>
+    <div id="private-reader"></div>
+    <div class="private-actions" id="private-pagination" hidden>
+      <button id="private-prev">上一题</button><span id="private-page"></span><button id="private-next">下一题</button>
+    </div>
+  </section>
+</main>
+<noscript>需要启用 JavaScript 才能校验和读取本机私人题库。</noscript>
+</body>
+</html>

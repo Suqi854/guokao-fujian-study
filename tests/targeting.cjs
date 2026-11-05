@@ -171,7 +171,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   await p.goto(base + "/#settings");
   const saved = await readPageProgress(p);
   const downloadPromise = p.waitForEvent("download");
-  await p.getByRole("button", { name: "导出完整备份" }).tap();
+  await p.getByRole("button", { name: "导出学习记录备份" }).tap();
   const d = await downloadPromise;
   const backup = path.join(__dirname, "../test-results/v05-backup.json");
   await d.saveAs(backup);

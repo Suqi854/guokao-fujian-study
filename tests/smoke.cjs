@@ -115,7 +115,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   await test("Backup export and lossless restore", async () => {
     await page.goto(base + "/#settings");
     const wait = page.waitForEvent("download");
-    await page.getByRole("button", { name: "导出完整备份" }).click();
+    await page.getByRole("button", { name: "导出学习记录备份" }).click();
     const dl = await wait;
     backupPath = path.join(evidence, "test-backup.json");
     await dl.saveAs(backupPath);

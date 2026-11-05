@@ -155,7 +155,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   );
   await p.goto(base + "/#settings");
   const download = p.waitForEvent("download");
-  await p.getByRole("button", { name: "导出完整备份" }).tap();
+  await p.getByRole("button", { name: "导出学习记录备份" }).tap();
   const file = path.join(__dirname, "../test-results/v010-backup.json");
   await (await download).saveAs(file);
   assertV2Snapshot(JSON.parse(fs.readFileSync(file, "utf8")));

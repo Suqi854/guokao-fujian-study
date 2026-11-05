@@ -49,7 +49,7 @@ const base = process.env.STUDY_BASE_URL || 'http://127.0.0.1:4173';
  await p.locator('#draft').fill('测试新句意解释');await p.locator('a[href="#write/w25"]').tap();await p.getByRole('heading',{name:a.title,exact:true}).waitFor();assert.equal(await p.locator('#draft').inputValue(),'测试新问题概括');assert.equal(await p.locator('[data-check]').first().isChecked(),true);
  const saved=await readPageProgress(p);assert.deepEqual(saved.notes,old.notes);assert.deepEqual(saved.attempts[0],old.attempts[0]);assert.equal(saved.drafts.w23,old.drafts.w23);
  console.log('PASS Existing records, eight/five-question routes, targeted mistake priority and distinct shared-material drafts/checks');
- await p.goto(base+'/#settings');const download=p.waitForEvent('download');await p.getByRole('button',{name:'导出完整备份'}).tap();const file=path.join(__dirname,'../test-results/v012-backup.json');await(await download).saveAs(file);
+ await p.goto(base+'/#settings');const download=p.waitForEvent('download');await p.getByRole('button',{name:'导出学习记录备份'}).tap();const file=path.join(__dirname,'../test-results/v012-backup.json');await(await download).saveAs(file);
   assertV2Snapshot(JSON.parse(fs.readFileSync(file, "utf8")));
  const reset = await resetPageProgress(p);p.once('dialog',d=>d.accept());await p.locator('#import-file').setInputFiles(file);await p.getByText('备份已恢复，活动计时保持暂停。',{exact:true}).waitFor();
   await assertPageRestored(p, saved, reset.revision);fs.unlinkSync(file);

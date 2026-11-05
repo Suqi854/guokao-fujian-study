@@ -65,7 +65,7 @@ const base = process.env.STUDY_BASE_URL || 'http://127.0.0.1:4173';
   assert.equal(await p.locator('#draft').inputValue(),'测试新对策草稿');assert.equal(await p.locator('[data-check]').first().isChecked(),true);
   const saved=await readPageProgress(p);assert.deepEqual(saved.attempts[0],old.attempts[0]);assert.equal(saved.drafts.w21,old.drafts.w21);assert.deepEqual(saved.notes,old.notes);
   console.log('PASS Old lesson records, enlarged practice routes, targeted new error and separate linked writing state');
-  await p.goto(base+'/#settings');const download=p.waitForEvent('download');await p.getByRole('button',{name:'导出完整备份'}).tap();
+  await p.goto(base+'/#settings');const download=p.waitForEvent('download');await p.getByRole('button',{name:'导出学习记录备份'}).tap();
   const file=path.join(__dirname,'../test-results/v011-backup.json');await(await download).saveAs(file);
   assertV2Snapshot(JSON.parse(fs.readFileSync(file, "utf8")));
   const reset = await resetPageProgress(p);p.once('dialog',d=>d.accept());await p.locator('#import-file').setInputFiles(file);

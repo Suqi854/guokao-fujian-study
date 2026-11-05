@@ -1,6 +1,6 @@
 "use strict";
 (() => {
-  const C = window.STUDY_CONTENT, T = window.STUDY_TRAINING,
+  const C = window.STUDY_CONTENT, T = window.STUDY_TRAINING, R = window.STUDY_RECORD_CAPACITY,
     KEY = "zhixu-study-v2", LEGACY_KEY = "zhixu-study-v1";
   const $ = (s) => document.querySelector(s),
     esc = (s) =>
@@ -40,6 +40,18 @@
   const lesson = (id) => C.lessons.find((l) => l.id === id),
     question = (id) => C.questions.find((q) => q.id === id),
     writing = (id) => C.writing.find((w) => w.id === id);
+  const capacityReason=result=>result.reason==="attempt-limit"?"已达到50,000条逐题记录保护上限，未新增作答，原记录未截断。":result.reason==="file-limit"?"学习记录接近10 MiB备份保护上限，未写入本次变更。":"记录结构不符合安全保存要求，原记录未改动。";
+  function assessCapacity(snapshot,options){
+    try{
+      // Capacity must also fit the paused export form, without pausing live state.
+      let projected=snapshot;
+      if(snapshot.activeRun?.status==="running"){
+        const active=JSON.parse(JSON.stringify(snapshot.activeRun));T.pause(active,Date.now());
+        projected=T.isTerminal(active)?{...snapshot,runs:[...snapshot.runs,active],activeRun:null}:{...snapshot,activeRun:active};
+      }
+      return R.assess(projected,options);
+    }catch{return {ok:false,reason:"invalid-structure",nearLimit:false};}
+  }
   const fresh = () => ({
     schemaVersion: 2,
     revision: 0,
@@ -53,7 +65,7 @@
     ...T.empty(),
   });
   let state = fresh(),
-    storageError = "",
+    storageError = "", capacityMessage = "",
     catalogFilter = "全部",
     query = "",
     onlySaved = false,
@@ -153,6 +165,9 @@
   async function persist() {
     if (replacing) return false;
     if (storageError || !progressStore) { savingStatus();return false; }
+    const capacity=assessCapacity(state);
+    capacityMessage=capacity.nearLimit?"学习记录接近保护上限，请先导出学习记录备份；私人题库需另行备份。":"";
+    if(!capacity.ok){reportStorageError(capacityReason(capacity)+" 本页修改未保存，可在备份页导出应急本页副本。");return false;}
     const reference = state;
     pendingSaves++;savingStatus();
     try {
@@ -170,10 +185,11 @@
   }
   async function replaceProgress(next) {
     if(replacing)return {ok:false,cancelled:true};
+    const c=assessCapacity(next);if(!c.ok)return {ok:false,error:capacityReason(c)};
     replacing=true;lockForReplacement();
     try {
       const result=await progressStore.replace(next);
-      if(result.ok){state=result.value;storageError="";quiz=null;trainingUI?.resetView();}
+      if(result.ok){state=result.value;storageError="";capacityMessage="";quiz=null;trainingUI?.resetView();}
       else if(!result.cancelled)reportStorageError(result.error||"替换未完成，原记录保留。");
       return result;
     } finally {replacing=false;for(const [el,disabled] of replacementControls)if(el.isConnected)el.disabled=disabled;replacementControls.clear();render();}
@@ -879,7 +895,7 @@
         "用练习，检验理解。",
         `${C.questions.length} 道原创练习题，每次提交后展开解析。不是历年真题库。`,
       ) +
-      `<section class="panel bank-entry"><div><h2>自选限时与本机复盘</h2><p class="subtitle">固定题组 · 未提交分开记 · 申论用时</p></div>${btn("打开训练记录", "#training")}</section><section class="panel bank-entry"><div><h2>薄弱点线索与下一步</h2><p class="subtitle">说明样本和版本 · 回看讲义 · 换题检验</p></div>${btn("看看下一步练什么", "#diagnostics")}</section><section class="panel bank-entry"><div><h2>根据本机记录练下一组</h2><p class="subtitle">最近答错优先 · 未练补充 · 最多12题</p></div>${btn("打开针对性练习", "#targeted")}</section><section class="panel bank-entry"><div><h2>按题型与知识点找题</h2><p class="subtitle">组合筛选 · 本机错题 · 题源与年份</p></div>${btn("打开题库检索", "#bank")}</section><div class="practice-grid"><section class="card practice-card"><div class="tile-icon">${icon("chart")}</div><h3>综合练习</h3><p>覆盖当前全部选择题，顺序作答。已做过的题也可以重练。</p><span class="pill">${C.questions.length} 道 · 基础</span>${btn("开始综合练习", "#quiz/all")}</section>${categories
+      `<section class="panel bank-entry"><div><h2>三套原创方法训练短卷</h2><p class="subtitle">各20题 · 引用已有60题 · 非全真模拟或分数预测</p></div>${btn("选择短卷", "#papers")}</section><section class="panel bank-entry"><div><h2>自选限时与本机复盘</h2><p class="subtitle">固定题组 · 未提交分开记 · 申论用时</p></div>${btn("打开训练记录", "#training")}</section><section class="panel bank-entry"><div><h2>薄弱点线索与下一步</h2><p class="subtitle">说明样本和版本 · 回看讲义 · 换题检验</p></div>${btn("看看下一步练什么", "#diagnostics")}</section><section class="panel bank-entry"><div><h2>根据本机记录练下一组</h2><p class="subtitle">最近答错优先 · 未练补充 · 最多12题</p></div>${btn("打开针对性练习", "#targeted")}</section><section class="panel bank-entry"><div><h2>按题型与知识点找题</h2><p class="subtitle">组合筛选 · 本机错题 · 题源与年份</p></div>${btn("打开题库检索", "#bank")}</section><div class="practice-grid"><section class="card practice-card"><div class="tile-icon">${icon("chart")}</div><h3>综合练习</h3><p>覆盖当前全部选择题，顺序作答。已做过的题也可以重练。</p><span class="pill">${C.questions.length} 道 · 基础</span>${btn("开始综合练习", "#quiz/all")}</section>${categories
         .map((c) => {
           const count = C.questions.filter(
             (q) => lesson(q.lesson).category === c,
@@ -1025,7 +1041,7 @@
         "把进度，留在自己手里。",
         "备份包含笔记、草稿、作答和计时训练记录。请保存在私人位置，不要上传公开仓库。",
       ) +
-      `<div class="settings-grid"><div class="stack"><section class="panel"><h2>备份与恢复</h2><p>记录只保存在当前设备、浏览器及网站地址下。清除网站数据、换设备或更换网址后不会自动同步，请定期导出。</p><div class="actions"><button class="btn" data-action="backup">${icon("download")}导出完整备份</button><label class="btn secondary file-button" for="import-file">导入备份</label><input class="sr-only" type="file" id="import-file" accept="application/json,.json"></div><p class="stat-foot">可导入旧v1和新v2备份；导出为包含训练记录的v2，旧版网页不能完整读取。导入先校验再确认，运行中计时按暂停快照恢复。建议先导出。</p><div id="import-status" role="status"></div>${storageError ? '<button class="btn secondary" data-action="raw-backup">导出存储原文（受限时用缓存）</button><p class="stat-foot">缓存副本不保证最新，文件名会注明；可另导出完整本页副本。</p>' : ""}</section><section class="panel"><h2>当前记录</h2><p>已读 ${state.read.length} 篇 · 收藏 ${state.favorites.length} 篇<br>作答 ${state.attempts.length} 次 · 草稿 ${Object.values(state.drafts).filter(Boolean).length} 篇 · 计时训练 ${state.runs.length} 组</p><div class="note">网站无账号、广告、分析追踪或远程同步。打开页面时托管方仍可处理常规访问请求。公开代码中不包含你的学习记录。</div></section><section class="panel danger-zone"><h2>重置本机记录</h2><p>重置当前v2记录，其他网站不受影响。首次迁移保留的v1原文不改动，也不会在重置后自动恢复。旧标签页后续修改不会同步到新版；需要彻底清除本站数据时，可在浏览器清除站点数据，务必先备份。</p><button class="btn danger" data-action="reset">重置当前新版记录</button></section></div><div class="stack"><section class="panel"><h2>内容范围 · 知识基础版</h2><p>当前提供 ${C.lessons.length} 篇基础讲义、${C.questions.length} 道原创选择题、${C.writing.length} 个原创虚构材料写作练习。适用于通用方法入门，不声称覆盖国考或福建省考全部大纲。</p><ul><li>已扩展到政治理论、常识、福建地理、平面图形、更多言语数量资料题型，以及材料分析、对策落实、应用文和论证段方法。</li><li>仍未覆盖完整理论与时政、断代史与文学全体系、复杂空间重构、全部言语数量题型和福建文化政策专题。<a class="source" href="#sources">查看逐模块覆盖与来源 →</a></li><li>尚无历年真题库；已有原型和知识手册尚未成功取回，未并入本版。</li><li>备考方向选项仅用于记录目标，不会把同一内容包装成两套专属题库。</li></ul><p>申论参考要点与框架是学习提示，不是官方评分。不要把模板当成固定答案。</p></section><section class="panel"><h2>官方信息入口</h2><p><a class="source" href="#sources">讲义来源、年份与编写边界 →</a>以下是官方招录信息入口，供核对公告与考试要求；它们不是本站原创题目的出处。请以报考年度和具体职位公告为准。</p><a class="source" href="https://bm.scs.gov.cn/pp/gkweb/core/web/ui/business/home/gkhome.html" target="_blank" rel="noopener noreferrer">国家公务员考试专题 ↗</a><a class="source" href="https://gwykl.fujian.gov.cn/" target="_blank" rel="noopener noreferrer">福建省公务员考试录用网 ↗</a><p class="stat-foot">入口检索核对：2026-11-05。本站没有提供报名时间、资格判断或最新政策解读。</p></section></div></div>`
+      `<div class="settings-grid"><div class="stack"><section class="panel"><h2>备份与恢复</h2><p>记录只保存在当前设备、浏览器及网站地址下。清除网站数据、换设备或更换网址后不会自动同步，请定期导出。</p><div class="actions"><button class="btn" data-action="backup">${icon("download")}导出学习记录备份</button><label class="btn secondary file-button" for="import-file">导入学习记录备份</label><input class="sr-only" type="file" id="import-file" accept="application/json,.json"></div><p class="stat-foot">可导入旧v1和新v2学习记录备份；导出为包含训练记录的v2，旧版网页不能完整读取。私人题库另存，不在此备份中；私人临时答案和草稿不持久化。导入文件最多10 MiB，普通导出使用同一文件上限。导入先校验再确认，运行中计时按暂停快照恢复。建议先导出。</p><div id="import-status" role="status"></div><p class="stat-foot">公开内容保留全部旧题号；缺失或未知题号会拒绝导入并保留现有记录，不静默丢条。私人题库缺失不会影响这份学习记录，可到独立入口恢复私人备份。</p><p>逐题记录上限50,000条、计时历史500组。达到保护上限前请先备份；不会自动删除旧记录，浏览器仍可能更早因配额不足停止保存。</p><a class="btn secondary" href="./private-library.html">打开本机私人题库与独立备份</a><p class="stat-foot">仅UTF-8 JSON，来源/答案未经本站核验，不上传或计入公开题量。换设备需分别保存两份备份。</p><button class="text-button" data-action="page-recovery">导出应急本页副本（不保证可直接导入）</button><p class="stat-foot">仅在普通备份失败时保存当前页原始状态，可能包含未保存笔记、草稿与答案；需私人保管并另行核验恢复，不包含私人题库。</p>${storageError ? '<button class="btn secondary" data-action="raw-backup">导出存储原文（受限时用缓存）</button><p class="stat-foot">缓存副本不保证最新，文件名会注明；可另导出完整本页副本。</p>' : ""}</section><section class="panel"><h2>当前记录</h2><p>已读 ${state.read.length} 篇 · 收藏 ${state.favorites.length} 篇<br>作答 ${state.attempts.length} 次 · 草稿 ${Object.values(state.drafts).filter(Boolean).length} 篇 · 计时训练 ${state.runs.length} 组</p><div class="note">网站无账号、广告、分析追踪或远程同步。打开页面时托管方仍可处理常规访问请求。公开代码中不包含你的学习记录。</div></section><section class="panel danger-zone"><h2>重置本机记录</h2><p>重置当前v2记录，其他网站不受影响。首次迁移保留的v1原文不改动，也不会在重置后自动恢复。旧标签页后续修改不会同步到新版；需要彻底清除本站数据时，可在浏览器清除站点数据，务必先备份。</p><button class="btn danger" data-action="reset">重置当前新版记录</button></section></div><div class="stack"><section class="panel"><h2>内容范围 · 知识基础版</h2><p>当前提供 ${C.lessons.length} 篇基础讲义、${C.questions.length} 道原创选择题、${C.writing.length} 个原创虚构材料写作练习。适用于通用方法入门，不声称覆盖国考或福建省考全部大纲。</p><ul><li>已扩展到政治理论、常识、福建地理、平面图形、更多言语数量资料题型，以及材料分析、对策落实、应用文和论证段方法。</li><li>仍未覆盖完整理论与时政、断代史与文学全体系、复杂空间重构、全部言语数量题型和福建文化政策专题。<a class="source" href="#sources">查看逐模块覆盖与来源 →</a></li><li>尚无历年真题库；已有原型和知识手册尚未成功取回，未并入本版。</li><li>备考方向选项仅用于记录目标，不会把同一内容包装成两套专属题库。</li></ul><p>申论参考要点与框架是学习提示，不是官方评分。不要把模板当成固定答案。</p></section><section class="panel"><h2>官方信息入口</h2><p><a class="source" href="#sources">讲义来源、年份与编写边界 →</a>以下是官方招录信息入口，供核对公告与考试要求；它们不是本站原创题目的出处。请以报考年度和具体职位公告为准。</p><a class="source" href="https://bm.scs.gov.cn/pp/gkweb/core/web/ui/business/home/gkhome.html" target="_blank" rel="noopener noreferrer">国家公务员考试专题 ↗</a><a class="source" href="https://gwykl.fujian.gov.cn/" target="_blank" rel="noopener noreferrer">福建省公务员考试录用网 ↗</a><p class="stat-foot">入口检索核对：2026-11-05。本站没有提供报名时间、资格判断或最新政策解读。</p></section></div></div>`
     );
   }
   function missing() {
@@ -1054,6 +1070,7 @@
         targeted: "practice",
         diagnostics: "practice",
         training: "practice",
+        papers: "practice",
         coverage: "learn",
         methods: "learn",
         fujian: "learn",
@@ -1080,6 +1097,7 @@
       targeted,
       diagnostics: () => adaptiveUI.page(parts),
       training: () => trainingUI.page(parts),
+      papers: () => window.STUDY_PAPERS.catalogHtml(),
       bank,
       quiz: () => quizPage(parts),
       mistakes,
@@ -1102,6 +1120,8 @@
     if (page === "theory") $("#page-title").textContent = "政治理论入门";
     if (page === "diagnostics") $("#page-title").textContent = "薄弱点线索";
     if (page === "training") $("#page-title").textContent = "训练记录与复盘";
+    if (page === "papers") $("#page-title").textContent = "原创方法训练短卷";
+    if(capacityMessage)$("#main").insertAdjacentHTML("afterbegin",`<div id="record-capacity-alert" class="storage-alert" role="status">${esc(capacityMessage)} <a href="#settings">备份与容量说明</a></div>`);
     if (storageError || pendingSaves) savingStatus();
     if(replacing)lockForReplacement();
     document.title = $("#page-title").textContent + " · 知序";
@@ -1112,7 +1132,6 @@
     if (!quiz || quiz.choice === null || quiz.submitted) return;
     const q = question(quiz.ids[quiz.index]);
     const currentQuiz = quiz;
-    quiz.submitted = true;quiz.saved = null;
     const seconds = Math.max(0,Math.round((Date.now() - quiz.questionStart) / 1000));
     const a = {
       qid: q.id,
@@ -1120,6 +1139,10 @@
       at: new Date().toISOString(),
       seconds,
     };
+    const capacity=assessCapacity(state,{additionalAttempt:a});
+    if(!capacity.ok){capacityMessage=capacityReason(capacity)+" 本次没有提交，请先备份学习记录。";showToast(capacityMessage);render();return;}
+    capacityMessage=capacity.nearLimit?"学习记录接近保护上限，请先导出备份。":"";
+    quiz.submitted=true;quiz.saved=null;
     state.attempts.push(a);
     quiz.results.push({ qid: q.id, correct: quiz.choice === q.answer });
     render();
@@ -1146,10 +1169,11 @@
     return validate(copy);
   }
   function exportBackup() {
-    try { download(`zhixu-backup-${new Date().toISOString().slice(0,10)}.json`,JSON.stringify({...backupSnapshot(),exportedAt:new Date().toISOString()},null,2));showToast("已生成含训练记录的v2备份，请保存在私人位置。"); }
-    catch(e){showToast("本页副本未能通过校验，请先导出存储原文。");}
+    try { download(`zhixu-backup-${new Date().toISOString().slice(0,10)}.json`,R.serializeBackup(backupSnapshot(),new Date().toISOString()));showToast("已生成v2学习记录备份，请存私人位置；私人题库需另行导出。"); }
+    catch(e){showToast("学习记录备份未生成："+e.message+"。可在备份页导出应急本页副本或存储原文。");}
   }
   trainingUI = window.STUDY_TRAINING_UI.create({ C,T,getState:()=>state,save:persist,render,notify:showToast,getError:()=>storageError,questionMaterial,questionGraphic,questionMeta,optionReview,
+    canRecordAttempt:(event,proposedRun)=>{const c=assessCapacity({...state,activeRun:proposedRun},{additionalAttempt:{qid:event.qid,choice:event.choice,at:event.at,seconds:event.seconds}});return {...c,reason:c.ok?null:capacityReason(c)};},
     recordAttempt: event => state.attempts.push({qid:event.qid,choice:event.choice,at:event.at,seconds:event.seconds}) });
   if(storageError)trainingUI.suspendForStorageError();
   document.addEventListener("click", async (e) => {
@@ -1261,6 +1285,9 @@
       render({ focus: true });
     }
     if (a === "backup") exportBackup();
+    if(a === "page-recovery"){
+      try{download("zhixu-page-recovery-unvalidated.json",JSON.stringify({format:"zhixu-page-recovery",version:1,exportedAt:new Date().toISOString(),warning:"应急本页原始状态，未保证符合可导入格式；私人题库另行备份",state}));showToast("已生成应急本页副本；请私人保管，不能直接当普通学习记录备份导入。");}catch{showToast("应急副本生成失败，请勿关闭页面，先复制需要保留的文字。");}
+    }
     if (a === "raw-backup") {
       let raw = null, cached = false;
       try { raw = progressStore?.getRaw(); }
@@ -1373,9 +1400,13 @@
       const f = t.files[0];
       if (!f) return;
       try {
-        if (f.size > 10 * 1024 * 1024) throw Error("文件超过 10 MB");
-        const parsed = validate(JSON.parse(await f.text()));
+        if (f.size > R.MAX_FILE_BYTES) throw Error("学习记录备份超过10 MiB上限");
+        const rawImport=JSON.parse(await f.text());
+        if(rawImport?.format)throw Error("这不是主站学习记录备份；私人题库请在私人入口导入，应急副本需另行核验恢复");
+        const parsed = validate(rawImport);
+
         if(parsed.activeRun?.status === "running"){parsed.activeRun.status="paused";parsed.activeRun.anchorMs=null;}
+        const importCapacity=assessCapacity(parsed);if(!importCapacity.ok)throw Error(capacityReason(importCapacity)+"；未覆盖现有记录");
         if (
           confirm(
             `已校验：${parsed.attempts.length} 次作答、${parsed.read.length} 篇已读、${parsed.runs.length} 组计时记录。是否替换当前新版记录？建议先导出；进行中计时将保持暂停。`,

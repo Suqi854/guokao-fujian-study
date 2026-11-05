@@ -1,13 +1,15 @@
 "use strict";
 // Local-only training workspace. Counts and elapsed time are not official exam scores.
 (() => {
-  function create({ C, T, getState, save, render, notify, getError, questionMaterial, questionGraphic, questionMeta, optionReview, recordAttempt }) {
+  function create({ C, T, getState, save, render, notify, getError, questionMaterial, questionGraphic, questionMeta, optionReview, recordAttempt, canRecordAttempt }) {
     const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     const button = (label, action, id = '', disabled = false) => `<button class="btn secondary" data-action="${action}" data-id="${esc(id)}" ${disabled ? 'disabled' : ''}>${esc(label)}</button>`;
     const link = (label, href) => `<a class="btn secondary" href="${esc(href)}">${esc(label)}</a>`;
     const time = ms => { const s = Math.max(0, Math.floor(ms / 1000)); return `${Math.floor(s / 60)}分${String(s % 60).padStart(2,'0')}秒`; };
     const date = value => new Date(value).toLocaleString('zh-CN');
     const qById = id => C.questions.find(q => q.id === id), wById = id => C.writing.find(w => w.id === id);
+    const P=window.STUDY_PAPERS;
+    const paperOf=run=>{try{return P?.paperForRun(run)||null;}catch{return null;}};
     const types = C.categories.filter(c => !['全部','申论方法'].includes(c));
     let module = 'all', mode = 'new', count = 5, budget = '', message = '', busy = false, historyPage = 0, navigationVersion = 0;
     const choices = new Map();
@@ -45,6 +47,7 @@
       return C.questions.filter(q => (module === 'all' || q.meta.module === module) && (mode === 'all' || (mode === 'new' ? !done[q.id] : done[q.id] && done[q.id].choice !== q.answer)));
     }
     function proposed(parts) {
+      if(parts?.[1]==='paper'){const status=P?.definitionStatus(parts[2]);if(!status?.available)throw Error(status?.reason||'短卷尚未加载。');return P.get(parts[2]).sections.flatMap(s=>s.questionIds);}
       if (parts?.[1] !== 'ids') return null;
       const ids = (parts[2] || '').split(',');
       if (!ids.length || ids.length > 20 || new Set(ids).size !== ids.length || ids.some(id => !qById(id))) throw Error('这组题号无效，请返回针对性练习重新选择。');
@@ -53,8 +56,8 @@
     function forms(parts) {
       let fixed = null, error = '';
       try { fixed = proposed(parts); } catch (e) { error = e.message; }
-      const available = fixed ? fixed.length : pool().length;
-      return `<section class="panel"><h2>开一组自选限时训练</h2><p>原创方法训练，非真题。预算由你填写，不代表任何正式试卷时长。</p>${fixed ? `<p>来自指定题组，固定 ${fixed.length} 题。</p>` : `<div class="bank-filters"><label class="bank-field">模块<select id="run-module"><option value="all">全部选择题模块</option>${types.map(c=>`<option ${module===c?'selected':''}>${esc(c)}</option>`).join('')}</select></label><label class="bank-field">题目状态<select id="run-mode"><option value="new" ${mode==='new'?'selected':''}>只练未做题</option><option value="wrong" ${mode==='wrong'?'selected':''}>只练当前错题</option><option value="all" ${mode==='all'?'selected':''}>全部题，可重练</option></select></label><label class="bank-field">题数（1至20）<input id="run-count" type="number" min="1" max="20" value="${count}"></label></div>`}<div class="bank-filters"><label class="bank-field">本组预算分钟（1至240）<input id="run-budget" type="number" min="1" max="240" step="1" value="${esc(budget)}" placeholder="由你填写"></label></div><p>当前可选 ${available} 题，按目录顺序固定题号。运行时按经过时间计，后台及刷新继续；站内离开本组会自动暂停。未提交不算答错。</p><p class="stat-foot">模块计时包含该题阅读、作答及解析停留；暂停不计。未暂停就关闭页面，恢复时仍按运行时间核算。系统时钟异常的区间另作提示，不假装精确作答时间。</p>${error ? `<p role="alert">${esc(error)}</p>` : ''}<div class="actions">${button('固定题组并开始计时','run-start',fixed ? fixed.join(',') : '',blocked()||!!state().activeRun||state().runs.length>=500||!available||!!error)}${link('回到普通针对性练习','#targeted')}</div>${state().activeRun ? '<p>请先继续或结束已有训练，再开新组，避免同时计时。</p>' : ''}${state().runs.length>=500?'<p>已有500组历史，请先完整备份并整理；不会自动删除旧记录。</p>':''}<p role="status" id="training-message">${esc(message)}</p></section>`;
+      const available = fixed ? fixed.length : pool().length, paper=parts?.[1]==='paper'&&!error?P.get(parts[2]):null;
+      return `<section class="panel"><h2>开一组自选限时训练</h2><p>原创方法训练，非真题。预算由你填写，不代表任何正式试卷时长。</p>${paper?`<p data-selected-paper><strong>${esc(paper.title)}</strong> · 修订${paper.revision}，固定20题。原题重复接触会影响表现，不预测考试分数。</p>`:''}${fixed ? `<p>来自指定题组，固定 ${fixed.length} 题。</p>` : `<div class="bank-filters"><label class="bank-field">模块<select id="run-module"><option value="all">全部选择题模块</option>${types.map(c=>`<option ${module===c?'selected':''}>${esc(c)}</option>`).join('')}</select></label><label class="bank-field">题目状态<select id="run-mode"><option value="new" ${mode==='new'?'selected':''}>只练未做题</option><option value="wrong" ${mode==='wrong'?'selected':''}>只练当前错题</option><option value="all" ${mode==='all'?'selected':''}>全部题，可重练</option></select></label><label class="bank-field">题数（1至20）<input id="run-count" type="number" min="1" max="20" value="${count}"></label></div>`}<div class="bank-filters"><label class="bank-field">本组预算分钟（1至240）<input id="run-budget" type="number" min="1" max="240" step="1" value="${esc(budget)}" placeholder="由你填写"></label></div><p>当前可选 ${available} 题，按目录顺序固定题号。运行时按经过时间计，后台及刷新继续；站内离开本组会自动暂停。未提交不算答错。</p><p class="stat-foot">模块计时包含该题阅读、作答及解析停留；暂停不计。未暂停就关闭页面，恢复时仍按运行时间核算。系统时钟异常的区间另作提示，不假装精确作答时间。</p>${error ? `<p role="alert">${esc(error)}</p>` : ''}<div class="actions">${button('固定题组并开始计时','run-start',paper?'paper:'+paper.id:fixed ? fixed.join(',') : '',blocked()||!!state().activeRun||state().runs.length>=500||!available||!!error)}${link('回到普通针对性练习','#targeted')}</div>${state().activeRun ? '<p>请先继续或结束已有训练，再开新组，避免同时计时。</p>' : ''}${state().runs.length>=500?'<p>已有500组历史，请先完整备份并整理；不会自动删除旧记录。</p>':''}<p role="status" id="training-message">${esc(message)}</p></section>`;
     }
     function moduleCards(rows) {
       return `<div class="practice-grid">${rows.map(r=>`<section class="card practice-card"><h3>${esc(r.module)}</h3><p>计划 ${r.planned} · 已提交 ${r.submitted} · 未提交 ${r.unsubmitted}</p><p>正确 ${r.correct} · 错误 ${r.wrong}</p><strong>${time(r.spentMs)}</strong></section>`).join('')}</div>`;
@@ -69,12 +72,12 @@
     }
     function history() {
       const runs=[...state().runs].reverse(), pages=Math.max(1,Math.ceil(runs.length/10));historyPage=Math.min(historyPage,pages-1);
-      return `<section class="panel"><h2>计时训练记录</h2>${getError()?'<p class="storage-alert">本页可能含未保存变更，不能当作已经落盘；请先导出本页副本。</p>':''}<p>${runs.length} 组 · 第 ${historyPage+1} / ${pages} 页 · 最多500组，不自动删旧记录</p><div class="stack">${runs.slice(historyPage*10,historyPage*10+10).map(r=>`<article class="card"><span class="pill gray">${r.kind==='choice'?'选择题':'申论'} · ${esc(statusName(r))}</span><h3>${r.kind==='choice'?r.items.length+'道原创题':esc(wById(r.taskId).title)}</h3><p>${esc(date(r.startedAt))} · ${time(r.elapsedMs)}${r.kind==='writing'?' · '+(r.completed?'手动完成':'未标记完成'):''}</p>${r.clockIssue?'<p>含待核时钟提示，不能据此认定精确用时。</p>':''}${link('查看本次记录','#training/run/'+r.id)}</article>`).join('')||'<p>尚无已结束的计时训练，旧作答不会被猜成某一组。</p>'}</div><div class="actions">${button('上一页','run-history-prev','',historyPage===0)}${button('下一页','run-history-next','',historyPage>=pages-1)}${button('导出完整备份','backup')}</div></section>`;
+      return `<section class="panel"><h2>计时训练记录</h2>${getError()?'<p class="storage-alert">本页可能含未保存变更，不能当作已经落盘；请先导出本页副本。</p>':''}<p>${runs.length} 组 · 第 ${historyPage+1} / ${pages} 页 · 最多500组，不自动删旧记录</p><div class="stack">${runs.slice(historyPage*10,historyPage*10+10).map(r=>`<article class="card"><span class="pill gray">${r.kind==='choice'?'选择题':'申论'} · ${esc(statusName(r))}</span><h3>${r.kind==='choice'?r.items.length+'道原创题':esc(wById(r.taskId).title)}</h3><p>${esc(date(r.startedAt))} · ${time(r.elapsedMs)}${r.kind==='writing'?' · '+(r.completed?'手动完成':'未标记完成'):''}</p>${r.clockIssue?'<p>含待核时钟提示，不能据此认定精确用时。</p>':''}${link('查看本次记录','#training/run/'+r.id)}</article>`).join('')||'<p>尚无已结束的计时训练，旧作答不会被猜成某一组。</p>'}</div><div class="actions">${button('上一页','run-history-prev','',historyPage===0)}${button('下一页','run-history-next','',historyPage>=pages-1)}${button('导出学习记录备份','backup')}</div></section>`;
     }
     function details(id) {
       const run=state().runs.find(r=>r.id===id);
       if(!run)return '<section class="panel"><h1>没有找到这次记录</h1>'+link('返回复盘台','#training')+'</section>';
-      return `<section class="panel"><h1>本次训练记录</h1><p>${esc(statusName(run))} · ${esc(date(run.startedAt))}至${esc(date(run.endedAt))} · 用时 ${time(run.elapsedMs)}</p><p>已结束用时冻结，不随打开此页增长。显示按整秒截取，分项显示相加与合计可能有数秒差；原始记录按毫秒保存。${run.clockIssue?'存在时钟待核提示。':''}</p>${!T.compatible(run)?'<p>内容已更新：历史按开始本组时保存的模块和答案判断，不用当前版本反推原成绩。</p>':''}${run.kind==='choice'?`<p>本组 ${run.items.length} 题 · 预算 ${time(run.budgetMs)} · 未提交不是答错。</p>${moduleCards(T.choiceSummary(run).modules)}<ol>${run.items.map((item,i)=>`<li>${esc(item.qid.toUpperCase())} · ${esc(item.module)} · ${run.responses[i]?(run.responses[i].choice===item.answer?'正确':'错误'):'未提交'} · ${time(run.spentMs[i])} ${link('另开普通重练','#quiz/one/'+item.qid)}</li>`).join('')}</ol>`:`<p>${esc(wById(run.taskId).title)} · ${run.completed?'手动标记完成':'结束但未标记完成'} · 结束时草稿 ${run.draftChars} 个非空白字符。</p><p>这里记录的是计时器运行时长，非纯写字时间；不提供官方阅卷或分数。</p>${link('回到草稿','#write/'+run.taskId)}`}${link('看本机薄弱点线索','#diagnostics')}${link('返回复盘台','#training')}</section>`;
+      return `<section class="panel"><h1>${esc(paperOf(run)?.title||'本次训练记录')}</h1>${paperOf(run)?'<p>固定原创方法短卷；卷名及修订仅在公共目录指纹完全吻合时识别，不是完整模考。</p>':''}<p>${esc(statusName(run))} · ${esc(date(run.startedAt))}至${esc(date(run.endedAt))} · 用时 ${time(run.elapsedMs)}</p><p>已结束用时冻结，不随打开此页增长。显示按整秒截取，分项显示相加与合计可能有数秒差；原始记录按毫秒保存。${run.clockIssue?'存在时钟待核提示。':''}</p>${!T.compatible(run)?'<p>内容已更新：历史按开始本组时保存的模块和答案判断，不用当前版本反推原成绩。</p>':''}${run.kind==='choice'?`<p>本组 ${run.items.length} 题 · 预算 ${time(run.budgetMs)} · 未提交不是答错。</p>${moduleCards(T.choiceSummary(run).modules)}${P?P.typeReviewHtml(run):''}<ol>${run.items.map((item,i)=>`<li>${esc(item.qid.toUpperCase())} · ${esc(item.module)} · ${run.responses[i]?(run.responses[i].choice===item.answer?'正确':'错误'):'未提交'} · ${time(run.spentMs[i])} ${link('另开普通重练','#quiz/one/'+item.qid)}</li>`).join('')}</ol>`:`<p>${esc(wById(run.taskId).title)} · ${run.completed?'手动标记完成':'结束但未标记完成'} · 结束时草稿 ${run.draftChars} 个非空白字符。</p><p>这里记录的是计时器运行时长，非纯写字时间；不提供官方阅卷或分数。</p>${link('回到草稿','#write/'+run.taskId)}`}${link('看本机薄弱点线索','#diagnostics')}${link('返回复盘台','#training')}</section>`;
     }
     function page(parts) {
       if(parts?.[1]==='run')return details(parts[2]);
@@ -106,17 +109,22 @@
         const now=Date.now();
         if(action==='run-start'){
           if(run)throw Error('请先结束或继续已有训练。');if(state().runs.length>=500)throw Error('已有500组记录，请先备份并整理，不会自动删除。');
-          let ids=id?id.split(','):pool().slice(0,count).map(q=>q.id);const minutes=Number(budget);
+          const paperId=id?.startsWith('paper:')?id.slice(6):null;let ids=paperId?P.get(paperId)?.sections.flatMap(s=>s.questionIds):id?id.split(','):pool().slice(0,count).map(q=>q.id);const minutes=Number(budget);
           if(!Number.isInteger(minutes)||minutes<1||minutes>240)throw Error('请填写1至240的整数分钟预算。');
           if(!id&&(!Number.isInteger(count)||count<1||count>20||pool().length<count))throw Error('题数应为1至20且不超过当前可选题数。');
-          state().activeRun=T.newChoice({id:newId(),now,ids,budgetSeconds:minutes*60});const startedRun=state().activeRun;const ok=await commit();if(ok&&state()===originState&&state().activeRun?.id===startedRun.id&&navigationVersion===originNavigation&&location.hash===originHash)location.hash=routeFor(startedRun);
+          let freshId=newId(),suffix=0;while(state().runs.some(r=>r.id===freshId))freshId=newId()+'-'+(++suffix);
+          const nextRun=paperId?P.newRun({paperId,nonce:freshId,now,budgetSeconds:minutes*60}):T.newChoice({id:freshId,now,ids,budgetSeconds:minutes*60});
+          if(state().runs.some(r=>r.id===nextRun.id))throw Error('训练记录标识冲突，请重新开始。');
+          state().activeRun=nextRun;const startedRun=state().activeRun;const ok=await commit();if(ok&&state()===originState&&state().activeRun?.id===startedRun.id&&navigationVersion===originNavigation&&location.hash===originHash)location.hash=routeFor(startedRun);
         } else if(action==='writing-run-start'){
           if(run)throw Error('已有其他计时训练，请先处理。');if(state().runs.length>=500)throw Error('已达500组，请先备份并整理。');state().activeRun=T.newWriting({id:newId(),now,taskId:id});await commit();
         } else if(run){
           if(action==='run-pause')T.pause(run,now);
           if(action==='run-resume')T.resume(run,now);
           if(action==='run-submit'&&run.kind==='choice'){
-            const choice=choices.get(run.id+':'+run.cursor);const result=T.submit(run,choice,now);if(result.accepted)recordAttempt(result);else if(!T.isTerminal(run))message='未接受重复、暂停或超时的提交。';
+            const choice=choices.get(run.id+':'+run.cursor), proposedRun=JSON.parse(JSON.stringify(run)), result=T.submit(proposedRun,choice,now);
+            if(result.accepted){const capacity=canRecordAttempt?canRecordAttempt(result,proposedRun):{ok:true};if(!capacity.ok)throw Error(capacity.reason);Object.assign(run,proposedRun);recordAttempt(result);}
+            else {Object.assign(run,proposedRun);if(!T.isTerminal(run))message='未接受重复、暂停或超时的提交。';}
           }
           if(action==='run-next')T.advance(run,now,{skip:false});
           if(action==='run-skip')T.advance(run,now,{skip:true});

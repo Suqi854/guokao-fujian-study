@@ -1,0 +1,20 @@
+{
+  "format": "zhixu-private-question-pack",
+  "version": 1,
+  "packId": "format-demo-original-v1",
+  "title": "格式演示：原创样例，不是真题",
+  "sourceNote": "本文件为格式演示而原创，不冒充历年真题或官方答案。",
+  "materials": [
+    { "id": "m1", "title": "虚构社区记录", "text": "某虚构社区去年举办 20 场活动，今年举办 25 场活动。" }
+  ],
+  "questions": [
+    { "id": "q1", "type": "single-choice", "module": "资料分析", "materialIds": ["m1"], "stem": "今年活动场次比去年增长多少？", "options": ["5%", "20%", "25%", "125%"], "answer": 2, "explanation": "增长率为 (25−20)÷20=25%。答案下标从 0 开始，2 对应 C。" },
+    { "id": "w1", "type": "writing", "module": "申论", "materialIds": ["m1"], "stem": "用一句话概括材料中的活动变化。", "explanation": "参考表达：该社区今年举办 25 场活动，较去年增加 5 场、增长 25%。这只是原创参考，不是官方评分。" }
+  ],
+  "papers": [
+    { "id": "p1", "title": "原创自查演示卷", "sourceNote": "仅演示分节和固定题序，无官方分值或限时。", "sections": [
+      { "id": "s1", "title": "客观题", "questionIds": ["q1"] },
+      { "id": "s2", "title": "表达练习", "questionIds": ["w1"] }
+    ] }
+  ]
+}

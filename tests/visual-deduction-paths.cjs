@@ -96,7 +96,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   assert.deepEqual(saved.attempts[0], old.attempts[0]);
   await p.goto(base + "/#settings");
   const download = p.waitForEvent("download");
-  await p.getByRole("button", { name: "导出完整备份" }).tap();
+  await p.getByRole("button", { name: "导出学习记录备份" }).tap();
   const evidence = path.join(__dirname, "../test-results");
   fs.mkdirSync(evidence, { recursive: true });
   const file = path.join(evidence, "v024-backup.json");
