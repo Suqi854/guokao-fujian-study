@@ -4,14 +4,14 @@ const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path'),asse
 const root=path.join(__dirname,'..'),ctx={window:{}};vm.createContext(ctx);
 for(const m of fs.readFileSync(path.join(root,'docs/index.html'),'utf8').matchAll(/src="\.\/([^\"]+)"/g))if(m[1]!=='app.js')vm.runInContext(fs.readFileSync(path.join(root,'docs',m[1]),'utf8'),ctx);
 const C=JSON.parse(JSON.stringify(ctx.window.STUDY_CONTENT)),q=Object.fromEntries(C.questions.map(x=>[x.id,x])),ids=['practice-cognition','contradiction-method','productive-relations','mao-thought-context'];
-assert.equal(C.lessons.length,97);assert.equal(C.questions.length,621);assert.equal(C.lessons.filter(l=>l.learningLevels).length,83);assert.equal(C.lessons.filter(l=>!l.learningLevels).length,14);assert.equal(Object.keys(C.sources).length,40);
-assert.equal(C.writing.length,65);assert.equal(new Set(C.writing.map(w=>w.material)).size,31);assert.equal(C.methods.length,17);assert.equal(C.comparisons.length,7);
+assert.equal(C.lessons.length,102);assert.equal(C.questions.length,669);assert.equal(C.lessons.filter(l=>l.learningLevels).length,88);assert.equal(C.lessons.filter(l=>!l.learningLevels).length,14);assert.equal(Object.keys(C.sources).length,40);
+assert.equal(C.writing.length,75);assert.equal(new Set(C.writing.map(w=>w.material)).size,33);assert.equal(C.methods.length,17);assert.equal(C.comparisons.length,7);
 const trackIds=[...ids,'social-being-people','mao-living-soul','six-method-principles','new-quality-productivity','reform-framework-2024','unified-market-rules'];
 assert.deepEqual(Object.keys(C.learningPaths),['intro','practice','advanced']);assert.deepEqual(C.theoryTrack.steps.map(s=>s.lessonId),trackIds);assert.equal(new Set(C.theoryTrack.steps.map(s=>s.lessonId)).size,10);
 for(const id of ids){const l=C.lessons.find(l=>l.id===id);assert.equal(l.category,'政治理论');assert.equal(l.sections.length,9);assert.equal(l.practice.length,6);assert.ok(l.versionNote);assert.ok(l.sources.every(id=>C.sources[id]));assert.deepEqual(Object.values(l.learningLevels).flatMap(g=>g.sections),[...Array(9).keys()]);for(const g of Object.values(l.learningLevels)){assert.equal(g.questionIds.length,2);assert.ok(g.questionIds.every(id=>q[id].lesson===l.id&&q[id].meta.trainingStage===g.stage));}}
 assert.deepEqual([...Array(24)].map((_,i)=>q['q'+(436+i)].answer),[2,0,3,1,1,3,0,2,3,0,2,1,2,1,0,3,0,2,1,3,3,0,1,2]);
 for(let n=436;n<=459;n++){const x=q['q'+n];assert.equal(x.optionReviews.length,4);assert.equal(x.meta.source.kind,'original');assert.equal(x.meta.examSource.year,null);assert.equal(x.meta.difficulty.level,null);assert.equal(x.meta.module,'政治理论');}
-for(const stage of ['识别概念','迁移运用','检查边界'])assert.equal(C.questions.filter(q=>q.meta.trainingStage===stage).length,179);
+for(const stage of ['识别概念','迁移运用','检查边界'])assert.equal(C.questions.filter(q=>q.meta.trainingStage===stage).length,195);
 assert.equal(C.lessons.filter(l=>l.category==='政治理论').length,12);assert.equal(C.questions.filter(q=>q.meta.module==='政治理论').length,70);
 assert.ok(C.sources['mao-practice-1937'].year.includes('1937年7月'));assert.ok(C.sources['mao-practice-1937'].year.includes('2017-08-29'));
 assert.ok(C.sources['mao-contradiction-1937'].scope.includes('有修订'));assert.ok(C.sources['marx-preface-1859'].year.includes('2009'));assert.ok(C.sources['marx-preface-1859'].year.includes('网页发布日期未标'));

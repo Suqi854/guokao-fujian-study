@@ -3,7 +3,7 @@ const fs=require("node:fs"),vm=require("node:vm"),path=require("node:path"),asse
 const root=path.join(__dirname,".."),context={window:{}};vm.createContext(context);
 for(const m of fs.readFileSync(path.join(root,"docs/index.html"),"utf8").matchAll(/src="\.\/([^\"]+)"/g))if(m[1]!=="app.js")vm.runInContext(fs.readFileSync(path.join(root,"docs",m[1]),"utf8"),context);
 const C=JSON.parse(JSON.stringify(context.window.STUDY_CONTENT)),q=Object.fromEntries(C.questions.map(x=>[x.id,x]));
-assert.equal(C.questions.length,621);assert.equal(C.lessons.length,97);assert.equal(C.lessons.filter(l=>l.learningLevels).length,83);
+assert.equal(C.questions.length,669);assert.equal(C.lessons.length,102);assert.equal(C.lessons.filter(l=>l.learningLevels).length,88);
 for(const id of ["growth-contribution","multi-table","context-blanks","title-choice"]){
   const l=C.lessons.find(l=>l.id===id);assert.equal(l.sections.length,9);assert.equal(l.practice.length,9);
   assert.deepEqual(Object.values(l.learningLevels).flatMap(g=>g.sections),[...Array(9).keys()]);

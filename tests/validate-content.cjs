@@ -14,11 +14,11 @@ for (const file of scripts.filter(f => f !== "app.js")) {
 const C = JSON.parse(JSON.stringify(context.window.STUDY_CONTENT));
 const q = Object.fromEntries(C.questions.map(v => [v.id, v]));
 const lessons = Object.fromEntries(C.lessons.map(v => [v.id, v]));
-assert.equal(Object.keys(q).length, 621);
-assert.equal(Object.keys(lessons).length, 97);
-assert.equal(C.lessons.filter(l => l.learningLevels).length, 83);
-assert.equal(C.writing.length, 65);
-assert.equal(new Set(C.writing.map(w => w.material)).size, 31);
+assert.equal(Object.keys(q).length, 669);
+assert.equal(Object.keys(lessons).length, 102);
+assert.equal(C.lessons.filter(l => l.learningLevels).length, 88);
+assert.equal(C.writing.length, 75);
+assert.equal(new Set(C.writing.map(w => w.material)).size, 33);
 for (const x of C.questions) {
   assert.ok(lessons[x.lesson], x.id);
   assert.equal(x.options.length, 4, x.id);
@@ -52,7 +52,7 @@ for (let n = 322; n <= 345; n++) {
   assert.ok(q["q" + n].optionReviews.every(s => s.trim().length > 0));
 }
 assert.deepEqual([...Array(24)].map((_, i) => q["q" + (322 + i)].answer), [0,2,3,1,2,0,1,3,0,2,3,1,2,0,3,1,0,2,1,3,2,0,3,1]);
-console.log("PASS All 97 lessons, 621 questions, 65 writing tasks and sixty-nine recent paths have valid links and explicit provenance");
+console.log("PASS All 102 lessons, 669 questions, 75 writing tasks and sixty-nine recent paths have valid links and explicit provenance");
 
 const truth = n => Array.from({length: 2 ** n}, (_, mask) => Array.from({length:n}, (_, i) => Boolean(mask & (1 << i))));
 const implies = (a, b) => !a || b;
