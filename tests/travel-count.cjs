@@ -35,11 +35,11 @@ const base = process.env.STUDY_BASE_URL || 'http://127.0.0.1:4173';
  assert.equal(C.methods.length,17);assert.equal(C.comparisons.length,7);
  const a=C.writing.find(w=>w.id==='w25'),b=C.writing.find(w=>w.id==='w26');assert.equal(a.material,b.material);assert.equal(a.materialGroup,b.materialGroup);assert.ok(a.material.length>1800);
  for(const w of [a,b])assert.ok(w.sample.replace(/\s/g,'').length<=w.limit);
- assert.equal(C.questions.length,213);assert.equal(C.writing.length,32);assert.equal(new Set(C.writing.map(w=>w.material)).size,24);
+ assert.equal(C.questions.length,228);assert.equal(C.writing.length,32);assert.equal(new Set(C.writing.map(w=>w.material)).size,24);
  console.log('PASS Minute simulation, unique set-partition enumeration, ordered draws and scoped author attribution');
  const old={schemaVersion:1,exam:'both',read:['travel'],favorites:['count'],notes:{travel:'测试旧行程笔记',count:'测试旧计数笔记'},attempts:[{qid:'q16',choice:1,at:'2026-11-04T12:00:00Z',seconds:9}],drafts:{w23:'测试旧对策草稿'},checks:{w23:[0]}};
  await p.evaluate(s=>localStorage.setItem('zhixu-study-v1',JSON.stringify(s)),old);await p.reload();
- for(const id of ['travel','count']){await p.goto(base+'/#lesson/'+id);assert.equal(await p.locator('#lesson-note').inputValue(),old.notes[id]);await p.getByRole('link',{name:'练配套题',exact:true}).tap();assert.ok((await p.locator('.quiz-header').textContent()).includes('1 / '+(id==='travel'?8:5)));}
+ for(const id of ['travel','count']){await p.goto(base+'/#lesson/'+id);assert.equal(await p.locator('#lesson-note').inputValue(),old.notes[id]);await p.getByRole('link',{name:'练配套题',exact:true}).tap();assert.ok((await p.locator('.quiz-header').textContent()).includes('1 / '+(id==='travel'?8:8)));}
  await p.goto(base+'/#quiz/one/q168');await p.locator('[data-action="choose"][data-id="1"]').tap();await p.locator('[data-action="submit"]').tap();assert.equal(await p.locator('.option-review li').count(),4);
  await p.goto(base+'/#targeted');await p.locator('#target-module').selectOption('数量关系');await p.locator('#target-stage').selectOption('检查边界');
  assert.equal((await p.getByRole('link',{name:/开始这组/}).getAttribute('href')).split('/').at(-1).split(',')[0],'q168');

@@ -28,11 +28,11 @@ const base=process.env.STUDY_BASE_URL||'http://127.0.0.1:4173';
  for(const id of ['q179','q160','q175'])assert.ok(!q[id].meta.methodIds.includes(method.id));assert.ok(!q.q175.meta.methodIds.includes('gufei-2010'));
  assert.equal(C.methods.length,17);assert.equal(C.comparisons.length,7);
  const a=C.writing.find(w=>w.id==='w29'),b=C.writing.find(w=>w.id==='w30');assert.equal(a.material,b.material);assert.equal(a.materialGroup,b.materialGroup);assert.ok(a.material.length>1750);for(const w of [a,b])assert.ok(w.sample.replace(/\s/g,'').length<=w.limit);
- assert.equal(C.questions.length,213);assert.equal(C.writing.length,32);assert.equal(new Set(C.writing.map(w=>w.material)).size,24);
+ assert.equal(C.questions.length,228);assert.equal(C.writing.length,32);assert.equal(new Set(C.writing.map(w=>w.material)).size,24);
  console.log('PASS Semantic review ledger, implication counterexample, average countermodel and scoped historical attribution');
  const old={schemaVersion:1,exam:'both',read:['word'],favorites:['argument'],notes:{word:'测试旧填空笔记',argument:'测试旧论证笔记'},attempts:[{qid:'q13',choice:1,at:'2026-11-04T12:00:00Z',seconds:10}],drafts:{w27:'测试旧对策草稿'},checks:{w27:[1]}};
  await p.evaluate(s=>localStorage.setItem('zhixu-study-v1',JSON.stringify(s)),old);await p.reload();
- for(const [id,n]of[['word',7],['argument',10]]){await p.goto(base+'/#lesson/'+id);assert.equal(await p.locator('#lesson-note').inputValue(),old.notes[id]);await p.getByRole('link',{name:'练配套题',exact:true}).tap();assert.ok((await p.locator('.quiz-header').textContent()).includes('1 / '+n));}
+ for(const [id,n]of[['word',7],['argument',13]]){await p.goto(base+'/#lesson/'+id);assert.equal(await p.locator('#lesson-note').inputValue(),old.notes[id]);await p.getByRole('link',{name:'练配套题',exact:true}).tap();assert.ok((await p.locator('.quiz-header').textContent()).includes('1 / '+n));}
  await p.goto(base+'/#quiz/one/q177');await p.locator('[data-action="choose"][data-id="0"]').tap();await p.locator('[data-action="submit"]').tap();assert.equal(await p.locator('.option-review li').count(),4);
  await p.goto(base+'/#targeted');await p.locator('#target-module').selectOption('言语理解');await p.locator('#target-stage').selectOption('检查边界');assert.equal((await p.getByRole('link',{name:/开始这组/}).getAttribute('href')).split('/').at(-1).split(',')[0],'q177');
  await p.goto(base+'/#write/w29');await p.locator('#draft').fill('测试新信息问题概括');await p.locator('[data-check]').first().check();await p.locator('a[href="#write/w30"]').tap();await p.getByRole('heading',{name:b.title,exact:true}).waitFor();assert.equal(await p.locator('#draft').inputValue(),'');assert.equal(await p.locator('[data-check]').first().isChecked(),false);

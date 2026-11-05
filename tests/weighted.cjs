@@ -32,11 +32,11 @@ const base=process.env.STUDY_BASE_URL||'http://127.0.0.1:4173';
  assert.match(C.lessons.find(l=>l.id==='average').sections[0][1],/均值相同/);
  assert.equal(C.methods.length,17);assert.equal(C.comparisons.length,7);
  const a=C.writing.find(w=>w.id==='w27'),b=C.writing.find(w=>w.id==='w28');assert.equal(a.material,b.material);assert.equal(a.materialGroup,b.materialGroup);assert.ok(a.material.length>1750);for(const w of [a,b])assert.ok(w.sample.replace(/\s/g,'').length<=w.limit);
- assert.equal(C.questions.length,213);assert.equal(C.writing.length,32);assert.equal(new Set(C.writing.map(w=>w.material)).size,24);
+ assert.equal(C.questions.length,228);assert.equal(C.writing.length,32);assert.equal(new Set(C.writing.map(w=>w.material)).size,24);
  console.log('PASS Independent unit constructions, error extrema, base enumeration and percentage-point checks with positive-weight counterexample');
  const old={schemaVersion:1,exam:'both',read:['average'],favorites:['mixed-growth'],notes:{average:'测试旧平均数笔记','mixed-growth':'测试旧混合增长笔记'},attempts:[{qid:'q06',choice:1,at:'2026-11-04T12:00:00Z',seconds:12}],drafts:{w25:'测试旧问题概括'},checks:{w25:[1]}};
  await p.evaluate(s=>localStorage.setItem('zhixu-study-v1',JSON.stringify(s)),old);await p.reload();
- for(const [id,n]of[['average',7],['mixed-growth',5]]){await p.goto(base+'/#lesson/'+id);assert.equal(await p.locator('#lesson-note').inputValue(),old.notes[id]);await p.getByRole('link',{name:'练配套题',exact:true}).tap();assert.ok((await p.locator('.quiz-header').textContent()).includes('1 / '+n));}
+ for(const [id,n]of[['average',10],['mixed-growth',8]]){await p.goto(base+'/#lesson/'+id);assert.equal(await p.locator('#lesson-note').inputValue(),old.notes[id]);await p.getByRole('link',{name:'练配套题',exact:true}).tap();assert.ok((await p.locator('.quiz-header').textContent()).includes('1 / '+n));}
  await p.goto(base+'/#quiz/one/q171');await p.locator('[data-action="choose"][data-id="0"]').tap();await p.locator('[data-action="submit"]').tap();assert.equal(await p.locator('.option-review li').count(),4);
  await p.goto(base+'/#targeted');await p.locator('#target-module').selectOption('资料分析');await p.locator('#target-stage').selectOption('检查边界');assert.equal((await p.getByRole('link',{name:/开始这组/}).getAttribute('href')).split('/').at(-1).split(',')[0],'q171');
  await p.goto(base+'/#write/w27');await p.locator('#draft').fill('测试新共享空间对策');await p.locator('[data-check]').first().check();await p.locator('a[href="#write/w28"]').tap();await p.getByRole('heading',{name:b.title,exact:true}).waitFor();assert.equal(await p.locator('#draft').inputValue(),'');assert.equal(await p.locator('[data-check]').first().isChecked(),false);
