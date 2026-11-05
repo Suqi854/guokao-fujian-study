@@ -43,7 +43,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   for (const stage of ["识别概念", "迁移运用", "检查边界"])
     assert.equal(
       C.questions.filter((q) => q.meta.trainingStage === stage).length,
-      59,
+      69,
     );
   assert.ok(
     C.questions.every(

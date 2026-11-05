@@ -108,7 +108,7 @@
     ],
   };
   C.coverageAdded = [];
-  C.coverageDeepened = ["summary", "analysis-writing", "proposal", "document", "essay"];
+  C.coverageDeepened = ["cohesion-reference", "detail-boundaries", "analogy", "definition-conditions", "argument-controls"];
 
   C.coverageMatrix = C.categories
     .filter((c) => c !== "全部")
