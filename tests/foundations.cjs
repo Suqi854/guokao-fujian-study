@@ -13,14 +13,14 @@ assert.equal(q.q187.answer,constraints187.findIndex(x=>x.every(Boolean)));assert
 // A positive response from observed users permits either outcome for unobserved users; universal benefit is not entailed.
 const worlds=[{observed:true,unobserved:true},{observed:true,unobserved:false}];assert.ok(worlds.every(w=>w.observed));assert.ok(worlds.some(w=>!w.unobserved));
 for(let n=181;n<=189;n++){const x=q['q'+n];assert.equal(x.optionReviews.length,4);assert.equal(x.meta.source.kind,'original');assert.equal(x.meta.examSource.year,null);assert.equal(x.meta.difficulty.level,null);}
-assert.equal(C.questions.length,243);assert.equal(C.writing.length,32);assert.equal(new Set(C.writing.map(x=>x.material)).size,24);
+assert.equal(C.questions.length,261);assert.equal(C.writing.length,32);assert.equal(new Set(C.writing.map(x=>x.material)).size,24);
 for(const id of ['development','state-organs','sentence-link']){const l=C.lessons.find(x=>x.id===id);assert.ok(l.sections.flat().join('').length>1150);assert.deepEqual(Object.values(l.learningLevels).flatMap(x=>x.sections),Array.from({length:9},(_,i)=>i));}
 const a=C.writing.find(x=>x.id==='w31'),z=C.writing.find(x=>x.id==='w32');assert.equal(a.material,z.material);assert.equal(a.materialGroup,z.materialGroup);assert.ok(a.material.length>1500);for(const w of [a,z])assert.ok(w.sample.replace(/\s/g,'').length<=w.limit);
 assert.equal(C.sources['development-system'].year,'2023-01-17');assert.equal(C.methods.length,17);console.log('PASS Source-scoped foundations, semantic review ledger and conjunction/countermodel checks');
 const old={schemaVersion:1,exam:'both',read:['development'],favorites:['state-organs'],notes:{development:'测试旧政治笔记','state-organs':'测试旧机构笔记'},attempts:[{qid:'q41',choice:0,at:'2026-11-04T12:00:00Z',seconds:8}],drafts:{w29:'测试旧信息栏草稿'},checks:{w29:[1]}};
 await p.evaluate(s=>localStorage.setItem('zhixu-study-v1',JSON.stringify(s)),old);await p.reload();
 for(const level of ['intro','practice','advanced']){
- await p.goto(base+'/#learn/'+level);assert.equal(await p.locator('.lesson-card').count(),19);
+ await p.goto(base+'/#learn/'+level);assert.equal(await p.locator('.lesson-card').count(),23);
  for(const id of ['development','state-organs','sentence-link']){
   await p.goto(base+'/#lesson/'+id+'/'+level);assert.equal(await p.locator('.learning-paths [aria-current="page"]').textContent(),C.learningPaths[level].label);assert.equal(await p.locator('.reading > section:not(.level-guide)').count(),3);assert.equal(await p.locator('.source-panel').count(),0);
   const target=await p.getByRole('link',{name:'练本路径 · 1题',exact:true}).getAttribute('href');const qid=target.split('/').at(-1);assert.equal(q[qid].lesson,id);assert.equal(q[qid].meta.trainingStage,C.learningPaths[level].stage);await p.getByRole('link',{name:'练本路径 · 1题',exact:true}).tap();assert.ok((await p.locator('.quiz-header').textContent()).includes('1 / 1'));
