@@ -1,12 +1,12 @@
 {
   "name": "guokao-fujian-study",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "A standalone, local-first civil service study website",
   "scripts": {
     "start": "python3 -m http.server 4173 --directory docs",
-    "test": "node tests/smoke.cjs && node tests/touch.cjs",
-    "check": "node --check docs/app.js && node --check docs/content.js"
+    "test": "node tests/smoke.cjs && node tests/touch.cjs && node tests/expansion.cjs",
+    "check": "node --check docs/app.js && node --check docs/content.js && node --check docs/expansion.js"
   },
   "devDependencies": { "@playwright/test": "1.64.1" }
 }

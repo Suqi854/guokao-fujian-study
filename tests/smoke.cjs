@@ -29,7 +29,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   await test("Empty first-run dashboard", async () => {
     assert.equal(
       await page.locator(".stat-value").nth(0).innerText(),
-      "0/ 15 篇",
+      "0/ 34 篇",
     );
     await page.screenshot({
       path: path.join(evidence, "desktop-home.png"),
@@ -38,7 +38,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   });
   await test("Search, filtering, read progress, favorites and note persistence", async () => {
     await page.goto(base + "/#learn");
-    await page.locator("#search").fill("基期");
+    await page.locator("#search").fill("增长率与增长量：先找基期");
     assert.equal(await page.locator(".lesson-card").count(), 1);
     await page.locator(".lesson-card h3").click();
     await page.getByRole("button", { name: "标记已读", exact: true }).click();
@@ -136,15 +136,13 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
     const before = await page.evaluate(() =>
       localStorage.getItem("zhixu-study-v1"),
     );
-    await page
-      .locator("#import-file")
-      .setInputFiles({
-        name: "bad.json",
-        mimeType: "application/json",
-        buffer: Buffer.from(
-          '{"schemaVersion":1,"exam":"national","read":["unknown"]}',
-        ),
-      });
+    await page.locator("#import-file").setInputFiles({
+      name: "bad.json",
+      mimeType: "application/json",
+      buffer: Buffer.from(
+        '{"schemaVersion":1,"exam":"national","read":["unknown"]}',
+      ),
+    });
     await page
       .locator("#import-status")
       .filter({ hasText: "导入失败" })

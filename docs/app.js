@@ -226,7 +226,7 @@
         )
         .join(
           "",
-        )}</section><section class="panel"><div class="panel-head"><h2>最近 7 天</h2><span class="pill gray">作答次数</span></div>${activity()}<p class="stat-foot">记录属于这台设备、这个浏览器。</p><a class="text-button" href="#settings">导出一份备份 ${icon("arrow")}</a></section></div></div><div class="note notice">当前为基础示例版，含 ${C.lessons.length} 篇讲义、${C.questions.length} 道原创题和 ${C.writing.length} 个写作练习。尚未导入已有知识手册，也不代表完整考试范围。<a href="#settings">了解覆盖范围</a></div>`
+        )}</section><section class="panel"><div class="panel-head"><h2>最近 7 天</h2><span class="pill gray">作答次数</span></div>${activity()}<p class="stat-foot">记录属于这台设备、这个浏览器。</p><a class="text-button" href="#settings">导出一份备份 ${icon("arrow")}</a></section></div></div><div class="note notice">当前为知识基础版，含 ${C.lessons.length} 篇讲义、${C.questions.length} 道原创题和 ${C.writing.length} 个写作练习。尚未导入已有知识手册，也不代表完整考试范围。<a href="#settings">了解覆盖范围</a></div>`
     );
   }
   function activity() {
@@ -241,6 +241,83 @@
     }
     const max = Math.max(1, ...days.map((x) => x.n));
     return `<div class="activity">${days.map((x) => `<div class="activity-day" title="${x.d.toLocaleDateString("zh-CN")}：${x.n} 次"><span class="activity-bar" style="height:${Math.max(3, (x.n / max) * 50)}px"></span>${x.d.getMonth() + 1}/${x.d.getDate()}</div>`).join("")}</div>`;
+  }
+  let diagramStep = 0,
+    diagramRule = "xor";
+  function sourcePanel(l) {
+    return `<section class="source-panel"><h2>来源与适用范围</h2><p>${esc(l.basis || "独立编写")} · 整理核对 ${esc(l.updated || "2026-11-05")}</p>${(
+      l.sources || []
+    )
+      .map((id) => {
+        const src = C.sources[id];
+        return `<div class="source-item"><a href="${esc(src.url)}" target="_blank" rel="noopener noreferrer">${esc(src.title)} ↗</a><small>${esc(src.publisher)} · ${esc(src.year)}</small><p>${esc(src.scope)}</p></div>`;
+      })
+      .join(
+        "",
+      )}<p class="stat-foot">来源支持其标明的事实或范围；解题步骤、数字例子与练习由本站独立编写，不是官方例题或评分。</p></section>`;
+  }
+  function arrowFigure(deg, label, marked = false) {
+    return `<svg class="study-figure" viewBox="0 0 100 100" role="img" aria-label="${esc(label)}"><rect x="4" y="4" width="92" height="92" rx="14" fill="#fff" stroke="#dfe2ef"/><g transform="rotate(${deg} 50 50)"><path d="M50 76V25m-17 17 17-17 17 17" stroke="#5055db" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>${marked ? '<circle cx="24" cy="24" r="5" fill="#202535"/>' : ""}</g></svg>`;
+  }
+  function gridFigure(bits, label) {
+    return `<div class="bit-figure" role="img" aria-label="${esc(label)}：${bits}">${[...bits].map((bit) => `<span class="bit ${bit === "1" ? "filled" : ""}"></span>`).join("")}</div>`;
+  }
+  function diagram(l) {
+    if (!l.diagram) return "";
+    if (l.diagram === "rotation")
+      return `<section class="diagram-box" id="lesson-demo"><div class="panel-head"><h2>动手观察 · 旋转</h2><span class="pill gray">原创示意</span></div><div class="figure-row">${arrowFigure(0, "起始：箭头向上，黑点左上", true)}<span>→</span>${arrowFigure(diagramStep * 90, `第${diagramStep}步`, true)}</div><p class="diagram-caption" aria-live="polite">已转 ${diagramStep} 步，每步顺时针90°；箭头与黑点一起旋转。</p><div class="actions"><button class="btn" data-action="rotate-demo">下一步 ↻</button><button class="btn secondary" data-action="reset-demo">重置</button></div></section>`;
+    const a = "110",
+      b = "101",
+      result =
+        diagramRule === "xor" ? "011" : diagramRule === "union" ? "111" : "100";
+    return `<section class="diagram-box" id="lesson-demo"><div class="panel-head"><h2>动手观察 · 叠加</h2><span class="pill gray">黑1 / 白0</span></div><div class="figure-row"><div>A${gridFigure(a, "图A")}</div><span>+</span><div>B${gridFigure(b, "图B")}</div></div><div class="filters">${[
+      ["union", "并集"],
+      ["intersection", "交集"],
+      ["xor", "异或"],
+    ]
+      .map(
+        ([id, text]) =>
+          `<button class="chip ${diagramRule === id ? "active" : ""}" aria-pressed="${diagramRule === id}" data-action="overlay-demo" data-id="${id}">${text}</button>`,
+      )
+      .join(
+        "",
+      )}</div><div class="figure-row" aria-live="polite"><span>结果</span>${gridFigure(result, "叠加结果")}<strong>${result}</strong></div><p class="diagram-caption">${diagramRule === "xor" ? "不同色才保留黑格。" : diagramRule === "union" ? "至少一幅是黑格就保留。" : "只有两幅都黑才保留。"}</p></section>`;
+  }
+  function questionGraphic(q) {
+    if (!q.graphic) return "";
+    if (q.graphic.type === "bits")
+      return `<div class="question-figures">${q.graphic.values.map((bits, i) => `<div>${i === 0 ? "A" : "B"}${gridFigure(bits, `图${i === 0 ? "A" : "B"}`)}</div>`).join("")}<span class="figure-question">?</span></div>`;
+    return `<div class="question-figures" aria-label="题目图形序列">${q.graphic.values.map((deg) => arrowFigure(deg, { 0: "向上", 90: "向右", 180: "向下", 270: "向左" }[deg])).join("")}<span class="figure-question">?</span></div>`;
+  }
+  function coverageRows() {
+    return C.coverage
+      .map(
+        ([cat, included, gap]) =>
+          `<div class="coverage-row"><strong>${cat}<small>${C.lessons.filter((l) => l.category === cat).length} 篇 · ${C.questions.filter((q) => lesson(q.lesson).category === cat).length} 道选择题</small></strong><div><p>${included}</p><small>待补：${gap}</small></div></div>`,
+      )
+      .join("");
+  }
+  function roadmap() {
+    return `<details class="roadmap"><summary>备考路线与实际覆盖 · 展开查看</summary><div class="note">先学基础与方法 → 配套练习 → 错题回看 → 申论材料写作。国考题型参照2026年度官方大纲；新年度和福建具体职位要求应另查公告。本版不是完整教材，也没有两套独立真题库。</div>${coverageRows()}<a class="text-button" href="#sources">查看全部来源、年份与编写边界 →</a></details>`;
+  }
+  function sourcesPage() {
+    return (
+      heading(
+        "SOURCES & SCOPE",
+        "每一条知识，都有边界。",
+        "事实查来源，方法看条件，练习用原创。来源核对日期：2026-11-05。",
+      ) +
+      `<section class="panel"><h2>实际覆盖</h2>${coverageRows()}</section><div class="section-head"><h2>公开参考资料</h2><span class="pill">${Object.keys(C.sources).length} 项</span></div><div class="source-grid">${Object.values(
+        C.sources,
+      )
+        .map(
+          (src) =>
+            `<article class="panel"><h3><a href="${esc(src.url)}" target="_blank" rel="noopener noreferrer">${esc(src.title)} ↗</a></h3><span class="pill gray">${esc(src.year)}</span><p class="stat-foot">${esc(src.publisher)}</p><p>${esc(src.scope)}</p><small>核对：${src.checked}</small></article>`,
+        )
+        .join(
+          "",
+        )}</div><div class="note notice">未复制商业题库、教材图表或官方样题。数学公式为基础演绎，图示与虚构材料由本站独立编写。已有私人知识手册尚未导入。政治与法律页面只覆盖所列基础条目；法规和年度文件可能更新，请以权威文本为准。</div>`
+    );
   }
   function lessonCards() {
     const list = C.lessons.filter(
@@ -261,13 +338,14 @@
         "知识地图",
         "先看懂方法，再到练习里检验。收藏值得反复读的内容。",
       ) +
+      roadmap() +
       `<label class="search-box">${icon("search")}<input id="search" aria-label="搜索知识点" placeholder="搜索知识点、公式或技巧…" value="${esc(query)}"></label><div class="filters">${C.categories.map((c) => `<button class="chip ${c === catalogFilter ? "active" : ""}" data-action="filter" data-id="${c}" aria-pressed="${c === catalogFilter}">${c}</button>`).join("")}<button class="chip ${onlySaved ? "active" : ""}" data-action="saved-filter" aria-pressed="${onlySaved}">★ 收藏</button></div><div id="catalog">${lessonCards()}</div>`
     );
   }
   function lessonPage(id) {
     const l = lesson(id);
     if (!l) return missing();
-    return `<a class="back-link" href="#learn">${icon("back")}知识地图</a><div class="reading-grid"><article class="panel reading"><span class="pill">${l.category} · 基础讲义</span><h1>${l.title}</h1><p class="subtitle">${l.subtitle}</p><span class="muted" style="font-size:12px">约 ${l.minutes} 分钟 · ${l.tags.join(" / ")}</span><div class="formula">${l.formula}</div>${l.sections.map((s) => `<section><h2>${s[0]}</h2><p>${s[1]}</p></section>`).join("")}<div class="note">方法与例子由本项目编写，非官方教材。请结合题目限定条件使用；阅读完成不代表已经掌握。</div><div class="actions"><button class="btn" data-action="read" data-id="${l.id}">${icon("check")}${state.read.includes(l.id) ? "已读 · 点击取消" : "标记已读"}</button><button class="btn secondary" data-action="favorite" data-id="${l.id}" aria-pressed="${state.favorites.includes(l.id)}">${icon("star")}${state.favorites.includes(l.id) ? "已收藏" : "收藏讲义"}</button></div></article><aside class="stack sticky"><div class="panel"><h2>把方法用起来</h2><p class="subtitle">${l.practice.length ? `用 ${l.practice.length} 道原创示例题检验理解。` : "读完方法，选一个材料开始写。"}</p><div class="actions">${btn(l.practice.length ? "练配套题" : "去申论写作", l.practice.length ? "#quiz/lesson/" + l.id : "#writing")}</div></div><div class="panel"><label class="field-label" for="lesson-note">我的笔记</label><textarea id="lesson-note" data-note="${l.id}" rows="7" maxlength="10000" placeholder="记下卡住的地方、适用条件或自己的解法…">${esc(state.notes[l.id] || "")}</textarea><div class="field-meta"><span id="note-status">仅保存在当前浏览器</span></div></div></aside></div>`;
+    return `<a class="back-link" href="#learn">${icon("back")}知识地图</a><div class="reading-grid"><article class="panel reading"><span class="pill">${l.category} · 基础讲义</span><h1>${l.title}</h1><p class="subtitle">${l.subtitle}</p><span class="muted" style="font-size:12px">约 ${l.minutes} 分钟 · ${l.tags.join(" / ")}</span><div class="formula">${l.formula}</div>${diagram(l)}${l.sections.map((s) => `<section><h2>${s[0]}</h2><p>${s[1]}</p></section>`).join("")}${sourcePanel(l)}<div class="note">学习讲义并非官方教材。请结合题目限定条件使用；阅读完成不代表已经掌握。</div><div class="actions"><button class="btn" data-action="read" data-id="${l.id}">${icon("check")}${state.read.includes(l.id) ? "已读 · 点击取消" : "标记已读"}</button><button class="btn secondary" data-action="favorite" data-id="${l.id}" aria-pressed="${state.favorites.includes(l.id)}">${icon("star")}${state.favorites.includes(l.id) ? "已收藏" : "收藏讲义"}</button></div></article><aside class="stack sticky"><div class="panel"><h2>把方法用起来</h2><p class="subtitle">${l.practice.length ? `用 ${l.practice.length} 道原创示例题检验理解。` : "读完方法，选一个材料开始写。"}</p><div class="actions">${btn(l.practice.length ? "练配套题" : "去申论写作", l.practice.length ? "#quiz/lesson/" + l.id : "#write/" + (C.writing.find((w) => w.lesson === l.id)?.id || "w01"))}</div></div><div class="panel"><label class="field-label" for="lesson-note">我的笔记</label><textarea id="lesson-note" data-note="${l.id}" rows="7" maxlength="10000" placeholder="记下卡住的地方、适用条件或自己的解法…">${esc(state.notes[l.id] || "")}</textarea><div class="field-meta"><span id="note-status">仅保存在当前浏览器</span></div></div></aside></div>`;
   }
   function practice() {
     const categories = C.categories.filter(
@@ -277,14 +355,14 @@
       heading(
         "PRACTICE LAB",
         "用练习，检验理解。",
-        `${C.questions.length} 道原创基础示例题，每次提交后展开解析。不是历年真题库。`,
+        `${C.questions.length} 道原创练习题，每次提交后展开解析。不是历年真题库。`,
       ) +
       `<div class="practice-grid"><section class="card practice-card"><div class="tile-icon">${icon("chart")}</div><h3>综合练习</h3><p>覆盖当前全部选择题，顺序作答。已做过的题也可以重练。</p><span class="pill">${C.questions.length} 道 · 基础</span>${btn("开始综合练习", "#quiz/all")}</section>${categories
         .map((c) => {
           const count = C.questions.filter(
             (q) => lesson(q.lesson).category === c,
           ).length;
-          return `<section class="card practice-card"><div class="tile-icon">${icon("pen")}</div><h3>${c}</h3><p>${c === "资料分析" ? "增长、比重、平均数，先判断口径再计算。" : c === "判断推理" ? "条件、论证、定义，抓住逻辑链条。" : c === "言语理解" ? "主旨与填空，从结构和语境出发。" : "工程、计数、概率，先识别模型条件。"}</p><span class="pill gray">${count} 道 · 原创示例</span>${btn("开始专项练习", "#quiz/category/" + encodeURIComponent(c))}</section>`;
+          return `<section class="card practice-card"><div class="tile-icon">${icon("pen")}</div><h3>${c}</h3><p>${(C.coverage.find((row) => row[0] === c) || [])[1] || "从知识点开始练习。"}</p><span class="pill gray">${count} 道 · 原创示例</span>${btn("开始专项练习", "#quiz/category/" + encodeURIComponent(c))}</section>`;
         })
         .join(
           "",
@@ -328,7 +406,7 @@
     const q = question(quiz.ids[quiz.index]),
       l = lesson(q.lesson),
       correct = quiz.choice === q.answer;
-    return `<div class="quiz-wrap"><div class="quiz-header"><a class="back-link" href="#practice" style="margin:0">${icon("back")}退出本组</a><span>${quiz.index + 1} / ${quiz.ids.length} 题 · <span id="elapsed">${Math.floor((Date.now() - quiz.questionStart) / 1000)}</span> 秒</span></div><div class="mini-progress"><span style="width:${(quiz.index / quiz.ids.length) * 100}%"></span></div><section class="panel quiz-card"><span class="pill">${l.category} · 原创示例</span><h1>${q.stem}</h1><div class="options" role="group" aria-label="选择一个答案">${q.options.map((o, i) => `<button class="option ${quiz.choice === i ? "selected" : ""} ${quiz.submitted && i === q.answer ? "correct" : ""} ${quiz.submitted && quiz.choice === i && !correct ? "incorrect" : ""}" data-action="choose" data-id="${i}" aria-pressed="${quiz.choice === i}" ${quiz.submitted ? "disabled" : ""}><span>${String.fromCharCode(65 + i)}</span><span>${esc(o)}${quiz.submitted && i === q.answer ? " ✓ 正确答案" : ""}${quiz.submitted && quiz.choice === i && !correct ? " · 你的选择" : ""}</span></button>`).join("")}</div>${quiz.submitted ? `<div class="feedback ${correct ? "" : "wrong"}" role="status"><strong>${correct ? "答对了，继续保持。" : "这道题，值得再看一遍。"}</strong><p>${q.explanation}</p><a href="#lesson/${l.id}">回看知识点：${l.title} →</a></div>` : ""}<div class="quiz-actions"><span class="muted" style="font-size:12px">${quiz.submitted ? "提交已记录；答错会进入错题集。" : "选择后提交，即可查看解析。"}</span><button class="btn" data-action="${quiz.submitted ? "next" : "submit"}" ${quiz.choice === null ? "disabled" : ""}>${quiz.submitted ? (quiz.index === quiz.ids.length - 1 ? "查看本组结果" : "下一题") : "提交答案"}${icon("arrow")}</button></div></section></div>`;
+    return `<div class="quiz-wrap"><div class="quiz-header"><a class="back-link" href="#practice" style="margin:0">${icon("back")}退出本组</a><span>${quiz.index + 1} / ${quiz.ids.length} 题 · <span id="elapsed">${Math.floor((Date.now() - quiz.questionStart) / 1000)}</span> 秒</span></div><div class="mini-progress"><span style="width:${(quiz.index / quiz.ids.length) * 100}%"></span></div><section class="panel quiz-card"><span class="pill">${l.category} · 原创示例</span><h1>${q.stem}</h1>${questionGraphic(q)}<div class="options" role="group" aria-label="选择一个答案">${q.options.map((o, i) => `<button class="option ${quiz.choice === i ? "selected" : ""} ${quiz.submitted && i === q.answer ? "correct" : ""} ${quiz.submitted && quiz.choice === i && !correct ? "incorrect" : ""}" data-action="choose" data-id="${i}" aria-pressed="${quiz.choice === i}" ${quiz.submitted ? "disabled" : ""}><span>${String.fromCharCode(65 + i)}</span><span>${esc(o)}${quiz.submitted && i === q.answer ? " ✓ 正确答案" : ""}${quiz.submitted && quiz.choice === i && !correct ? " · 你的选择" : ""}</span></button>`).join("")}</div>${quiz.submitted ? `<div class="feedback ${correct ? "" : "wrong"}" role="status"><strong>${correct ? "答对了，继续保持。" : "这道题，值得再看一遍。"}</strong><p>${q.explanation}</p><a href="#lesson/${l.id}">回看知识点：${l.title} →</a></div>` : ""}<div class="quiz-actions"><span class="muted" style="font-size:12px">${quiz.submitted ? "提交已记录；答错会进入错题集。" : "选择后提交，即可查看解析。"}</span><button class="btn" data-action="${quiz.submitted ? "next" : "submit"}" ${quiz.choice === null ? "disabled" : ""}>${quiz.submitted ? (quiz.index === quiz.ids.length - 1 ? "查看本组结果" : "下一题") : "提交答案"}${icon("arrow")}</button></div></section></div>`;
   }
   function mistakes() {
     const ids = wrongIds();
@@ -385,7 +463,7 @@
         "把进度，留在自己手里。",
         "备份包含笔记、草稿和作答记录。请保存在私人位置，不要上传公开仓库。",
       ) +
-      `<div class="settings-grid"><div class="stack"><section class="panel"><h2>备份与恢复</h2><p>记录只保存在当前设备、浏览器及网站地址下。清除网站数据、换设备或更换网址后不会自动同步，请定期导出。</p><div class="actions"><button class="btn" data-action="backup">${icon("download")}导出完整备份</button><label class="btn secondary file-button" for="import-file">导入备份</label><input class="sr-only" type="file" id="import-file" accept="application/json,.json"></div><p class="stat-foot">导入前会校验文件，并要求确认替换当前记录。建议先导出一次。</p><div id="import-status" role="status"></div>${storageError ? '<button class="btn secondary" data-action="raw-backup">导出当前存储原文</button>' : ""}</section><section class="panel"><h2>当前记录</h2><p>已读 ${state.read.length} 篇 · 收藏 ${state.favorites.length} 篇<br>作答 ${state.attempts.length} 次 · 草稿 ${Object.values(state.drafts).filter(Boolean).length} 篇</p><div class="note">网站无账号、广告、分析追踪或远程同步。打开页面时托管方仍可处理常规访问请求。公开代码中不包含你的学习记录。</div></section><section class="panel danger-zone"><h2>重置本机记录</h2><p>此操作清空本工具的学习记录。其他网站的数据不受影响。请先备份。</p><button class="btn danger" data-action="reset">清空学习记录</button></section></div><div class="stack"><section class="panel"><h2>内容范围 · 基础示例版</h2><p>当前提供 ${C.lessons.length} 篇基础讲义、${C.questions.length} 道原创选择题、${C.writing.length} 个原创虚构材料写作练习。适用于通用方法入门，不声称覆盖国考或福建省考全部大纲。</p><ul><li>已包含：增长、比重、平均数；条件、论证、定义；主旨与填空；工程、计数、概率；四类申论方法。</li><li>尚未系统覆盖：政治理论、常识、图形推理、完整言语与数量题型、时政与福建地方专题。</li><li>尚无历年真题库；已有原型和知识手册尚未成功取回，未并入本版。</li><li>备考方向选项仅用于记录目标，不会把同一内容包装成两套专属题库。</li></ul><p>申论参考要点与框架是学习提示，不是官方评分。不要把模板当成固定答案。</p></section><section class="panel"><h2>官方信息入口</h2><p>以下是官方招录信息入口，供核对公告与考试要求；它们不是本站原创题目的出处。请以报考年度和具体职位公告为准。</p><a class="source" href="https://bm.scs.gov.cn/pp/gkweb/core/web/ui/business/home/gkhome.html" target="_blank" rel="noopener noreferrer">国家公务员考试专题 ↗</a><a class="source" href="https://gwykl.fujian.gov.cn/" target="_blank" rel="noopener noreferrer">福建省公务员考试录用网 ↗</a><p class="stat-foot">入口检索核对：2026-11-05。本站没有提供报名时间、资格判断或最新政策解读。</p></section></div></div>`
+      `<div class="settings-grid"><div class="stack"><section class="panel"><h2>备份与恢复</h2><p>记录只保存在当前设备、浏览器及网站地址下。清除网站数据、换设备或更换网址后不会自动同步，请定期导出。</p><div class="actions"><button class="btn" data-action="backup">${icon("download")}导出完整备份</button><label class="btn secondary file-button" for="import-file">导入备份</label><input class="sr-only" type="file" id="import-file" accept="application/json,.json"></div><p class="stat-foot">导入前会校验文件，并要求确认替换当前记录。建议先导出一次。</p><div id="import-status" role="status"></div>${storageError ? '<button class="btn secondary" data-action="raw-backup">导出当前存储原文</button>' : ""}</section><section class="panel"><h2>当前记录</h2><p>已读 ${state.read.length} 篇 · 收藏 ${state.favorites.length} 篇<br>作答 ${state.attempts.length} 次 · 草稿 ${Object.values(state.drafts).filter(Boolean).length} 篇</p><div class="note">网站无账号、广告、分析追踪或远程同步。打开页面时托管方仍可处理常规访问请求。公开代码中不包含你的学习记录。</div></section><section class="panel danger-zone"><h2>重置本机记录</h2><p>此操作清空本工具的学习记录。其他网站的数据不受影响。请先备份。</p><button class="btn danger" data-action="reset">清空学习记录</button></section></div><div class="stack"><section class="panel"><h2>内容范围 · 知识基础版</h2><p>当前提供 ${C.lessons.length} 篇基础讲义、${C.questions.length} 道原创选择题、${C.writing.length} 个原创虚构材料写作练习。适用于通用方法入门，不声称覆盖国考或福建省考全部大纲。</p><ul><li>已扩展到政治理论、常识、福建地理、平面图形、更多言语数量资料题型和五类申论方法。</li><li>仍未覆盖完整理论与时政、人文历史、立体图形、全部言语数量题型和福建文化政策专题。<a class="source" href="#sources">查看逐模块覆盖与来源 →</a></li><li>尚无历年真题库；已有原型和知识手册尚未成功取回，未并入本版。</li><li>备考方向选项仅用于记录目标，不会把同一内容包装成两套专属题库。</li></ul><p>申论参考要点与框架是学习提示，不是官方评分。不要把模板当成固定答案。</p></section><section class="panel"><h2>官方信息入口</h2><p><a class="source" href="#sources">讲义来源、年份与编写边界 →</a>以下是官方招录信息入口，供核对公告与考试要求；它们不是本站原创题目的出处。请以报考年度和具体职位公告为准。</p><a class="source" href="https://bm.scs.gov.cn/pp/gkweb/core/web/ui/business/home/gkhome.html" target="_blank" rel="noopener noreferrer">国家公务员考试专题 ↗</a><a class="source" href="https://gwykl.fujian.gov.cn/" target="_blank" rel="noopener noreferrer">福建省公务员考试录用网 ↗</a><p class="stat-foot">入口检索核对：2026-11-05。本站没有提供报名时间、资格判断或最新政策解读。</p></section></div></div>`
     );
   }
   function missing() {
@@ -416,6 +494,7 @@
         writing: "申论写作",
         mistakes: "错题回顾",
         settings: "备份与内容说明",
+        sources: "资料来源与覆盖",
       }[active] || "学习工作台";
     $("#exam").value = state.exam;
     const views = {
@@ -428,6 +507,7 @@
       writing: writingList,
       write: () => writePage(parts[1]),
       settings,
+      sources: sourcesPage,
     };
     $("#main").innerHTML =
       (storageError
@@ -482,6 +562,14 @@
     if (!b) return;
     const id = b.dataset.id,
       a = b.dataset.action;
+    if (a === "rotate-demo" || a === "reset-demo" || a === "overlay-demo") {
+      if (a === "rotate-demo") diagramStep = (diagramStep + 1) % 4;
+      if (a === "reset-demo") diagramStep = 0;
+      if (a === "overlay-demo") diagramRule = id;
+      const activeLesson = lesson(location.hash.split("/")[1]);
+      if (activeLesson && $("#lesson-demo"))
+        $("#lesson-demo").outerHTML = diagram(activeLesson);
+    }
     if (a === "favorite") {
       state.favorites = state.favorites.includes(id)
         ? state.favorites.filter((x) => x !== id)
