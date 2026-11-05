@@ -1971,3 +1971,50 @@ footer a {
     padding: 16px;
   }
 }
+
+.question-material {
+  margin: 20px 0;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fafbff;
+}
+.question-material h2,
+.option-review h2 {
+  font-size: 16px;
+}
+.question-material p {
+  font-size: 13px;
+  color: var(--muted);
+}
+.data-table-wrap {
+  overflow-x: auto;
+  margin: 16px 0;
+}
+.data-table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  text-align: right;
+}
+.data-table-wrap caption {
+  text-align: left;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--ink);
+}
+.data-table-wrap th,
+.data-table-wrap td {
+  border-bottom: 1px solid var(--line);
+  padding: 8px;
+}
+.data-table-wrap th:first-child {
+  text-align: left;
+}
+.option-review ul {
+  padding-left: 20px;
+  font-size: 14px;
+}
+.option-review li {
+  margin: 8px 0;
+}

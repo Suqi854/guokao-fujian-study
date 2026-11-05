@@ -478,7 +478,7 @@
         "已有多少，缺在哪里。",
         "按模块查看讲义、配套题与待建设项，再决定下一步学什么。",
       ) +
-      `<section class="panel"><div class="actions"><span class="pill">${C.lessons.length} 篇讲义</span><span class="pill">${C.questions.length} 道原创题</span><span class="pill">${C.writing.length} 个写作练习</span></div><p>这是本站内容盘点，不是官方完整大纲或完成率。入门条目只有少量练习，不代表该题型已全面覆盖；当前历年真题收录为0，难度未标定。</p><div class="bank-filters"><label class="bank-field">选择模块<select id="coverage-module"><option value="all">全部模块</option>${C.coverageMatrix.map((g) => `<option ${coverageModule === g.module ? "selected" : ""}>${g.module}</option>`).join("")}</select></label><label class="bank-field">查看范围<select id="coverage-status"><option value="all">已有与缺口</option><option value="intro" ${coverageStatus === "intro" ? "selected" : ""}>已有入门</option><option value="missing" ${coverageStatus === "missing" ? "selected" : ""}>待建设 / 待扩充</option></select></label></div><p class="stat-foot">本轮先补贡献率、至少保证、量词命题和长材料组。政治理论与年度时政、福建政策等需可靠来源核验，仍明确保留缺口。</p></section><section id="coverage-results">${coverageMatrixResults()}</section><details class="roadmap"><summary>数量关系：两位具名教师出处核验</summary><p>本轮未找到满足“同题型、两位完整姓名、具体方法可读”的可靠出处链。以下为未采用的候选记录，不计入已核实方法数量。</p>${C.quantitySourceAudit.map((x) => `<article class="source-item"><a href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">${esc(x.title)} ↗</a><small>${esc(x.date)}</small><p>${esc(x.identity)}</p><p>${esc(x.result)}</p></article>`).join("")}<p class="stat-foot">核对2026-11-05。公开可读不等于有转载许可；未复制商业题干、解析、图片或模板。已采用的其他历史方法见<a href="#methods">出处与对照</a>。</p></details>`
+      `<section class="panel"><div class="actions"><span class="pill">${C.lessons.length} 篇讲义</span><span class="pill">${C.questions.length} 道原创题</span><span class="pill">${C.writing.length} 个写作练习</span></div><p>这是本站内容盘点，不是官方完整大纲或完成率。入门条目只有少量练习，不代表该题型已全面覆盖；当前历年真题收录为0，难度未标定。</p><div class="bank-filters"><label class="bank-field">选择模块<select id="coverage-module"><option value="all">全部模块</option>${C.coverageMatrix.map((g) => `<option ${coverageModule === g.module ? "selected" : ""}>${g.module}</option>`).join("")}</select></label><label class="bank-field">查看范围<select id="coverage-status"><option value="all">已有与缺口</option><option value="intro" ${coverageStatus === "intro" ? "selected" : ""}>已有入门</option><option value="missing" ${coverageStatus === "missing" ? "selected" : ""}>待建设 / 待扩充</option></select></label></div><p class="stat-foot">本轮补多表联读、标题与下文推断、完整文章，并深化增长和平均数的原理及边界。政治理论与年度时政、福建政策等需可靠来源核验，仍明确保留缺口。</p></section><section id="coverage-results">${coverageMatrixResults()}</section><details class="roadmap"><summary>数量关系：两位具名教师出处核验</summary><p>本轮未找到满足“同题型、两位完整姓名、具体方法可读”的可靠出处链。以下为未采用的候选记录，不计入已核实方法数量。</p>${C.quantitySourceAudit.map((x) => `<article class="source-item"><a href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">${esc(x.title)} ↗</a><small>${esc(x.date)}</small><p>${esc(x.identity)}</p><p>${esc(x.result)}</p></article>`).join("")}<p class="stat-foot">核对2026-11-05。公开可读不等于有转载许可；未复制商业题干、解析、图片或模板。已采用的其他历史方法见<a href="#methods">出处与对照</a>。</p></details>`
     );
   }
   function coverageRows() {
@@ -683,13 +683,26 @@
       )}</div></details><div class="actions"><button class="btn secondary" data-action="bank-reset">清除筛选</button></div><p class="stat-foot">训练层次表示编写目标，不是实测难度。学习方向是适用建议，不是真题出处。现有 ${C.questions.length} 道均为原创，无真题年份，难度尚无样本标定。</p></section><div id="bank-results">${bankResults()}</div>`
     );
   }
+  function questionMaterial(q) {
+    const m = C.questionMaterials?.[q.materialId];
+    if (!m) return "";
+    return `<section class="question-material" aria-label="本题共用材料"><h2>${esc(m.title)}</h2><p>${esc(m.note)}</p>${m.tables.map((t) => `<div class="data-table-wrap"><table><caption>${esc(t.caption)}</caption><thead><tr>${t.columns.map((c) => `<th scope="col">${esc(c)}</th>`).join("")}</tr></thead><tbody>${t.rows.map((row) => `<tr>${row.map((v, i) => (i ? `<td>${esc(v)}</td>` : `<th scope="row">${esc(v)}</th>`)).join("")}</tr>`).join("")}</tbody></table></div>`).join("")}<p class="stat-foot">同一材料下可有多个设问；每题作答单独记录。</p></section>`;
+  }
+  function optionReview(q) {
+    return q.optionReviews
+      ? `<div class="option-review"><h2>逐项核对</h2><ul>${q.optionReviews.map((r, i) => `<li><strong>${String.fromCharCode(65 + i)} · ${i === q.answer ? "符合题意" : "排除"}</strong> ${esc(r)}</li>`).join("")}</ul></div>`
+      : "";
+  }
   function questionMeta(q) {
     const m = q.meta,
       year = m.examSource.year === null ? "无考试年份" : m.examSource.year;
     return `<details class="question-meta"><summary>题目档案 · 来源、条件与难度</summary><p>${esc(m.type)} · ${esc(m.module)} · ${m.tags.map(esc).join(" / ")}</p><p>训练层次：${esc(m.trainingStage)}；目标：${esc(m.trainingGoal)}。</p><p>出处：${esc(m.source.title)}；${esc(year)}。难度：${esc(m.difficulty.level || "未标定")}。用途：${esc(m.purpose)}。</p><p>${esc(m.rights.note)}</p><p>答案核对：${esc(m.answerReview.date)}；${esc(m.answerReview.basis)}</p><p>本题独立编写；<a href="#methods">可查看方法出处与独立对照</a>，相关作者未参与本题或认可其答案。事实依据见<a href="#lesson/${q.lesson}">配套讲义的来源说明</a>。</p></details>`;
   }
 
-  let targetModule = "all";
+  let targetModule = "all",
+    targetStage = "all";
+  const targetEligible = (id) =>
+    targetStage === "all" || question(id).meta.trainingStage === targetStage;
   function targetRows() {
     const done = latest();
     return C.lessons
@@ -701,9 +714,12 @@
       .map((l) => ({
         lesson: l,
         wrong: l.practice.filter(
-          (id) => done[id] && done[id].choice !== question(id).answer,
+          (id) =>
+            targetEligible(id) &&
+            done[id] &&
+            done[id].choice !== question(id).answer,
         ),
-        fresh: l.practice.filter((id) => !done[id]),
+        fresh: l.practice.filter((id) => targetEligible(id) && !done[id]),
       }))
       .filter((r) => r.wrong.length || r.fresh.length)
       .sort(
@@ -734,7 +750,7 @@
         "下一组，从记录出发。",
         "先回看最近答错，再练尚未尝试的题。记录仅在本机计算。",
       ) +
-      `<section class="panel"><label class="bank-field">选择练习模块<select id="target-module"><option value="all">全部选择题模块</option>${C.categories
+      `<section class="panel"><div class="bank-filters"><label class="bank-field">选择练习模块<select id="target-module"><option value="all">全部选择题模块</option>${C.categories
         .filter((c) => !["全部", "申论方法"].includes(c))
         .map(
           (c) =>
@@ -742,7 +758,7 @@
         )
         .join(
           "",
-        )}</select></label><div class="actions"><span class="pill">${wrong} 道最近答错</span><span class="pill gray">${freshCount} 道尚未练习</span></div><p>未做过不等于薄弱，答对一次也不等于掌握。当前题目均为原创，难度尚未经样本标定。</p>${ids.length ? btn(`开始这组 · ${ids.length} 题`, targetLink(ids)) : btn("自主选择重练", "#bank", true)}<details class="roadmap"><summary>这组题怎样选出来</summary><p>先选最近一次答错的题，再用未做题补足，最多12题。知识点按错题数量、再按未做数量排序，同数按目录顺序；每轮每个知识点取一题，避免单一知识点占满。进入后题号固定，刷新会从本组首题重新开始，已提交记录保留。练完回到本页会重新计算。</p><p>这里不推断能力、考试得分或遗忘周期；申论草稿不自动评分，可到申论写作页训练。</p></details></section><div class="practice-grid">${rows.map((r) => `<section class="card practice-card target-card" data-lesson="${r.lesson.id}"><span class="pill gray">${r.lesson.category}</span><h2>${r.lesson.title}</h2><p class="target-reason">${r.wrong.length ? `最近答错 ${r.wrong.length} 道，建议回看解析。` : "还有未练题，可继续检验理解。"}未练 ${r.fresh.length} 道。</p><div class="actions">${btn("练这个知识点", targetLink(targetQueue([r])))}${btn("先读讲义", "#lesson/" + r.lesson.id, true)}</div></section>`).join("")}</div>${!rows.length ? empty("当前筛选下没有待选题", "本机已有题目的最近一次作答均正确。你仍可自行重练或继续申论写作。", btn("练申论", "#writing")) : ""}`
+        )}</select></label><label class="bank-field">训练目标<select id="target-stage"><option value="all">全部训练目标</option>${["识别概念", "迁移运用", "检查边界", "未分层"].map((t) => `<option ${targetStage === t ? "selected" : ""}>${esc(t)}</option>`).join("")}</select></label></div><p class="stat-foot">训练目标是编写目的，不是难度等级。以下题组仅从所选模块与目标中选取。</p><div class="actions"><span class="pill">${wrong} 道最近答错</span><span class="pill gray">${freshCount} 道尚未练习</span></div><p>未做过不等于薄弱，答对一次也不等于掌握。当前题目均为原创，难度尚未经样本标定。</p>${ids.length ? btn(`开始这组 · ${ids.length} 题`, targetLink(ids)) : btn("自主选择重练", "#bank", true)}<details class="roadmap"><summary>这组题怎样选出来</summary><p>先按模块与训练目标筛选，再选最近一次答错的题，用未做题补足，最多12题。知识点按错题数量、再按未做数量排序，同数按目录顺序；每轮每个知识点取一题，避免单一知识点占满。进入后题号固定，刷新会从本组首题重新开始，已提交记录保留。练完回到本页会重新计算。</p><p>这里不推断能力、考试得分或遗忘周期；申论草稿不自动评分，可到申论写作页训练。</p></details></section><div class="practice-grid">${rows.map((r) => `<section class="card practice-card target-card" data-lesson="${r.lesson.id}"><span class="pill gray">${r.lesson.category}</span><h2>${r.lesson.title}</h2><p class="target-reason">${r.wrong.length ? `最近答错 ${r.wrong.length} 道，建议回看解析。` : "还有未练题，可继续检验理解。"}未练 ${r.fresh.length} 道。</p><div class="actions">${btn("练这个知识点", targetLink(targetQueue([r])))}${btn("先读讲义", "#lesson/" + r.lesson.id, true)}</div></section>`).join("")}</div>${!rows.length ? empty("当前筛选下没有待选题", "所选范围可能暂无题目，或最近一次作答均正确。可以调整筛选、自行重练或继续申论写作。", btn("练申论", "#writing")) : ""}`
     );
   }
   function practice() {
@@ -814,7 +830,7 @@
     const q = question(quiz.ids[quiz.index]),
       l = lesson(q.lesson),
       correct = quiz.choice === q.answer;
-    return `<div class="quiz-wrap"><div class="quiz-header"><a class="back-link" href="#practice" style="margin:0">${icon("back")}退出本组</a><span>${quiz.index + 1} / ${quiz.ids.length} 题 · <span id="elapsed">${Math.floor((Date.now() - quiz.questionStart) / 1000)}</span> 秒</span></div><div class="mini-progress"><span style="width:${(quiz.index / quiz.ids.length) * 100}%"></span></div><section class="panel quiz-card"><span class="pill">${l.category} · 原创示例</span><h1>${q.stem}</h1>${questionGraphic(q)}${questionMeta(q)}<div class="options" role="group" aria-label="选择一个答案">${q.options.map((o, i) => `<button class="option ${quiz.choice === i ? "selected" : ""} ${quiz.submitted && i === q.answer ? "correct" : ""} ${quiz.submitted && quiz.choice === i && !correct ? "incorrect" : ""}" data-action="choose" data-id="${i}" aria-pressed="${quiz.choice === i}" ${quiz.submitted ? "disabled" : ""}><span>${String.fromCharCode(65 + i)}</span><span>${esc(o)}${quiz.submitted && i === q.answer ? " ✓ 正确答案" : ""}${quiz.submitted && quiz.choice === i && !correct ? " · 你的选择" : ""}</span></button>`).join("")}</div>${quiz.submitted ? `<div class="feedback ${correct ? "" : "wrong"}" role="status"><strong>${correct ? "答对了，继续保持。" : "这道题，值得再看一遍。"}</strong><p>${q.explanation}</p><a href="#lesson/${l.id}">回看知识点：${l.title} →</a></div>` : ""}<div class="quiz-actions"><span class="muted" style="font-size:12px">${quiz.submitted ? "提交已记录；答错会进入错题集。" : "选择后提交，即可查看解析。"}</span><button class="btn" data-action="${quiz.submitted ? "next" : "submit"}" ${quiz.choice === null ? "disabled" : ""}>${quiz.submitted ? (quiz.index === quiz.ids.length - 1 ? "查看本组结果" : "下一题") : "提交答案"}${icon("arrow")}</button></div></section></div>`;
+    return `<div class="quiz-wrap"><div class="quiz-header"><a class="back-link" href="#practice" style="margin:0">${icon("back")}退出本组</a><span>${quiz.index + 1} / ${quiz.ids.length} 题 · <span id="elapsed">${Math.floor((Date.now() - quiz.questionStart) / 1000)}</span> 秒</span></div><div class="mini-progress"><span style="width:${(quiz.index / quiz.ids.length) * 100}%"></span></div><section class="panel quiz-card"><span class="pill">${l.category} · 原创示例</span><h1>${q.stem}</h1>${questionMaterial(q)}${questionGraphic(q)}${questionMeta(q)}<div class="options" role="group" aria-label="选择一个答案">${q.options.map((o, i) => `<button class="option ${quiz.choice === i ? "selected" : ""} ${quiz.submitted && i === q.answer ? "correct" : ""} ${quiz.submitted && quiz.choice === i && !correct ? "incorrect" : ""}" data-action="choose" data-id="${i}" aria-pressed="${quiz.choice === i}" ${quiz.submitted ? "disabled" : ""}><span>${String.fromCharCode(65 + i)}</span><span>${esc(o)}${quiz.submitted && i === q.answer ? " ✓ 正确答案" : ""}${quiz.submitted && quiz.choice === i && !correct ? " · 你的选择" : ""}</span></button>`).join("")}</div>${quiz.submitted ? `<div class="feedback ${correct ? "" : "wrong"}" role="status"><strong>${correct ? "答对了，继续保持。" : "这道题，值得再看一遍。"}</strong><p>${q.explanation}</p>${optionReview(q)}<a href="#lesson/${l.id}">回看知识点：${l.title} →</a></div>` : ""}<div class="quiz-actions"><span class="muted" style="font-size:12px">${quiz.submitted ? "提交已记录；答错会进入错题集。" : "选择后提交，即可查看解析。"}</span><button class="btn" data-action="${quiz.submitted ? "next" : "submit"}" ${quiz.choice === null ? "disabled" : ""}>${quiz.submitted ? (quiz.index === quiz.ids.length - 1 ? "查看本组结果" : "下一题") : "提交答案"}${icon("arrow")}</button></div></section></div>`;
   }
   function mistakes() {
     const ids = wrongIds();
@@ -857,7 +873,7 @@
             .join(" ")
             .includes(writingQuery)),
     );
-    return `<p class="stat-foot" role="status">当前 ${rows.length} / ${C.writing.length} 个原创练习 · 不是历年真题 · 不提供自动评分</p><div class="writing-cards">${rows.map((w) => `<article class="card writing-card" data-writing="${w.id}"><div class="type"><span class="pill">${w.type}</span>${state.drafts[w.id]?.trim() ? '<span class="pill green">有本机草稿</span>' : ""}</div><h3>${w.title}</h3><p>${w.task}</p><div class="actions">${btn(state.drafts[w.id]?.trim() ? "继续写作" : "开始写作", "#write/" + w.id)}<a class="text-button" href="#lesson/${w.lesson}">先学对应方法 →</a></div><div class="card-bottom"><span>建议练习 ${w.minutes} 分钟</span><span>不超过 ${w.limit} 字</span></div></article>`).join("")}</div>${rows.length ? "" : empty("没有匹配的写作练习", "当前材料组仍有限，可以放宽条件查看已有原创练习。", '<button class="btn secondary" data-action="writing-clear">清除筛选</button>')}`;
+    return `<p class="stat-foot" role="status">当前 ${rows.length} / ${C.writing.length} 个原创练习 · 不是历年真题 · 不提供自动评分</p><div class="writing-cards">${rows.map((w) => `<article class="card writing-card" data-writing="${w.id}"><div class="type"><span class="pill">${w.type}</span>${state.drafts[w.id]?.trim() ? '<span class="pill green">有本机草稿</span>' : ""}</div><h3>${w.title}</h3><p>${w.task}</p><div class="actions">${btn(state.drafts[w.id]?.trim() ? "继续写作" : "开始写作", "#write/" + w.id)}<a class="text-button" href="#lesson/${w.lesson}">先学对应方法 →</a></div><div class="card-bottom"><span>建议练习 ${w.minutes} 分钟</span><span>${w.minLength ? `${w.minLength}—${w.limit} 字` : `不超过 ${w.limit} 字`}</span></div></article>`).join("")}</div>${rows.length ? "" : empty("没有匹配的写作练习", "当前材料组仍有限，可以放宽条件查看已有原创练习。", '<button class="btn secondary" data-action="writing-clear">清除筛选</button>')}`;
   }
   function writingList() {
     return (
@@ -891,7 +907,7 @@
     if (!w) return missing();
     const value = state.drafts[id] || "",
       count = countWords(value);
-    return `<a class="back-link" href="#writing">${icon("back")}申论写作</a>${heading(w.type, w.title, `原创虚构材料 · 建议练习 ${w.minutes} 分钟 · 字数仅作自查`)}<div class="writing-grid"><div class="stack"><section class="panel"><h2>给定材料</h2><p class="material">${w.material}</p><div class="task"><strong>作答任务</strong><br>${w.task}</div>${relatedWriting(w)}<a class="text-button" href="#lesson/${w.lesson}">先看对应方法 →</a></section><section class="panel"><h2>写完后，逐项自查</h2>${w.points.map((p, i) => `<label class="check-item"><input type="checkbox" data-check="${id}" value="${i}" ${(state.checks[id] || []).includes(i) ? "checked" : ""}>${p}</label>`).join("")}<p class="stat-foot">自查勾选只记录你的判断，不代表评分。</p></section></div><section class="panel"><label class="field-label" for="draft">我的答案</label><textarea id="draft" class="writing-area" data-draft="${id}" maxlength="20000" placeholder="先列关键词，再组织成完整答案。输入会自动保存在本机。">${esc(value)}</textarea><div class="field-meta"><span id="draft-status">本机自动保存</span><span id="word-count" class="${count > w.limit ? "over-limit" : ""}">${count} / ${w.limit} 字</span></div><p class="stat-foot">统计非空白字符，包含标点；不等同于答题纸格数。</p><div class="actions"><button class="btn secondary" data-action="export-draft" data-id="${id}">${icon("download")}导出这篇草稿</button></div><details><summary>展开参考要点与表达示例</summary><div class="note">建议先独立作答，再对照查漏。以下是编写者参考，不是官方答案或评分标准。</div><ul>${w.points.map((p) => `<li>${p}</li>`).join("")}</ul><div class="reference">${esc(w.sample)}</div></details></section></div>`;
+    return `<a class="back-link" href="#writing">${icon("back")}申论写作</a>${heading(w.type, w.title, `原创虚构材料 · 建议练习 ${w.minutes} 分钟 · 字数仅作自查`)}<div class="writing-grid"><div class="stack"><section class="panel"><h2>给定材料</h2><p class="material">${w.material}</p><div class="task"><strong>作答任务</strong><br>${w.task}</div>${relatedWriting(w)}<a class="text-button" href="#lesson/${w.lesson}">先看对应方法 →</a></section><section class="panel"><h2>写完后，逐项自查</h2>${w.points.map((p, i) => `<label class="check-item"><input type="checkbox" data-check="${id}" value="${i}" ${(state.checks[id] || []).includes(i) ? "checked" : ""}>${p}</label>`).join("")}<p class="stat-foot">自查勾选只记录你的判断，不代表评分。</p></section></div><section class="panel"><label class="field-label" for="draft">我的答案</label><textarea id="draft" class="writing-area" data-draft="${id}" maxlength="20000" placeholder="先列关键词，再组织成完整答案。输入会自动保存在本机。">${esc(value)}</textarea><div class="field-meta"><span id="draft-status">本机自动保存</span><span id="word-count" class="${count > w.limit ? "over-limit" : ""}">${count} / ${w.limit} 字${w.minLength && count < w.minLength ? ` · 尚不足${w.minLength}字` : ""}</span></div><p class="stat-foot">统计非空白字符，包含标点；不等同于答题纸格数。</p><div class="actions"><button class="btn secondary" data-action="export-draft" data-id="${id}">${icon("download")}导出这篇草稿</button></div><details><summary>展开参考要点与表达示例</summary><div class="note">建议先独立作答，再对照查漏。以下是编写者参考，不是官方答案或评分标准。</div><ul>${w.points.map((p) => `<li>${p}</li>`).join("")}</ul><div class="reference">${esc(w.sample)}</div></details></section></div>`;
   }
   function settings() {
     return (
@@ -1164,7 +1180,8 @@
         : "未能保存，请立即备份";
       const w = writing(t.dataset.draft),
         n = countWords(t.value);
-      $("#word-count").textContent = `${n} / ${w.limit} 字`;
+      $("#word-count").textContent =
+        `${n} / ${w.limit} 字${w.minLength && n < w.minLength ? ` · 尚不足${w.minLength}字` : ""}`;
       $("#word-count").classList.toggle("over-limit", n > w.limit);
     }
   });
@@ -1180,10 +1197,12 @@
       else writingStatus = t.value;
       $("#writing-results").innerHTML = writingResults();
     }
-    if (t.id === "target-module") {
-      targetModule = t.value;
+    if (["target-module", "target-stage"].includes(t.id)) {
+      if (t.id === "target-module") targetModule = t.value;
+      else targetStage = t.value;
+      const focusId = t.id;
       render();
-      $("#target-module").focus();
+      $("#" + focusId).focus();
     }
     if (t.dataset.bank) {
       bankFilter[t.dataset.bank] = t.value;

@@ -16,8 +16,8 @@
       application:
         "本站练法：先判断问主旨还是细节，再逐项核对对象、范围与语气。",
       boundary:
-        "词语相近不等于逻辑等价；历史页面中的时间指标不作为当前考试要求。",
-      lessons: ["mainidea", "word", "sentence-link", "detail-reading"],
+        "此出处讨论片段阅读，不是逻辑填空的词义依据；词语相近不等于逻辑等价，历史时间指标不作为当前考试要求。",
+      lessons: ["mainidea", "detail-reading"],
     },
     {
       id: "caijinlong-2011",
