@@ -36,7 +36,7 @@ const base = process.env.STUDY_BASE_URL || 'http://127.0.0.1:4173';
  assert.equal(C.methods.length,17);assert.equal(C.comparisons.length,7);
  const a=C.writing.find(w=>w.id==='w25'),b=C.writing.find(w=>w.id==='w26');assert.equal(a.material,b.material);assert.equal(a.materialGroup,b.materialGroup);assert.ok(a.material.length>1800);
  for(const w of [a,b])assert.ok(w.sample.replace(/\s/g,'').length<=w.limit);
- assert.equal(C.questions.length,594);assert.equal(C.writing.length,65);assert.equal(new Set(C.writing.map(w=>w.material)).size,31);
+ assert.equal(C.questions.length,621);assert.equal(C.writing.length,65);assert.equal(new Set(C.writing.map(w=>w.material)).size,31);
  console.log('PASS Minute simulation, unique set-partition enumeration, ordered draws and scoped author attribution');
  const old={schemaVersion:1,exam:'both',read:['travel'],favorites:['count'],notes:{travel:'测试旧行程笔记',count:'测试旧计数笔记'},attempts:[{qid:'q16',choice:1,at:'2026-11-04T12:00:00Z',seconds:9}],drafts:{w23:'测试旧对策草稿'},checks:{w23:[0]}};
  await seedPageLegacy(p, old);await p.reload();

@@ -1,0 +1,673 @@
+{
+  "notice": "Synthetic fixture only; no user records.",
+  "longBackup": {
+    "format": "zhixu-long-mock-backup",
+    "version": 1,
+    "exportedAt": 1793779204000,
+    "notice": "仅本页长题组记录，不含主站学习记录或私人题库；恢复后计时暂停，不自动同步。",
+    "records": {
+      "format": "zhixu-long-mock-records",
+      "version": 1,
+      "revision": 0,
+      "commitId": null,
+      "sessions": [
+        {
+          "id": "synthetic-v033-long",
+          "title": "合成旧版60题记录",
+          "kind": "original-custom",
+          "official": false,
+          "createdAt": 1793779200000,
+          "endedAt": null,
+          "status": "paused",
+          "budgetMs": 3600000,
+          "anchorMs": null,
+          "elapsedMs": 3000,
+          "section": 0,
+          "clockIssue": false,
+          "sections": [
+            {
+              "name": "资料分析",
+              "cursor": 0,
+              "elapsedMs": 3000,
+              "items": [
+                {
+                  "qid": "q01",
+                  "signature": "v1:q4:318dd6e6d5b59a0c",
+                  "answer": 1,
+                  "optionCount": 4,
+                  "choice": 1,
+                  "type": "增长计算",
+                  "lesson": "growth"
+                },
+                {
+                  "qid": "q04",
+                  "signature": "v1:q4:0ab106c520f7e143",
+                  "answer": 0,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "比重计算",
+                  "lesson": "share"
+                },
+                {
+                  "qid": "q06",
+                  "signature": "v1:q4:68c9dcc012581154",
+                  "answer": 1,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "平均数计算",
+                  "lesson": "average"
+                },
+                {
+                  "qid": "q19",
+                  "signature": "v1:q4:72421d8cb2662078",
+                  "answer": 0,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "间隔与年均增长",
+                  "lesson": "compound-growth"
+                },
+                {
+                  "qid": "q21",
+                  "signature": "v1:q4:d288d1bbd54c45e9",
+                  "answer": 1,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "混合增长",
+                  "lesson": "mixed-growth"
+                },
+                {
+                  "qid": "q94",
+                  "signature": "v1:q4:653a067c563c64cc",
+                  "answer": 1,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "混合增长",
+                  "lesson": "mixed-weights"
+                },
+                {
+                  "qid": "q97",
+                  "signature": "v1:q4:f8311b453fdbea55",
+                  "answer": 2,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "增长排序",
+                  "lesson": "rate-amount-order"
+                },
+                {
+                  "qid": "q106",
+                  "signature": "v1:q4:8b5805745bf15e48",
+                  "answer": 1,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "估算边界",
+                  "lesson": "estimation-boundary"
+                },
+                {
+                  "qid": "q121",
+                  "signature": "v1:q4:6b9ddfc35e24cab7",
+                  "answer": 0,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "增长贡献率与拉动",
+                  "lesson": "growth-contribution"
+                },
+                {
+                  "qid": "q130",
+                  "signature": "v1:q4:ee6488bb862189d7",
+                  "answer": 2,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "多表定位与日均比较",
+                  "lesson": "multi-table"
+                }
+              ]
+            },
+            {
+              "name": "判断推理",
+              "cursor": 0,
+              "elapsedMs": 0,
+              "items": [
+                {
+                  "qid": "q07",
+                  "signature": "v1:q4:389b850d86651009",
+                  "answer": 0,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "条件推理",
+                  "lesson": "logic"
+                },
+                {
+                  "qid": "q09",
+                  "signature": "v1:q4:12fa7e122cff8bdc",
+                  "answer": 1,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "论证评价",
+                  "lesson": "argument"
+                },
+                {
+                  "qid": "q10",
+                  "signature": "v1:q4:b9b19ba4e86a0bce",
+                  "answer": 2,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "定义判断",
+                  "lesson": "definition"
+                },
+                {
+                  "qid": "q27",
+                  "signature": "v1:q4:f8993d062512b6e4",
+                  "answer": 1,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "类比推理",
+                  "lesson": "analogy"
+                },
+                {
+                  "qid": "q29",
+                  "signature": "v1:q4:11f6b3b44b594854",
+                  "answer": 0,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "排列推理",
+                  "lesson": "arrangement"
+                },
+                {
+                  "qid": "q91",
+                  "signature": "v1:q4:606461cb2015f099",
+                  "answer": 3,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "定义判断",
+                  "lesson": "definition-conditions"
+                },
+                {
+                  "qid": "q100",
+                  "signature": "v1:q4:6bc7a67a4df87d26",
+                  "answer": 2,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "因果论证",
+                  "lesson": "argument-controls"
+                },
+                {
+                  "qid": "q127",
+                  "signature": "v1:q4:d363183eefed20ee",
+                  "answer": 2,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "量词与命题否定",
+                  "lesson": "quantified-logic"
+                },
+                {
+                  "qid": "q225",
+                  "signature": "v1:q4:17c8e6e78eaa995f",
+                  "answer": 2,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "平面图形旋转",
+                  "lesson": "rotation"
+                },
+                {
+                  "qid": "q256",
+                  "signature": "v1:q4:62eca8edee4e9bf3",
+                  "answer": 2,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "图形叠加",
+                  "lesson": "overlay"
+                }
+              ]
+            },
+            {
+              "name": "言语理解",
+              "cursor": 0,
+              "elapsedMs": 0,
+              "items": [
+                {
+                  "qid": "q11",
+                  "signature": "v1:q4:a18f1fb405f1a97a",
+                  "answer": 2,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "主旨概括",
+                  "lesson": "mainidea"
+                },
+                {
+                  "qid": "q13",
+                  "signature": "v1:q4:cb97f114aad99824",
+                  "answer": 1,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "逻辑填空",
+                  "lesson": "word"
+                },
+                {
+                  "qid": "q31",
+                  "signature": "v1:q4:55c7857fd32e2fa1",
+                  "answer": 1,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "语句排序",
+                  "lesson": "sentence-order"
+                },
+                {
+                  "qid": "q33",
+                  "signature": "v1:q4:396b25f7f8b0ef79",
+                  "answer": 1,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "细节判断",
+                  "lesson": "detail-reading"
+                },
+                {
+                  "qid": "q70",
+                  "signature": "v1:q4:fea54bc98cc0b0f1",
+                  "answer": 2,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "语句衔接",
+                  "lesson": "sentence-link"
+                },
+                {
+                  "qid": "q73",
+                  "signature": "v1:q4:baad9efff9371559",
+                  "answer": 1,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "逻辑填空",
+                  "lesson": "context-blanks"
+                },
+                {
+                  "qid": "q85",
+                  "signature": "v1:q4:6a64af33c12bf20f",
+                  "answer": 1,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "主旨观点",
+                  "lesson": "scoped-reading"
+                },
+                {
+                  "qid": "q109",
+                  "signature": "v1:q4:12418d2b84f44797",
+                  "answer": 1,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "限定词与细节判断",
+                  "lesson": "detail-boundaries"
+                },
+                {
+                  "qid": "q112",
+                  "signature": "v1:q4:1c87ba924b6f6f66",
+                  "answer": 0,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "指代与语句衔接",
+                  "lesson": "cohesion-reference"
+                },
+                {
+                  "qid": "q133",
+                  "signature": "v1:q4:6909c4a46fb48a22",
+                  "answer": 0,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "标题选择",
+                  "lesson": "title-choice"
+                }
+              ]
+            },
+            {
+              "name": "数量关系",
+              "cursor": 0,
+              "elapsedMs": 0,
+              "items": [
+                {
+                  "qid": "q14",
+                  "signature": "v1:q4:52e1e5463c71e3f2",
+                  "answer": 1,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "工程问题",
+                  "lesson": "work"
+                },
+                {
+                  "qid": "q16",
+                  "signature": "v1:q4:692b2c305ca39a5e",
+                  "answer": 1,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "排列组合",
+                  "lesson": "count"
+                },
+                {
+                  "qid": "q18",
+                  "signature": "v1:q4:2e2b1faa68880c4c",
+                  "answer": 1,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "概率计算",
+                  "lesson": "probability"
+                },
+                {
+                  "qid": "q35",
+                  "signature": "v1:q4:e7f88b4db0194689",
+                  "answer": 1,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "行程问题",
+                  "lesson": "travel"
+                },
+                {
+                  "qid": "q37",
+                  "signature": "v1:q4:db94cd4475cdc60a",
+                  "answer": 1,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "集合容斥",
+                  "lesson": "inclusion"
+                },
+                {
+                  "qid": "q39",
+                  "signature": "v1:q4:db774130d8f1a430",
+                  "answer": 0,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "余数问题",
+                  "lesson": "remainders"
+                },
+                {
+                  "qid": "q76",
+                  "signature": "v1:q4:98a0bd759f802627",
+                  "answer": 1,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "几何计算",
+                  "lesson": "geometry-scale"
+                },
+                {
+                  "qid": "q79",
+                  "signature": "v1:q4:8b3c5a1f5f91c455",
+                  "answer": 1,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "经济利润",
+                  "lesson": "profit-discount"
+                },
+                {
+                  "qid": "q82",
+                  "signature": "v1:q4:131dc269b7a68dbd",
+                  "answer": 2,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "浓度问题",
+                  "lesson": "mixture"
+                },
+                {
+                  "qid": "q88",
+                  "signature": "v1:q4:21b43c3c90ca7fd0",
+                  "answer": 1,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "经济利润",
+                  "lesson": "profit-bases"
+                }
+              ]
+            },
+            {
+              "name": "政治理论",
+              "cursor": 0,
+              "elapsedMs": 0,
+              "items": [
+                {
+                  "qid": "q41",
+                  "signature": "v1:q4:172ba4e119226495",
+                  "answer": 0,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "理论概念",
+                  "lesson": "development"
+                },
+                {
+                  "qid": "q43",
+                  "signature": "v1:q4:90120f3424822e56",
+                  "answer": 1,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "理论概念",
+                  "lesson": "modernization"
+                },
+                {
+                  "qid": "q436",
+                  "signature": "v1:q4:fe7812e55474556b",
+                  "answer": 2,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "实践与认识",
+                  "lesson": "practice-cognition"
+                },
+                {
+                  "qid": "q442",
+                  "signature": "v1:q4:bacbd9c357989a3b",
+                  "answer": 0,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "矛盾分析方法",
+                  "lesson": "contradiction-method"
+                },
+                {
+                  "qid": "q448",
+                  "signature": "v1:q4:cfa8cdb446d8db50",
+                  "answer": 2,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "历史唯物主义入门",
+                  "lesson": "productive-relations"
+                },
+                {
+                  "qid": "q454",
+                  "signature": "v1:q4:479ef54f086f321b",
+                  "answer": 1,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "毛泽东思想基础",
+                  "lesson": "mao-thought-context"
+                },
+                {
+                  "qid": "pol2-01",
+                  "signature": "v1:q4:4328e25ab9b04332",
+                  "answer": 1,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "社会存在与群众史观",
+                  "lesson": "social-being-people"
+                },
+                {
+                  "qid": "pol2-07",
+                  "signature": "v1:q4:70dccc0ec434c59e",
+                  "answer": 2,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "六个必须坚持",
+                  "lesson": "six-method-principles"
+                },
+                {
+                  "qid": "pol2-13",
+                  "signature": "v1:q4:bf36a23139c310c3",
+                  "answer": 3,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "新质生产力",
+                  "lesson": "new-quality-productivity"
+                },
+                {
+                  "qid": "pol2-19",
+                  "signature": "v1:q4:e66a1261082ea1cf",
+                  "answer": 1,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "进一步全面深化改革",
+                  "lesson": "reform-framework-2024"
+                }
+              ]
+            },
+            {
+              "name": "常识判断",
+              "cursor": 0,
+              "elapsedMs": 0,
+              "items": [
+                {
+                  "qid": "q45",
+                  "signature": "v1:q4:86e4b017992c3d9d",
+                  "answer": 1,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "国家机构",
+                  "lesson": "state-organs"
+                },
+                {
+                  "qid": "q47",
+                  "signature": "v1:q4:e89cf231773ac0e7",
+                  "answer": 2,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "民事行为能力",
+                  "lesson": "civil-capacity"
+                },
+                {
+                  "qid": "q49",
+                  "signature": "v1:q4:bfa72199be0ccb23",
+                  "answer": 1,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "经济常识",
+                  "lesson": "cpi"
+                },
+                {
+                  "qid": "q51",
+                  "signature": "v1:q4:5219f43dfdd520dd",
+                  "answer": 1,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "物理常识",
+                  "lesson": "phase-change"
+                },
+                {
+                  "qid": "q55",
+                  "signature": "v1:q4:5cb5deaf4e204e61",
+                  "answer": 1,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "历史分期",
+                  "lesson": "history-periods"
+                },
+                {
+                  "qid": "q58",
+                  "signature": "v1:q4:c559c8c07f5a3eee",
+                  "answer": 3,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "史书体例",
+                  "lesson": "historiography"
+                },
+                {
+                  "qid": "q61",
+                  "signature": "v1:q4:7bdb7bdb21b828fb",
+                  "answer": 0,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "古代科技",
+                  "lesson": "paper-printing"
+                },
+                {
+                  "qid": "q400",
+                  "signature": "v1:q4:71746fc18de51979",
+                  "answer": 1,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "宪法权利义务",
+                  "lesson": "constitutional-rights"
+                },
+                {
+                  "qid": "q406",
+                  "signature": "v1:q4:b3b5cb34d0de4b8e",
+                  "answer": 2,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "行政复议基础",
+                  "lesson": "admin-review"
+                },
+                {
+                  "qid": "q46",
+                  "signature": "v1:q4:95986f5c06d63600",
+                  "answer": 0,
+                  "optionCount": 4,
+                  "choice": null,
+                  "type": "国家机构",
+                  "lesson": "state-organs"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "studyBackup": {
+    "schemaVersion": 2,
+    "revision": 4,
+    "exam": "fujian",
+    "read": [
+      "growth"
+    ],
+    "favorites": [
+      "pn-context-contrast"
+    ],
+    "notes": {
+      "growth": "合成旧笔记，不是用户记录"
+    },
+    "drafts": {
+      "w01": "合成旧草稿，不是用户记录"
+    },
+    "checks": {},
+    "attempts": [],
+    "runs": [],
+    "activeRun": {
+      "id": "synthetic-v033-choice",
+      "kind": "choice",
+      "startedAt": "2026-11-04T08:00:00.000Z",
+      "endedAt": null,
+      "anchorMs": null,
+      "elapsedMs": 3000,
+      "budgetMs": 600000,
+      "status": "paused",
+      "clockIssue": "",
+      "items": [
+        {
+          "qid": "q01",
+          "module": "资料分析",
+          "answer": 1,
+          "signature": "v1:q4:318dd6e6d5b59a0c"
+        },
+        {
+          "qid": "pn-compound-logic-01",
+          "module": "判断推理",
+          "answer": 2,
+          "signature": "v1:q4:df7250935c9888dd"
+        }
+      ],
+      "cursor": 0,
+      "spentMs": [
+        3000,
+        0
+      ],
+      "responses": [
+        {
+          "choice": 1,
+          "at": "2026-11-04T08:00:02.000Z"
+        },
+        null
+      ]
+    },
+    "exportedAt": "2026-11-04T08:00:00.000Z"
+  }
+}

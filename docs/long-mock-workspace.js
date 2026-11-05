@@ -10,7 +10,7 @@
   const savedText='已保存到本机。本页记录不含主站学习记录或私人题库。';
   function sync(){
     const blocked=repo.busy||!!repo.error||!repo.snapshot();
-    for(const e of doc.querySelectorAll('#create input,#create button,#builder [data-preset],#resume,#pause,#finish,#question input,#question button,#prev,#next,#next-unanswered,#sections button,#import'))e.disabled=blocked;
+    for(const e of doc.querySelectorAll('#create input,#create button,#builder [data-preset],#fixed-papers input,#fixed-papers button,#resume,#pause,#finish,#question input,#question button,#prev,#next,#next-unanswered,#sections button,#import'))e.disabled=blocked;
     $('#reload').disabled=repo.busy;$('#export').disabled=!repo.snapshot();$('#export').textContent=repo.hasDraft||repo.busy||repo.error?'导出已保存记录（不含待提交）':'导出已保存长题组备份';$('#emergency').disabled=!repo.pageCopy()&&repo.raw===null;
     const r=current();if(r){const end=M.terminal(r);$('#resume').disabled=blocked||end||r.status==='running'||M.compatibility(r).length>0;$('#pause').disabled=blocked||r.status!=='running';$('#finish').disabled=blocked||end;
       for(const e of doc.querySelectorAll('#question input,#question button'))e.disabled=blocked||r.status!=='running'||end||M.compatibility(r).length>0;
@@ -26,7 +26,7 @@
     for(const r of [...state.sessions].reverse()){const s=M.summary(r).total;const b=node('button',`${r.title} · ${s.planned}题 · 已做${s.answered}/未做${s.unanswered} · ${{paused:'暂停',running:'计时中',finished:'已交卷',timeout:'到时'}[r.status]}`);b.onclick=()=>{selected=r.id;render();};history.append(b);}
     if(!state.sessions.length)history.append(node('p','暂无本页记录。'));
     const r=current();$('#reader').hidden=!r;
-    if(r){$('#run-title').textContent=r.title;$('#run-meta').textContent=`原创自组 · 非官方 · ${M.summary(r).total.planned}题 · 总预算${r.budgetMs/60000}分钟（自选）`;renderSections(r);renderQuestion(r);renderClock();}
+    if(r){$('#run-title').textContent=r.title;$('#run-meta').textContent=`原创训练记录 · 非官方 · ${M.summary(r).total.planned}题 · 总预算${r.budgetMs/60000}分钟（自选）`;renderSections(r);renderQuestion(r);renderClock();}
     renderPending();sync();
   }
   function renderSections(r){const holder=$('#sections');holder.replaceChildren();const result=M.summary(r),report=$('#report');report.replaceChildren();r.sections.forEach((s,index)=>{const count=result.sections[index];const b=node('button',`${s.name} ${count.answered}/${count.planned}，未做${count.unanswered}`);b.classList.toggle('selected',index===r.section);b.onclick=()=>act({type:'navigate',section:index,cursor:s.cursor});holder.append(b);});
@@ -55,11 +55,31 @@
   const inputs=$('#module-inputs');for(const m of M.modules()){const l=node('label',m.name+'（可用'+m.available+'题）'),i=node('input');i.type='number';i.min='0';i.max=String(m.available);i.step='1';i.value=m.name==='福建专题'?'0':'10';i.dataset.module=m.name;l.append(i);inputs.append(l);}
   $('#scope').textContent=`当前公开题库${window.STUDY_CONTENT.questions.length}题均为原创。本候选可用${M.pool().length}题；图形题尚未接入本页，未计入可选范围。现有内容不足以代表完整考试范围，也未按真实题型比例或难度标定。`;
   for(const b of doc.querySelectorAll('[data-preset]'))b.onclick=()=>{offset=Number(b.dataset.preset);$('#title').value='原创60题长题组 '+({0:'A',10:'B',20:'C'}[offset]);for(const i of inputs.querySelectorAll('input'))i.value=i.dataset.module==='福建专题'?'0':'10';say('已填入便捷配置。总预算仍由你设置；建立后可在各模块中作答。');};
-  $('#create').onsubmit=async e=>{e.preventDefault();try{const state=repo.snapshot();if(state.sessions.length>=M.LIMITS.sessions)throw Error('已达100组，不会自动删除历史。请先导出。');const requests=[...inputs.querySelectorAll('input')].filter(i=>Number(i.value)>0).map(i=>({module:i.dataset.module,count:Number(i.value)}));const run=M.build({id:window.crypto.randomUUID(),title:$('#title').value,minutes:Number($('#minutes').value),requests,now:Date.now(),offset});state.sessions.push(run);const result=await commit(state);if(result.ok){selected=run.id;render();}}catch(e){say(e.message);}};
+  function hasRunning(state){return state.sessions.some(r=>r.status==='running');}
+  async function createFixed(paperId){
+    if(repo.busy||repo.error||!repo.snapshot()){say('当前记录尚不可安全编辑，请等待保存或先处理提示。');return;}
+    try{
+      const state=repo.snapshot();
+      if(hasRunning(state))throw Error('请先暂停正在计时的题组并确认已保存，再建立另一组，避免切走后继续计时。');
+      if(state.sessions.length>=M.LIMITS.sessions)throw Error('已达100组，不会自动删除历史。请先导出。');
+      const minutes=Number($('#fixed-minutes').value);
+      if(!Number.isSafeInteger(minutes)||minutes<1||minutes>M.LIMITS.minutes)throw Error('请先明确设置固定卷1–480分钟自选预算；不是官方考试时长。');
+      if(!window.FULL_PAPER_ADAPTER?.createRun)throw Error('固定训练卷组件未加载，现有题组与备份仍保留。');
+      const run=window.FULL_PAPER_ADAPTER.createRun(paperId,{id:window.crypto.randomUUID(),minutes,now:Date.now()});
+      if(!window.confirm(`${run.title}：120道已有原创题，自选预算${minutes}分钟；非官方、非真题、无官方分值。建立后初始暂停，计入本页记录容量。确认建立？`)){say('已取消建立，已有记录未变。');return;}
+      state.sessions.push(run);const result=await commit(state);
+      if(result.ok){selected=run.id;render();}
+    }catch(e){say('未建立固定卷：'+e.message);}
+  }
+  const fixedList=$('#fixed-paper-list');
+  if(window.FULL_TRAINING_PAPERS?.papers?.length&&window.FULL_PAPER_ADAPTER?.createRun){
+    for(const paper of window.FULL_TRAINING_PAPERS.papers){const b=node('button','建立'+paper.title+'（初始暂停）');b.type='button';b.dataset.fixedPaper=paper.id;b.onclick=()=>createFixed(paper.id);fixedList.append(b);}
+  }else fixedList.append(node('p','固定训练卷组件未加载；可继续使用原有60题配置、自组训练与独立备份。'));
+  $('#create').onsubmit=async e=>{e.preventDefault();try{if(repo.busy||repo.error||!repo.snapshot())return;const state=repo.snapshot();if(hasRunning(state))throw Error('请先暂停正在计时的题组并确认已保存，再建立另一组，避免切走后继续计时。');if(state.sessions.length>=M.LIMITS.sessions)throw Error('已达100组，不会自动删除历史。请先导出。');const requests=[...inputs.querySelectorAll('input')].filter(i=>Number(i.value)>0).map(i=>({module:i.dataset.module,count:Number(i.value)}));const run=M.build({id:window.crypto.randomUUID(),title:$('#title').value,minutes:Number($('#minutes').value),requests,now:Date.now(),offset});state.sessions.push(run);const result=await commit(state);if(result.ok){selected=run.id;render();}}catch(e){say(e.message);}};
   window.addEventListener('beforeunload',e=>{if(repo.busy||repo.hasDraft){e.preventDefault();e.returnValue='';}});
   window.addEventListener('pageshow',()=>{if(alive){tick();render();}});
   // No unload mutation is required: each accepted interaction has a synchronous journal.
   // A timer uses its last durable wall-clock anchor even after refresh/close.
-  repo.read();if(!repo.error)say(savedText);selected=repo.snapshot()?.sessions.find(r=>!M.terminal(r))?.id||repo.snapshot()?.sessions.at(-1)?.id||'';render();tick();setInterval(tick,1000);
+  repo.read();if(!repo.error)say(savedText);const initialSessions=repo.snapshot()?.sessions||[];selected=initialSessions.find(r=>r.status==='running')?.id||initialSessions.filter(r=>!M.terminal(r)).at(-1)?.id||initialSessions.at(-1)?.id||'';render();tick();setInterval(tick,1000);
   window.LONG_MOCK_WORKSPACE={repo,render};
 })();

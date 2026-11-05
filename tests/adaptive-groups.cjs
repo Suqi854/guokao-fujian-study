@@ -38,7 +38,7 @@ const live=(()=>{
   const c=vm.createContext({window:{}}),html=baseline('index.html');
   let oldQuestions,oldLessons,oldCopies;
   for(const [,file] of html.matchAll(/src="\.\/([^"]+)"/g)){
-    if(file==='app.js'||file==='practice-next.js')continue;
+    if(file==='app.js'||file==='practice-next.js'||file==='practice-overnight.js')continue;
     if(file==='coverage-map.js'){
       oldQuestions=c.window.STUDY_CONTENT.questions.slice();oldLessons=c.window.STUDY_CONTENT.lessons.slice();
       oldCopies=copy(oldQuestions);
@@ -49,7 +49,7 @@ const live=(()=>{
   return {C:c.window.STUDY_CONTENT,T:c.window.STUDY_TRAINING,oldQuestions,oldLessons,oldCopies};
 })();
 
-test('actual integration retains 594 questions, 94 lessons, all 567 old question objects/signatures and 91 lesson objects',()=>{
+test('focused v0.33 integration retains 594 questions, 94 lessons, all 567 old question objects/signatures and 91 lesson objects',()=>{
   assert.equal(live.C.questions.length,594);assert.equal(live.C.lessons.length,94);
   for(const q of live.oldQuestions)assert.equal(live.C.questions.find(n=>n.id===q.id),q);
   for(const l of live.oldLessons)assert.equal(live.C.lessons.find(n=>n.id===l.id),l);

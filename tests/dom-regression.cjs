@@ -56,7 +56,7 @@ function select(selector, value) { const el = d.querySelector(selector); el.valu
     await navigateHash(w,link.hash,()=>link.click()); await pause();
     assert.match(text(".quiz-header"), /1 \/ 2/);
   }
-  console.log("PASS DOM: all 94 full lessons, every existing learning path and sixty-nine exact recent quiz paths");
+  console.log("PASS DOM: all 97 full lessons, every existing learning path and sixty-nine exact recent quiz paths");
   await route("#lesson/figure-features/practice");
   await action("feature-example", 1);
   assert.match(text(".diagram-caption"), /黑格 5 · 连通部分 1 · 孔洞 0/);

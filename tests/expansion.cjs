@@ -20,8 +20,8 @@ const evidence = path.join(__dirname, "..", "test-results");
   p.on("pageerror", (e) => errors.push(e.message));
   await p.goto(base);
   const data = await p.evaluate(() => window.STUDY_CONTENT);
-  assert.equal(data.lessons.length, 94);
-  assert.equal(data.questions.length, 594);
+  assert.equal(data.lessons.length, 97);
+  assert.equal(data.questions.length, 621);
   assert.equal(data.writing.length, 65);
   for (const key of ["lessons", "questions", "writing"])
     assert.equal(new Set(data[key].map((x) => x.id)).size, data[key].length);
