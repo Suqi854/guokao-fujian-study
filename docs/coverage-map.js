@@ -108,7 +108,7 @@
     ],
   };
   C.coverageAdded = [];
-  C.coverageDeepened = ["work", "share"];
+  C.coverageDeepened = ["mainidea", "definition"];
 
   C.coverageMatrix = C.categories
     .filter((c) => c !== "全部")
