@@ -3,7 +3,7 @@ const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path'),asse
 const root=path.join(__dirname,'..'),ctx={window:{}};vm.createContext(ctx);
 for(const m of fs.readFileSync(path.join(root,'docs/index.html'),'utf8').matchAll(/src="\.\/([^\"]+)"/g))if(m[1]!=='app.js')vm.runInContext(fs.readFileSync(path.join(root,'docs',m[1]),'utf8'),ctx);
 const C=JSON.parse(JSON.stringify(ctx.window.STUDY_CONTENT)),q=Object.fromEntries(C.questions.map(x=>[x.id,x]));
-assert.equal(C.lessons.length,75);assert.equal(C.questions.length,411);assert.equal(C.lessons.filter(l=>l.learningLevels).length,53);assert.equal(Object.keys(C.sources).length,24);
+assert.equal(C.lessons.length,75);assert.equal(C.questions.length,435);assert.equal(C.lessons.filter(l=>l.learningLevels).length,57);assert.equal(Object.keys(C.sources).length,24);
 for(const id of ['cpi','fujian-geography','constitutional-rights','admin-review']){
   const l=C.lessons.find(l=>l.id===id);assert.equal(l.sections.length,9);assert.ok(l.versionNote);
   assert.deepEqual(Object.values(l.learningLevels).flatMap(g=>g.sections),[...Array(9).keys()]);

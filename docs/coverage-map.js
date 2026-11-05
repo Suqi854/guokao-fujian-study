@@ -42,7 +42,7 @@
       ],
       [
         "标题选择与下文推断",
-        "标题已有三层与9题，下文推断仍3题；长语境、多段结构及接近干扰项仍需扩充。",
+        "标题与下文推断均已有三层及9题；长语境、多段结构及更多接近干扰项仍需扩充。",
       ],
     ],
     数量关系: [
@@ -107,8 +107,8 @@
       ],
     ],
   };
-  C.coverageAdded = ["constitutional-rights", "admin-review"];
-  C.coverageDeepened = ["cpi", "fujian-geography"];
+  C.coverageAdded = [];
+  C.coverageDeepened = ["estimation-boundary", "without-replacement", "three-set-counting", "next-paragraph"];
 
   C.coverageMatrix = C.categories
     .filter((c) => c !== "全部")
