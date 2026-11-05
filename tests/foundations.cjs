@@ -14,7 +14,7 @@ assert.equal(q.q187.answer,constraints187.findIndex(x=>x.every(Boolean)));assert
 // A positive response from observed users permits either outcome for unobserved users; universal benefit is not entailed.
 const worlds=[{observed:true,unobserved:true},{observed:true,unobserved:false}];assert.ok(worlds.every(w=>w.observed));assert.ok(worlds.some(w=>!w.unobserved));
 for(let n=181;n<=189;n++){const x=q['q'+n];assert.equal(x.optionReviews.length,4);assert.equal(x.meta.source.kind,'original');assert.equal(x.meta.examSource.year,null);assert.equal(x.meta.difficulty.level,null);}
-assert.equal(C.questions.length,669);assert.equal(C.writing.length,75);assert.equal(new Set(C.writing.map(x=>x.material)).size,33);
+assert.equal(C.questions.length,699);assert.equal(C.writing.length,75);assert.equal(new Set(C.writing.map(x=>x.material)).size,33);
 for(const id of ['development','state-organs','sentence-link']){const l=C.lessons.find(x=>x.id===id);assert.ok(l.sections.flat().join('').length>1150);assert.deepEqual(Object.values(l.learningLevels).flatMap(x=>x.sections),Array.from({length:9},(_,i)=>i));}
 const a=C.writing.find(x=>x.id==='w31'),z=C.writing.find(x=>x.id==='w32');assert.equal(a.material,z.material);assert.equal(a.materialGroup,z.materialGroup);assert.ok(a.material.length>1500);for(const w of [a,z])assert.ok(w.sample.replace(/\s/g,'').length<=w.limit);
 assert.equal(C.sources['development-system'].year,'2023-01-17');assert.equal(C.methods.length,17);console.log('PASS Source-scoped foundations, semantic review ledger and conjunction/countermodel checks');

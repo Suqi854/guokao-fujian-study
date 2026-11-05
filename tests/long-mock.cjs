@@ -11,7 +11,7 @@ const w=env(),M=w.LONG_MOCK_MODEL,S=w.LONG_MOCK_STORE;
 const requests=M.modules().filter(m=>m.name!=='福建专题').map(m=>({module:m.name,count:10}));
 const build=(id='test-run',minutes=60,offset=0)=>M.build({id,title:'原创测试',requests,minutes,now:NOW,offset});
 (async()=>{
- assert.equal(w.STUDY_CONTENT.questions.length,669);assert.equal(M.pool().length,646);assert.equal(M.modules().length,7);
+ assert.equal(w.STUDY_CONTENT.questions.length,699);assert.equal(M.pool().length,676);assert.equal(M.modules().length,7);
  const twoHundred=M.build({id:'boundary-200',title:'200题边界',requests:[{module:'数量关系',count:100},{module:'资料分析',count:100}],minutes:480,now:NOW});assert.equal(M.summary(twoHundred).total.planned,200);assert.throws(()=>M.build({id:'over-200',title:'201题',requests:[{module:'数量关系',count:101},{module:'资料分析',count:100}],minutes:60,now:NOW}),/200/);
  const ids=new Set();for(let i=0;i<3;i++){const r=build('preset-'+i,60,i*10);assert.equal(M.summary(r).total.planned,60);for(const id of r.sections.flatMap(s=>s.items.map(q=>q.qid))){assert.ok(!ids.has(id),'three presets are disjoint');ids.add(id);}}assert.equal(ids.size,180);
  let r=build();assert.equal(r.status,'paused');r=M.action(r,{type:'resume'},NOW);r=M.action(r,{type:'answer',choice:r.sections[0].items[0].answer},NOW+1000);r=M.action(r,{type:'navigate',section:1,cursor:5},NOW+2500);r=M.action(r,{type:'answer',choice:(r.sections[1].items[5].answer+1)%4},NOW+4500);r=M.action(r,{type:'pause'},NOW+7000);
@@ -38,6 +38,6 @@ const build=(id='test-run',minutes=60,offset=0)=>M.build({id,title:'原创测试
  assert.ok(calls.every(([,key])=>key===S.KEY||key.startsWith(S.PREFIX)),'old and private keys neither read nor written');assert.equal(data.get('zhixu-study-v1'),'v1 sentinel');assert.equal(data.get('zhixu-study-v2'),'v2 sentinel');assert.equal(data.get('zhixu-private-library-v1'),'private sentinel');
  const prior=data.get(S.KEY);data.set(S.KEY,'{broken');const broken=S.create();assert.equal(broken.read().ok,false);assert.equal(broken.raw,'{broken');assert.equal(data.get(S.KEY),'{broken');data.set(S.KEY,prior);
  const noLocks=env();noLocks.navigator.locks=undefined;const ro=noLocks.LONG_MOCK_STORE.create();ro.read();assert.match(ro.error,/只读/);assert.equal((await ro.save(doc)).ok,false);assert.equal(data.get(S.KEY),prior);
- console.log('PASS model: 3 x 60 distinct references, 646 eligible/669 current, modules, deadline, pause/resume, refresh anchor, missing content, backup isolation, conflicts');
+ console.log('PASS model: 3 x 60 distinct references, 676 eligible/699 current, modules, deadline, pause/resume, refresh anchor, missing content, backup isolation, conflicts');
  console.log('PASS storage: synchronous journal, close before lock, cross-tab conflict preservation, staging/commit quotas, read denial, corrupt source, unsupported locks, untouched v1/v2/private');
 })().catch(e=>{console.error(e);process.exit(1);});

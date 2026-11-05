@@ -28,7 +28,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   const topics = C.coverageMatrix.flatMap((g) => g.topics),
     gaps = C.coverageMatrix.flatMap((g) => g.gaps);
   assert.equal(C.coverageMatrix.length, 8);
-  assert.equal(topics.length, 102);
+  assert.equal(topics.length, 104);
   assert.equal(gaps.length, 24);
   for (const [field, items] of [
     ["lessonIds", C.lessons],

@@ -1,0 +1,274 @@
+{
+  "curriculumQuestions": {
+    "c36-phase-01": "d7285ae135389e4b9616a64e15cd8294d434326367973025550283643cdf49ad",
+    "c36-phase-02": "6cae64cbd9c629ba5366f9a4bd430cfe60edd49a1afae678a0d8f718a2b47172",
+    "c36-phase-03": "e1c7e58dfac3b674f3d7340dc07608ad3b01b961803bdccac44831a4fc1bc16e",
+    "c36-phase-04": "f5cb96dedccc5f053c843be8abe0fb30888d130de2970f7423a8ae2ea5777e1e",
+    "c36-phase-05": "8fcacb6b2aff63205f369daa3c2159c1204a577771243bf3d712242a8ee60a3c",
+    "c36-phase-06": "0101c2b2161dd33839a9dbb1b9dd428221ae32ef869fbf3b24eb025db2278312",
+    "c36-phase-07": "763faff55975eec6196482d0397db0461909b711373380e374485025d464e1f3",
+    "c36-phase-08": "00d128cc86eb3cf885aa6509313460dcc32a6b94df9a96912ba095c26192834f",
+    "c36-phase-09": "8fd18a1d083a207932cd95f3318855753ab2e6353392c1c28a57dfa9ac8ca3b4",
+    "c36-history-01": "a9fbb56341a91d528481db95d3075e3037739fca5c2289503ff8396343c936c9",
+    "c36-history-02": "7215ea3ec2fb897ddbc2c8ad305ce67f3432ddcf1d49d3ebdf4c6dbaf60601a9",
+    "c36-history-03": "5f4864cb4bccf9269644775bc7d4d82ee6a1f56ccc25240da1b79e88c9d86f8b",
+    "c36-history-04": "ff1ca74fba536ac7e0710b6cdb3ced1f14d4d1be21e08c4f0fea796c52b6c60f",
+    "c36-history-05": "72cde3f13b14278bfc96f0ba38d4dda45a94770062f80501adbf3a427cb6fe57",
+    "c36-history-06": "d66f7bfa0a3fdc6035339338a834a2ce7b1c5ed51cb4ef72b26993dd12086986",
+    "c36-history-07": "d3f8197092fc5176336bb2cb7a55fa1f5424910388de11c16aed3263c5637c98",
+    "c36-history-08": "fb13dca6062de0960fbf801665bd748bceb6e01a2cd3332aeb0201cc429c1221",
+    "c36-history-09": "9a91988622f9f1175b50b9c0591d7b7e93f596062e61d3c6fda5113f023f3e25"
+  },
+  "politicsQuestions": {
+    "pol36-01": "dd1dc7a6bb59498e34e57cd8d91207d5c8dff2c1c32f8809de96a7bebd721ee2",
+    "pol36-02": "be0db84feecff4cfc7c3dd85faf61228d9f033a88e159a367b24b273d6393699",
+    "pol36-03": "be8e402c40118f876334cee72d7e08eabfa68d22246af2ff23c0118d7197a8b3",
+    "pol36-04": "58a3cc538438f5864f126b62288f233842f5e50ebe2c74a2de2ba8524dd75f04",
+    "pol36-05": "d6a6362d1379fc680b8731154f03954bb83fe1f2ee794f3fe4dff7c870e81036",
+    "pol36-06": "3017941f2e3ecdf0c6882b449e23e95c21815d3a251622d83db6f2071a185550",
+    "pol36-07": "0ca20d4e98490528c4badc785ac3b51cbee39abcbc055550dc966199500bf159",
+    "pol36-08": "124e3f1da5a1f7a1eb5d8267ac76f83e93aaf47793be92635b661e63781505ea",
+    "pol36-09": "a20d26af6e76611ff898199752602943131d4780ae0c73eba15258c41633619c",
+    "pol36-10": "4e7eeea1c99a7ae7d1b1e43f718345537afe0719361b66c7d694828a6a06cbbc",
+    "pol36-11": "41b153d15d6594000fe79501a4eaaeff8a11a7a3eadb4511ab9dfe228db38f20",
+    "pol36-12": "64cb804deeb29c287b728c4e75a396ea1c4e1e43802cfe5975b9ca6a43b34e06"
+  },
+  "politicsQuestionFields": {
+    "pol36-01": [
+      "id",
+      "lesson",
+      "trainingStage",
+      "stem",
+      "options",
+      "answer",
+      "optionReviews",
+      "explanation",
+      "trainingGoal"
+    ],
+    "pol36-02": [
+      "id",
+      "lesson",
+      "trainingStage",
+      "stem",
+      "options",
+      "answer",
+      "optionReviews",
+      "explanation",
+      "trainingGoal"
+    ],
+    "pol36-03": [
+      "id",
+      "lesson",
+      "trainingStage",
+      "stem",
+      "options",
+      "answer",
+      "optionReviews",
+      "explanation",
+      "trainingGoal"
+    ],
+    "pol36-04": [
+      "id",
+      "lesson",
+      "trainingStage",
+      "stem",
+      "options",
+      "answer",
+      "optionReviews",
+      "explanation",
+      "trainingGoal"
+    ],
+    "pol36-05": [
+      "id",
+      "lesson",
+      "trainingStage",
+      "stem",
+      "options",
+      "answer",
+      "optionReviews",
+      "explanation",
+      "trainingGoal"
+    ],
+    "pol36-06": [
+      "id",
+      "lesson",
+      "trainingStage",
+      "stem",
+      "options",
+      "answer",
+      "optionReviews",
+      "explanation",
+      "trainingGoal"
+    ],
+    "pol36-07": [
+      "id",
+      "lesson",
+      "trainingStage",
+      "stem",
+      "options",
+      "answer",
+      "optionReviews",
+      "explanation",
+      "trainingGoal"
+    ],
+    "pol36-08": [
+      "id",
+      "lesson",
+      "trainingStage",
+      "stem",
+      "options",
+      "answer",
+      "optionReviews",
+      "explanation",
+      "trainingGoal"
+    ],
+    "pol36-09": [
+      "id",
+      "lesson",
+      "trainingStage",
+      "stem",
+      "options",
+      "answer",
+      "optionReviews",
+      "explanation",
+      "trainingGoal"
+    ],
+    "pol36-10": [
+      "id",
+      "lesson",
+      "trainingStage",
+      "stem",
+      "options",
+      "answer",
+      "optionReviews",
+      "explanation",
+      "trainingGoal"
+    ],
+    "pol36-11": [
+      "id",
+      "lesson",
+      "trainingStage",
+      "stem",
+      "options",
+      "answer",
+      "optionReviews",
+      "explanation",
+      "trainingGoal"
+    ],
+    "pol36-12": [
+      "id",
+      "lesson",
+      "trainingStage",
+      "stem",
+      "options",
+      "answer",
+      "optionReviews",
+      "explanation",
+      "trainingGoal"
+    ]
+  },
+  "lessonFields": {
+    "new-development-pattern": [
+      "id",
+      "category",
+      "title",
+      "subtitle",
+      "minutes",
+      "tags",
+      "formula",
+      "sections",
+      "practice",
+      "sources",
+      "updated",
+      "basis",
+      "questionType",
+      "versionNote",
+      "learningGoals",
+      "learningLevels"
+    ],
+    "education-strong-2035": [
+      "id",
+      "category",
+      "title",
+      "subtitle",
+      "minutes",
+      "tags",
+      "formula",
+      "sections",
+      "practice",
+      "sources",
+      "updated",
+      "basis",
+      "questionType",
+      "versionNote",
+      "learningGoals",
+      "learningLevels"
+    ]
+  },
+  "politicsLessons": {
+    "new-development-pattern": "5412b255571e907cca5124394d4098516487ca7869055b34cffd192fd694757f",
+    "education-strong-2035": "d7bc9abf15f3c0bd8c6d455de1bd3f62cc784f6d938f42c063383b77dfd12a93"
+  },
+  "lessonLevelFields": {
+    "new-development-pattern": {
+      "intro": [
+        "label",
+        "stage",
+        "sections",
+        "questionIds",
+        "goal"
+      ],
+      "practice": [
+        "label",
+        "stage",
+        "sections",
+        "questionIds",
+        "goal"
+      ],
+      "advanced": [
+        "label",
+        "stage",
+        "sections",
+        "questionIds",
+        "goal"
+      ]
+    },
+    "education-strong-2035": {
+      "intro": [
+        "label",
+        "stage",
+        "sections",
+        "questionIds",
+        "goal"
+      ],
+      "practice": [
+        "label",
+        "stage",
+        "sections",
+        "questionIds",
+        "goal"
+      ],
+      "advanced": [
+        "label",
+        "stage",
+        "sections",
+        "questionIds",
+        "goal"
+      ]
+    }
+  },
+  "revisedLessons": {
+    "phase-change": "3cd17d88fe7656adb29b46dd8901f906778f3738e1670fe1b1b479a1268f6359",
+    "historiography": "aeed3138b76fbed043e03a9f3dfa8bf3d11cb39aec0a919dadab8b37f5c9803b"
+  },
+  "learningAids": {
+    "phase-change": "74342866834a15302ba143350a71dac40d50720353b82e2b4934e32f7be221da",
+    "historiography": "01831a50841ddfd8ac9803888de6db67029387d70d18bcac65da9c56ce64a1ac",
+    "new-development-pattern": "e17251b202ddcd277044c68041e4a88d4dc24878534015e0a7a9b0922bd1bf0a",
+    "education-strong-2035": "e413f6cc3facad1b80591e08e9a0fbf1f4b833f76d7f72255c44f4bbe4b69229"
+  },
+  "sources": {
+    "development-pattern-speech-2023": "5c0e8dc556c7443a50da9aaa9993bb495f369557db9ee4aaea5686f7e2620d7f",
+    "education-outline-2025": "bc80e66972ac720554f5ce13e137aa16cbde51ff23b865ea4578cbe471568b86"
+  }
+}

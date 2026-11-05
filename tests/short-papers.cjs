@@ -6,7 +6,7 @@ for(const f of [...html.matchAll(/src="\.\/([^"]+)"/g)].map(m=>m[1]).filter(f=>f
 const C=c.window.STUDY_CONTENT,T=c.window.STUDY_TRAINING,P=c.window.STUDY_PAPERS,D=c.window.STUDY_PAPER_CATALOG,plain=x=>JSON.parse(JSON.stringify(x)),proofs=require('./short-paper-proofs.cjs');
 const canonical=v=>v===null||typeof v!=='object'?JSON.stringify(v):Array.isArray(v)?'['+v.map(canonical).join(',')+']':'{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+canonical(v[k])).join(',')+'}',hash=v=>crypto.createHash('sha256').update(canonical(v)).digest('hex');
 const prior=JSON.parse(fs.readFileSync(path.join(__dirname,'fixtures/v031-public-identities.json'),'utf8'));
-for(const[name,entries]of Object.entries(prior.collections))for(const[id,expected]of Object.entries(entries))assert.equal(hash(C[name].find(v=>v.id===id)),expected,'All v0.31 public identities retained: '+name+'/'+id);
+for(const[name,entries]of Object.entries(prior.collections))for(const[id,expected]of Object.entries(entries))assert.equal(hash(require('./v036-identity-projection.cjs')(C)[name].find(v=>v.id===id)),expected,'All v0.31 public identities retained: '+name+'/'+id);
 const currentContentHash=hash(C);
 assert.deepEqual(plain(D.papers.map(p=>p.id)),['methods-a','methods-c','methods-d']);assert.equal(D.basis.newQuestionCount,0);assert.equal(D.basis.distinctReferencedQuestionCount,60);assert.ok(Object.isFrozen(D)&&Object.isFrozen(D.questionVersions));
 const all=new Set();let numeric=0,semantic=0;

@@ -17,7 +17,7 @@ const bases=[1,25,1000];assert.ok(bases.every(v=>(0-v)/v===-1));assert.equal(q.q
 near(num('q199'),Array.from({length:60},(_,i)=>i<42?1:0).reduce((s,v)=>s+v,0)/60*100);near(num('q200'),(45/125-30/100)*100);
 assert.equal(12/120,0.1);assert.equal(0/100,0);assert.ok(!Number.isFinite((12-0)/0));assert.equal(q.q201.answer,2);
 for(let n=190;n<=201;n++){const x=q['q'+n];assert.equal(x.optionReviews.length,4);assert.equal(x.meta.source.kind,'original');assert.equal(x.meta.examSource.year,null);assert.equal(x.meta.difficulty.level,null);}
-assert.equal(C.questions.length,669);assert.equal(C.lessons.filter(l=>l.learningLevels).length,88);assert.equal(C.lessons.filter(l=>!l.learningLevels).length,14);
+assert.equal(C.questions.length,699);assert.equal(C.lessons.filter(l=>l.learningLevels).length,92);assert.equal(C.lessons.filter(l=>!l.learningLevels).length,12);
 for(const id of ['work','travel','growth','share']){const l=C.lessons.find(x=>x.id===id);assert.ok(l.sections.map(s=>s[1]).join('').length>1300);for(const [level,x]of Object.entries(l.learningLevels)){assert.equal(x.sections.length,id==='growth'?4:3);assert.ok(x.questionIds.length);assert.ok(x.questionIds.every(id=>q[id].lesson===l.id&&q[id].meta.trainingStage===x.stage));}}
 console.log('PASS Independent time slices, meeting enumeration, consecutive increments, zero-base counterexamples and proportion counts');
 const old={schemaVersion:1,exam:'both',read:['work'],favorites:['growth'],notes:{work:'测试旧工程笔记',travel:'测试旧行程笔记'},attempts:[{qid:'q14',choice:0,at:'2026-11-04T12:00:00Z',seconds:12}],drafts:{w31:'测试旧技能交换草稿'},checks:{w31:[2]}};await seedPageLegacy(p, old);await p.reload();

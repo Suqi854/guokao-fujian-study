@@ -6,7 +6,7 @@ const html=fs.readFileSync(path.join(base,'docs/index.html'),'utf8'),scripts=[..
 assert.equal(scripts.filter(f=>f==='practice-next.js').length,1);
 assert.ok(scripts.indexOf('focused-methods.js')<scripts.indexOf('practice-next.js')&&scripts.indexOf('practice-next.js')<scripts.indexOf('coverage-map.js'));
 const adapter=fs.readFileSync(path.join(base,'docs/practice-next.js'),'utf8');
-function load(include){const c=vm.createContext({window:{}});for(const f of scripts){if(['practice-overnight.js','practice-targeted-v035.js','fujian-governance-v035.js'].includes(f)||(f==='practice-next.js'&&!include))continue;vm.runInContext(fs.readFileSync(path.join(base,'docs',f),'utf8'),c,{filename:f});}return c;}
+function load(include){const c=vm.createContext({window:{}});for(const f of scripts){if(['practice-overnight.js','practice-targeted-v035.js','fujian-governance-v035.js','curriculum-v036.js','politics-v036.js'].includes(f)||(f==='practice-next.js'&&!include))continue;vm.runInContext(fs.readFileSync(path.join(base,'docs',f),'utf8'),c,{filename:f});}return c;}
 const orig=load(false),extended=load(true),old=orig.window.STUDY_CONTENT,now=extended.window.STUDY_CONTENT;
 const oldQ=new Set(old.questions.map(q=>q.id)),oldL=new Set(old.lessons.map(l=>l.id));
 const data=plain({questions:now.questions.filter(q=>!oldQ.has(q.id)),lessons:now.lessons.filter(l=>!oldL.has(l.id)),papers:extended.window.STUDY_PRACTICE_NEXT.papers});
