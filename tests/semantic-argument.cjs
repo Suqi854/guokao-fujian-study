@@ -28,7 +28,7 @@ const base=process.env.STUDY_BASE_URL||'http://127.0.0.1:4173';
  for(const id of ['q179','q160','q175'])assert.ok(!q[id].meta.methodIds.includes(method.id));assert.ok(!q.q175.meta.methodIds.includes('gufei-2010'));
  assert.equal(C.methods.length,17);assert.equal(C.comparisons.length,7);
  const a=C.writing.find(w=>w.id==='w29'),b=C.writing.find(w=>w.id==='w30');assert.equal(a.material,b.material);assert.equal(a.materialGroup,b.materialGroup);assert.ok(a.material.length>1750);for(const w of [a,b])assert.ok(w.sample.replace(/\s/g,'').length<=w.limit);
- assert.equal(C.questions.length,435);assert.equal(C.writing.length,47);assert.equal(new Set(C.writing.map(w=>w.material)).size,27);
+ assert.equal(C.questions.length,459);assert.equal(C.writing.length,47);assert.equal(new Set(C.writing.map(w=>w.material)).size,27);
  console.log('PASS Semantic review ledger, implication counterexample, average countermodel and scoped historical attribution');
  const old={schemaVersion:1,exam:'both',read:['word'],favorites:['argument'],notes:{word:'测试旧填空笔记',argument:'测试旧论证笔记'},attempts:[{qid:'q13',choice:1,at:'2026-11-04T12:00:00Z',seconds:10}],drafts:{w27:'测试旧对策草稿'},checks:{w27:[1]}};
  await p.evaluate(s=>localStorage.setItem('zhixu-study-v1',JSON.stringify(s)),old);await p.reload();

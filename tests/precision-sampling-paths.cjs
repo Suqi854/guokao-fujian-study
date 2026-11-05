@@ -3,8 +3,8 @@ const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path'),asse
 const root=path.join(__dirname,'..'),ctx={window:{}};vm.createContext(ctx);
 for(const m of fs.readFileSync(path.join(root,'docs/index.html'),'utf8').matchAll(/src="\.\/([^\"]+)"/g))if(m[1]!=='app.js')vm.runInContext(fs.readFileSync(path.join(root,'docs',m[1]),'utf8'),ctx);
 const C=JSON.parse(JSON.stringify(ctx.window.STUDY_CONTENT)),q=Object.fromEntries(C.questions.map(x=>[x.id,x])),chosen=id=>q[id].options[q[id].answer];
-assert.equal(C.lessons.length,75);assert.equal(C.questions.length,435);assert.equal(C.lessons.filter(l=>l.learningLevels).length,57);assert.equal(C.lessons.filter(l=>!l.learningLevels).length,18);
-assert.equal(Object.keys(C.sources).length,24);assert.equal(C.methods.length,17);assert.equal(C.comparisons.length,7);assert.equal(C.writing.length,47);assert.equal(new Set(C.writing.map(w=>w.material)).size,27);
+assert.equal(C.lessons.length,79);assert.equal(C.questions.length,459);assert.equal(C.lessons.filter(l=>l.learningLevels).length,61);assert.equal(C.lessons.filter(l=>!l.learningLevels).length,18);
+assert.equal(Object.keys(C.sources).length,28);assert.equal(C.methods.length,17);assert.equal(C.comparisons.length,7);assert.equal(C.writing.length,47);assert.equal(new Set(C.writing.map(w=>w.material)).size,27);
 for(const id of ['estimation-boundary','without-replacement','three-set-counting','next-paragraph']){
  const l=C.lessons.find(x=>x.id===id);assert.equal(l.sections.length,9);assert.equal(l.practice.length,9);assert.deepEqual(Object.values(l.learningLevels).flatMap(g=>g.sections),[...Array(9).keys()]);
  for(const g of Object.values(l.learningLevels)){assert.equal(g.questionIds.length,2);assert.ok(g.questionIds.every(id=>q[id].lesson===l.id&&q[id].meta.trainingStage===g.stage));}

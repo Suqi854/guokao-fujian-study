@@ -187,6 +187,22 @@
       )
       .join("");
   }
+  function studyRoutes() {
+    if (!C.theoryTrack) return "";
+    return `<section class="panel" data-study-routes><h2>练习与理解，两条学习线</h2><p>应试线继续分类练习、错题复盘与申论输出；理论线按概念、原文背景与迁移问题循序读，不用一条线替代另一条。</p><div class="actions">${btn("应试：分类与错题", "#targeted", true)}${btn("申论：材料输出", "#writing", true)}${btn("长期：政治理论入门", "#theory")}</div></section>`;
+  }
+  function theoryPage() {
+    const track = C.theoryTrack;
+    if (!track) return missing();
+    const steps = track.steps.filter(s => lesson(s.lessonId));
+    const read = steps.filter(s => state.read.includes(s.lessonId)).length;
+    const next = steps.find(s => !state.read.includes(s.lessonId)) || steps[0];
+    return heading("POLITICAL FOUNDATIONS", track.title, track.intro) +
+      `<section class="panel"><p>${esc(track.scope)}</p><p class="stat-foot">更新 ${esc(track.updated)} · 已标记已读 ${read} / ${steps.length} 个主题；已读不等于掌握，不据此预测考试分数。</p><div class="actions">${next ? btn(read === steps.length ? "重读第一个主题" : "从尚未标记的主题开始", "#lesson/" + next.lessonId + "/intro") : ""}${btn("返回应试练习", "#targeted", true)}${btn("进入申论输出", "#writing", true)}</div></section><div class="stack" data-theory-steps>${steps.map((step, i) => {
+        const l = lesson(step.lessonId);
+        return `<section class="panel" data-theory-lesson="${esc(l.id)}"><span class="pill ${state.read.includes(l.id) ? "green" : "gray"}">主题 ${i + 1} · ${state.read.includes(l.id) ? "已标记已读" : "待阅读"}</span><h2>${esc(l.title)}</h2><p>${esc(step.purpose)}</p><p><strong>迁移时问：</strong>${esc(step.bridge)}</p><div class="actions">${Object.entries(C.learningPaths).map(([id, path]) => btn(path.label, "#lesson/" + l.id + "/" + id, id !== "intro")).join("")}${btn("练这课的 " + l.practice.length + " 道原创题", "#quiz/lesson/" + l.id, true)}</div><p class="stat-foot">${esc(l.versionNote)}。三个层次是教学安排，题目难度未经样本标定。</p></section>`;
+      }).join("")}</div><section class="panel"><h2>读完后，用自己的话说清楚</h2><ol>${track.reflection.map(t => `<li>${esc(t)}</li>`).join("")}</ol><p>可把回答写入对应讲义的个人笔记，只保存在当前浏览器；没有自动评分或上传。</p><a class="text-button" href="#sources">集中查看原文年代、官方来源与核验边界 →</a></section><details class="roadmap"><summary>本阶段的范围与待补内容</summary><ul>${track.gaps.map(t => `<li>${esc(t)}</li>`).join("")}</ul></details>`;
+  }
   function home() {
     const done = state.read.length,
       total = state.attempts.length,
@@ -217,6 +233,7 @@
         "一个知识点，一组练习。按自己的节奏，稳稳向前。",
         '<span class="pill green">' + icon("shield") + " 本机记录</span>",
       ) +
+      studyRoutes() +
       `<div class="stats">${stats.map((s) => `<div class="stat"><div class="stat-label">${s[0]}${icon(s[4])}</div><div class="stat-value">${s[1]}<small>${s[2]}</small></div><div class="stat-foot">${s[3]}</div></div>`).join("")}</div><div class="dashboard-grid"><div><section class="card focus-card"><div class="focus-top"><span class="pill">下一步 · 学懂再练</span><span class="muted" style="font-size:11px">约 ${next.minutes} 分钟</span></div><h2>${esc(next.title)}</h2><p>${esc(next.subtitle)}</p><div class="focus-bottom">${btn("开始学习", "#lesson/" + next.id)}<small>${done} / ${C.lessons.length} 篇已读 · 不等同掌握</small></div></section><div class="section-head"><h2>切换一种学习方式</h2><a href="#practice">全部练习 →</a></div><div class="compact-links"><a class="compact-link" href="#practice"><span class="tile-icon">${icon("pen")}</span><div><strong>来一组专项练习</strong><small>${C.questions.length} 道原创示例 · 每题都有解析</small></div>${icon("arrow")}</a><a class="compact-link" href="#writing"><span class="tile-icon">${icon("write")}</span><div><strong>把思路写成申论答案</strong><small>${C.writing.length} 个虚构材料练习 · 草稿自动保存</small></div>${icon("arrow")}</a><a class="compact-link" href="#mistakes"><span class="tile-icon">${icon("wrong")}</span><div><strong>回看错题，找到原因</strong><small>${wrong ? `${wrong} 道题等待巩固` : "完成练习后，错题会自动收集在这里"}</small></div>${icon("arrow")}</a></div></div><div class="stack"><section class="panel"><div class="panel-head"><h2>讲练之间，走三步</h2></div>${[
         ["读懂知识", "看公式、适用条件和常见陷阱。"],
         ["带着问题练", "提交答案后，逐题拆解思路。"],
@@ -577,6 +594,7 @@
         "先看懂方法，再到练习里检验。收藏值得反复读的内容。",
         btn("查看覆盖矩阵", "#coverage", true),
       ) +
+      studyRoutes() +
       `<section class="panel"><h2>从你需要的地方开始</h2><p>小白先懂概念，基础阶段练迁移，高手阶段检查条件与边界。选择路径后，显示已有对应讲解的专题；完整讲义保留全部内容。</p>${pathChoices("#learn",learningPath)}<p class="stat-foot">当前${C.lessons.filter(l=>l.learningLevels).length}课已逐层编写，其他专题仍可从完整讲义进入。路径不是考试难度或能力等级认证。</p></section>` +
       roadmap() +
       `<label class="search-box">${icon("search")}<input id="search" aria-label="搜索知识点" placeholder="搜索知识点、公式或技巧…" value="${esc(query)}"></label><div class="filters">${C.categories.map((c) => `<button class="chip ${c === catalogFilter ? "active" : ""}" data-action="filter" data-id="${c}" aria-pressed="${c === catalogFilter}">${c}</button>`).join("")}<button class="chip ${onlySaved ? "active" : ""}" data-action="saved-filter" aria-pressed="${onlySaved}">★ 收藏</button></div><div id="catalog">${lessonCards()}</div>`
@@ -587,7 +605,8 @@
     if (!l) return missing();
     const selected=Object.keys(C.learningPaths).includes(pathId) && l.learningLevels?.[pathId]?pathId:"";
     const sections=(selected ? l.learningLevels[selected].sections.map(i=>l.sections[i]) : l.sections).filter(item=>item && !/来源|归属|出处/.test(item[0]));
-    return `<a class="back-link" href="#learn">${icon("back")}知识地图</a><div class="reading-grid"><article class="panel reading"><span class="pill">${esc(l.category)} · 学习讲义</span><h1>${esc(l.title)}</h1><p class="subtitle">${esc(l.subtitle)}</p><span class="muted" style="font-size:12px">约 ${l.minutes} 分钟 · ${l.tags.map(esc).join(" / ")} · 更新 ${esc(l.updated || "2026-11-05")}${l.versionNote ? " · "+esc(l.versionNote):""}</span>${l.learningLevels ? pathChoices("#lesson/"+l.id,selected)+levelGuide(l,selected):""}<div class="formula">${esc(l.formula)}</div>${diagram(l)}${sections.map((s) => `<section><h2>${esc(s[0])}</h2><p>${esc(s[1])}</p></section>`).join("")}<p class="stat-foot"><a href="#sources">资料说明</a> · <a href="#methods">方法对照</a></p><div class="note">学习讲义并非官方教材。请结合题目限定条件使用；阅读完成不代表已经掌握。</div><div class="actions"><button class="btn" data-action="read" data-id="${l.id}">${icon("check")}${state.read.includes(l.id) ? "已读 · 点击取消" : "标记已读"}</button><button class="btn secondary" data-action="favorite" data-id="${l.id}" aria-pressed="${state.favorites.includes(l.id)}">${icon("star")}${state.favorites.includes(l.id) ? "已收藏" : "收藏讲义"}</button></div></article><aside class="stack sticky"><div class="panel"><h2>把方法用起来</h2><p class="subtitle">${l.practice.length ? `用 ${l.practice.length} 道原创示例题检验理解。` : "读完方法，选一个材料开始写。"}</p><div class="actions">${btn(l.practice.length ? "练配套题" : "去申论写作", l.practice.length ? "#quiz/lesson/" + l.id : "#write/" + (C.writing.find((w) => w.lesson === l.id)?.id || "w01"))}</div></div><div class="panel"><label class="field-label" for="lesson-note">我的笔记</label><textarea id="lesson-note" data-note="${l.id}" rows="7" maxlength="10000" placeholder="记下卡住的地方、适用条件或自己的解法…">${esc(state.notes[l.id] || "")}</textarea><div class="field-meta"><span id="note-status">仅保存在当前浏览器</span></div></div></aside></div>`;
+    const inTheory = C.theoryTrack?.steps.some(s => s.lessonId === l.id);
+    return `<a class="back-link" href="#learn">${icon("back")}知识地图</a>${inTheory ? '<span class="muted" aria-hidden="true"> · </span><a class="back-link" href="#theory">返回政治理论路线</a>' : ""}<div class="reading-grid"><article class="panel reading"><span class="pill">${esc(l.category)} · 学习讲义</span><h1>${esc(l.title)}</h1><p class="subtitle">${esc(l.subtitle)}</p><span class="muted" style="font-size:12px">约 ${l.minutes} 分钟 · ${l.tags.map(esc).join(" / ")} · 更新 ${esc(l.updated || "2026-11-05")}${l.versionNote ? " · "+esc(l.versionNote):""}</span>${l.learningLevels ? pathChoices("#lesson/"+l.id,selected)+levelGuide(l,selected):""}<div class="formula">${esc(l.formula)}</div>${diagram(l)}${sections.map((s) => `<section><h2>${esc(s[0])}</h2><p>${esc(s[1])}</p></section>`).join("")}<p class="stat-foot"><a href="#sources">资料说明</a> · <a href="#methods">方法对照</a></p><div class="note">学习讲义并非官方教材。请结合题目限定条件使用；阅读完成不代表已经掌握。</div><div class="actions"><button class="btn" data-action="read" data-id="${l.id}">${icon("check")}${state.read.includes(l.id) ? "已读 · 点击取消" : "标记已读"}</button><button class="btn secondary" data-action="favorite" data-id="${l.id}" aria-pressed="${state.favorites.includes(l.id)}">${icon("star")}${state.favorites.includes(l.id) ? "已收藏" : "收藏讲义"}</button></div></article><aside class="stack sticky"><div class="panel"><h2>把方法用起来</h2><p class="subtitle">${l.practice.length ? `用 ${l.practice.length} 道原创示例题检验理解。` : "读完方法，选一个材料开始写。"}</p><div class="actions">${btn(l.practice.length ? "练配套题" : "去申论写作", l.practice.length ? "#quiz/lesson/" + l.id : "#write/" + (C.writing.find((w) => w.lesson === l.id)?.id || "w01"))}</div></div><div class="panel"><label class="field-label" for="lesson-note">我的笔记</label><textarea id="lesson-note" data-note="${l.id}" rows="7" maxlength="10000" placeholder="记下卡住的地方、适用条件或自己的解法…">${esc(state.notes[l.id] || "")}</textarea><div class="field-meta"><span id="note-status">仅保存在当前浏览器</span></div></div></aside></div>`;
   }
 
   const bankDefaults = () => ({
@@ -988,6 +1007,7 @@
     const active =
       {
         lesson: "learn",
+        theory: "learn",
         quiz: "practice",
         bank: "practice",
         targeted: "practice",
@@ -1011,6 +1031,7 @@
     const views = {
       home,
       learn,
+      theory: theoryPage,
       lesson: () => lessonPage(parts[1],parts[2]),
       practice,
       targeted,
@@ -1033,6 +1054,7 @@
       window.scrollTo({ top: 0 });
       $("#main").focus({ preventScroll: true });
     }
+    if (page === "theory") $("#page-title").textContent = "政治理论入门";
     document.title = $("#page-title").textContent + " · 知序";
   }
   function saveChoice() {

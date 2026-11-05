@@ -13,10 +13,17 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   await p.goto(base);
   const C = await p.evaluate(() => window.STUDY_CONTENT);
   const q = Object.fromEntries(C.questions.map(x => [x.id, x]));
-  const ids = ["logic", "quantified-logic", "solid-views", "figure-features", "arrangement", "remainders", "geometry-scale", "growth-contribution", "multi-table", "context-blanks", "title-choice", "cpi", "fujian-geography", "constitutional-rights", "admin-review", "estimation-boundary", "without-replacement", "three-set-counting", "next-paragraph"];
+  const ids = ["logic", "quantified-logic", "solid-views", "figure-features", "arrangement", "remainders", "geometry-scale", "growth-contribution", "multi-table", "context-blanks", "title-choice", "cpi", "fujian-geography", "constitutional-rights", "admin-review", "estimation-boundary", "without-replacement", "three-set-counting", "next-paragraph", "practice-cognition", "contradiction-method", "productive-relations", "mao-thought-context"];
   const old = { schemaVersion: 1, exam: "both", read: ["logic"], favorites: ["solid-views"], notes: { logic: "测试旧条件笔记", "solid-views": "测试旧柱高笔记", "figure-features": "测试图形笔记" }, attempts: [{ qid: "q07", choice: 0, at: "2026-11-04T12:00:00Z", seconds: 10 }], drafts: { w01: "测试早期草稿", ...Object.fromEntries(Array.from({ length: 15 }, (_, i) => ["w" + (33 + i), "测试保留写作" + (33 + i)])) }, checks: { w01: [0], w37: [1], w47: [0, 2] } };
   await p.evaluate(s => localStorage.setItem("zhixu-study-v1", JSON.stringify(s)), old);
   await p.reload();
+  await p.goto(base + "/#theory");
+  await p.getByRole("heading", { name: C.theoryTrack.title, exact: true }).waitFor();
+  assert.equal(await p.locator("[data-theory-lesson]").count(), 4);
+  await p.locator('[data-theory-lesson="practice-cognition"]').getByRole("link", {name:"小白入门",exact:true}).tap();
+  await p.getByRole("heading", {name:C.lessons.find(l=>l.id==="practice-cognition").title,exact:true}).waitFor();
+  await p.getByRole("link", {name:"返回政治理论路线",exact:true}).tap();
+  assert.equal(await p.locator("#page-title").textContent(), "政治理论入门");
   for (const level of ["intro", "practice", "advanced"]) for (const id of ids) {
     const l = C.lessons.find(x => x.id === id), g = l.learningLevels[level];
     await p.goto(base + "/#lesson/" + id + "/" + level);
@@ -29,7 +36,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
     await p.locator(".quiz-header").waitFor();
     assert.match(await p.locator(".quiz-header").textContent(), /1 \/ 2/);
   }
-  console.log("PASS Fifty-seven exact recent lesson paths retain their sections and two-question groups");
+  console.log("PASS Sixty-nine exact recent lesson paths retain their sections and two-question groups");
   await p.goto(base + "/#lesson/figure-features/practice");
   await p.getByRole("button", { name: "中心对称与轴对称", exact: true }).tap();
   assert.match(await p.locator(".diagram-caption").textContent(), /黑格 5 · 连通部分 1 · 孔洞 0/);
@@ -62,7 +69,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   }
   await p.goto(base + "/#quiz/one/q345");
   assert.equal(await p.locator(".question-features .feature-grid rect").count(), 18);
-  for (let n = 346; n <= 435; n++) {
+  for (let n = 346; n <= 459; n++) {
     await p.goto(base + "/#quiz/one/q" + n);
     await p.locator('.quiz-card h1').waitFor();
     await p.locator('[data-action="choose"][data-id="' + q['q'+n].answer + '"]').tap();
@@ -103,7 +110,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   console.log("PASS Exact v1 restore retains old notes, all prior-stage drafts, checks and new mistakes");
   for (const width of [360, 390, 768, 1440]) {
     await p.setViewportSize({ width, height: 1100 });
-    for (const route of ["learn/intro", ...ids.map(id => "lesson/" + id + "/advanced"), "quiz/one/q340", "quiz/one/q343", "quiz/one/q345", "write/w47", "coverage"]) {
+    for (const route of ["home", "theory", "learn/intro", ...ids.map(id => "lesson/" + id + "/advanced"), "quiz/one/q340", "quiz/one/q343", "quiz/one/q345", "write/w47", "coverage"]) {
       await p.goto(base + "/#" + route);
       assert.equal(await p.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, width + ":" + route);
     }

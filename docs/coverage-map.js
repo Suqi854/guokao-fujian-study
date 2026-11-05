@@ -60,14 +60,14 @@
       ],
     ],
     政治理论: [
-      ["理论体系与党史专题", "目前只有新发展理念、中国式现代化两个基础主题。"],
+      ["理论体系与党史专题", "已有四主题理论入门路线及原有两个主题；完整马原体系、思想发展史与党史仍不足。"],
       [
         "年度时政与文件更新",
-        "尚无持续核验的年度时政库，不把历史资料当最新政策。",
+        "尚无逐项核验的近年政策库；历史原典、网页日期不当作新年度现行政策。",
       ],
       [
         "理论联系材料的情境题",
-        "现有概念辨析较少，缺依据可靠文件的综合材料题。",
+        "新增四主题24道概念与迁移题，跨主题多段材料、现行政策依据和更多变式仍缺。",
       ],
     ],
     常识判断: [
@@ -107,8 +107,8 @@
       ],
     ],
   };
-  C.coverageAdded = [];
-  C.coverageDeepened = ["estimation-boundary", "without-replacement", "three-set-counting", "next-paragraph"];
+  C.coverageAdded = ["practice-cognition", "contradiction-method", "productive-relations", "mao-thought-context"];
+  C.coverageDeepened = [];
 
   C.coverageMatrix = C.categories
     .filter((c) => c !== "全部")

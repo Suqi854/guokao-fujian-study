@@ -143,7 +143,7 @@ function assertLesson(l, sections, label) {
   group.writingIds = oldIds;
   C.writing.pop();
   await route('#coverage');
-  assert.ok(d.querySelector('main').textContent.includes('当前57课已逐层编写，18课仍待分层'));
+  assert.ok(d.querySelector('main').textContent.includes('当前61课已逐层编写，18课仍待分层'));
   await route("#lesson/figure-features/practice");
   assert.equal(d.querySelectorAll(".feature-grid rect").length,9);
   await action("feature-turn");
