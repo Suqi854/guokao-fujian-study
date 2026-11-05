@@ -20,8 +20,8 @@ const evidence = path.join(__dirname, "..", "test-results");
   p.on("pageerror", (e) => errors.push(e.message));
   await p.goto(base);
   const data = await p.evaluate(() => window.STUDY_CONTENT);
-  assert.equal(data.lessons.length, 91);
-  assert.equal(data.questions.length, 567);
+  assert.equal(data.lessons.length, 94);
+  assert.equal(data.questions.length, 594);
   assert.equal(data.writing.length, 65);
   for (const key of ["lessons", "questions", "writing"])
     assert.equal(new Set(data[key].map((x) => x.id)).size, data[key].length);
@@ -123,7 +123,7 @@ const evidence = path.join(__dirname, "..", "test-results");
       0,
     );
     await p.getByRole("heading", { name: l.title, exact: true }).waitFor();
-    const expected = l.sections.filter(s => !/来源|归属|出处/.test(s[0]));
+    const expected = require('./section-visibility.cjs').visible(l.sections);
     assert.equal(await p.locator('.reading > .formula').textContent(), l.formula);
     assert.deepEqual(await p.locator('.reading > section:not(.level-guide):not(.diagram-box) > h2').allTextContents(), expected.map(s => s[0]));
     assert.deepEqual(await p.locator('.reading > section:not(.level-guide):not(.diagram-box) > p').allTextContents(), expected.map(s => s[1]));

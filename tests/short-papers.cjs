@@ -6,7 +6,8 @@ for(const f of [...html.matchAll(/src="\.\/([^"]+)"/g)].map(m=>m[1]).filter(f=>f
 const C=c.window.STUDY_CONTENT,T=c.window.STUDY_TRAINING,P=c.window.STUDY_PAPERS,D=c.window.STUDY_PAPER_CATALOG,plain=x=>JSON.parse(JSON.stringify(x)),proofs=require('./short-paper-proofs.cjs');
 const canonical=v=>v===null||typeof v!=='object'?JSON.stringify(v):Array.isArray(v)?'['+v.map(canonical).join(',')+']':'{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+canonical(v[k])).join(',')+'}',hash=v=>crypto.createHash('sha256').update(canonical(v)).digest('hex');
 const prior=JSON.parse(fs.readFileSync(path.join(__dirname,'fixtures/v031-public-identities.json'),'utf8'));
-assert.equal(hash(C),prior.wholeContentHash,'All v0.31 public content and metadata retained');
+for(const[name,entries]of Object.entries(prior.collections))for(const[id,expected]of Object.entries(entries))assert.equal(hash(C[name].find(v=>v.id===id)),expected,'All v0.31 public identities retained: '+name+'/'+id);
+const currentContentHash=hash(C);
 assert.deepEqual(plain(D.papers.map(p=>p.id)),['methods-a','methods-c','methods-d']);assert.equal(D.basis.newQuestionCount,0);assert.equal(D.basis.distinctReferencedQuestionCount,60);assert.ok(Object.isFrozen(D)&&Object.isFrozen(D.questionVersions));
 const all=new Set();let numeric=0,semantic=0;
 for(const p of D.papers){assert.ok(P.definitionStatus(p.id).available);assert.equal(p.questionCount,20);assert.equal(p.sections.length,4);assert.equal(p.scoring.totalScore,null);assert.equal(p.durationSeconds,null);assert.equal(p.examSource.year,null);const positions=[0,0,0,0];let longest=0;
@@ -19,6 +20,6 @@ T.submit(r,r.items[0].answer,now+2000);T.advance(r,now+3000);T.submit(r,(r.items
 const report=P.typeSummary(r),summary=T.choiceSummary(r);assert.deepEqual(plain(report.total),plain(summary.total));assert.deepEqual(plain(report.total),{planned:20,submitted:2,correct:1,wrong:1,unsubmitted:18,spentMs:8000});for(const key of Object.keys(report.total))assert.equal(report.types.reduce((n,v)=>n+v[key],0),report.total[key]);assert.ok(report.types.every(v=>v.basis==='paper-version-snapshot'));
 const restored=T.validate(plain({runs:[r],activeRun:null}));assert.equal(P.paperForRun(restored.runs[0]).id,p.id);assert.deepEqual(plain(restored.runs[0]),plain(r));
 const changed=C.questions.find(q=>q.id===r.items[0].qid),stem=changed.stem;changed.stem+=' synthetic change';assert.equal(P.definitionStatus(p.id).available,false);assert.throws(()=>P.newRun({paperId:p.id,nonce:'bad',now,budgetSeconds:60}));assert.ok(P.typeSummary(r).types.every(v=>v.basis==='paper-version-snapshot'));assert.ok(P.typeSummary(ordinary).types.some(v=>v.basis==='unknown'));changed.stem=stem;
-assert.equal(hash(C),prior.wholeContentHash);assert.ok(!/fetch\(|localStorage|sessionStorage|XMLHttpRequest|sendBeacon/.test(fs.readFileSync(root+'/docs/paper-engine.js','utf8')));
+assert.equal(hash(C),currentContentHash);assert.ok(!/fetch\(|localStorage|sessionStorage|XMLHttpRequest|sendBeacon/.test(fs.readFileSync(root+'/docs/paper-engine.js','utf8')));
 console.log(`PASS 3 original short papers, 60 existing references / 0 new questions, ${numeric} calculations + ${semantic} semantic checks, all v0.31 content unchanged`);
 console.log('PASS paper identity stays within v2 fields, time/module/type millisecond reconciliation, unanswered separation, revision guard and backup roundtrip');

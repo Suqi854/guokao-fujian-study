@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>原创长题组 · 实验性功能</title><link rel="stylesheet" href="./long-mock.css">
+<script src="./content.js" defer></script>
+<script src="./expansion.js" defer></script>
+<script src="./deepening.js" defer></script>
+<script src="./crossstudy.js" defer></script>
+<script src="./targeting-content.js" defer></script>
+<script src="./focused-content.js" defer></script>
+<script src="./gap-content.js" defer></script>
+<script src="./applied-content.js" defer></script>
+<script src="./review-depth.js" defer></script>
+<script src="./core-depth.js" defer></script>
+<script src="./verbal-logic-depth.js" defer></script>
+<script src="./growth-argument-depth.js" defer></script>
+<script src="./travel-count-depth.js" defer></script>
+<script src="./weighted-depth.js" defer></script>
+<script src="./semantic-argument-depth.js" defer></script>
+<script src="./foundations-depth.js" defer></script>
+<script src="./quant-paths.js" defer></script>
+<script src="./verbal-paths.js" defer></script>
+<script src="./reasoning-paths.js" defer></script>
+<script src="./growth-reading-paths.js" defer></script>
+<script src="./civic-visual-paths.js" defer></script>
+<script src="./writing-paths.js" defer></script>
+<script src="./verbal-inference-paths.js" defer></script>
+<script src="./quant-model-paths.js" defer></script>
+<script src="./visual-deduction-paths.js" defer></script>
+<script src="./constraint-geometry-paths.js" defer></script>
+<script src="./evidence-reading-paths.js" defer></script>
+<script src="./civic-foundations-paths.js" defer></script>
+<script src="./precision-sampling-paths.js" defer></script>
+<script src="./political-foundations-paths.js" defer></script>
+<script src="./theory-learning-aids.js" defer></script>
+<script src="./parallel-question-bank.js" defer></script>
+<script src="./parallel-politics.js" defer></script>
+<script src="./parallel-shenlun.js" defer></script>
+<script src="./next-curriculum.js" defer></script>
+<script src="./catalog.js" defer></script>
+<script src="./methods.js" defer></script>
+<script src="./comparisons.js" defer></script>
+<script src="./verified-methods.js" defer></script>
+<script src="./focused-methods.js" defer></script>
+<script src="./practice-next.js" defer></script>
+<script src="./coverage-map.js" defer></script>
+<script src="./visual-models.js" defer></script>
+<script src="./training-records.js" defer></script>
+<script src="./local-progress-store.js" defer></script>
+<script src="./training-workspace.js" defer></script>
+<script src="./shenlun-feedback.js" defer></script>
+<script src="./adaptive-diagnostics.js" defer></script>
+<script src="./adaptive-workspace.js" defer></script>
+<script src="./paper-catalog.js" defer></script>
+<script src="./paper-engine.js" defer></script>
+<script src="./record-capacity.js" defer></script>
+<script src="./long-mock-model.js" defer></script>
+<script src="./long-mock-store.js" defer></script>
+<script src="./long-mock-workspace.js" defer></script></head>
+<body><header><a href="./index.html">返回学习工作台</a><h1>原创长题组</h1><p>独立实验性功能 · 非官方、非真题、非完整标准模考</p></header>
+<main id="long-main"><section class="notice"><strong>先看清训练范围</strong><p id="scope"></p><p>只统计答对、答错和未做，不给官方分值或预测分数。共材料/条件组内的题相互关联，题数不等于独立测量样本。交卷前不显示解析，可跨模块检查与改答。每次作答和换题都保存；未暂停时，后台、刷新、关闭页面的时间继续计入当前模块。需要停表时，请先暂停并确认“已保存”。计时器仅在本页互斥；进入其他计时功能前，也请先暂停本页。</p><p>本页长题组记录与主站学习记录、私人题库分开，不会进入原v1/v2备份，不自动同步。清理网站数据、浏览器损坏或拒绝写入不能保证恢复，请另存备份。待保存日志额外占用近一份本页记录的空间，并与另两类功能共享浏览器配额；2 MiB保护上限不是实际容量保证。</p></section>
+<p id="status" role="status" aria-live="polite"></p>
+<section class="toolbar" aria-label="本页备份与恢复"><button id="export">导出已保存长题组备份</button><button id="emergency">导出应急页副本</button><button id="reload">重新载入已保存记录</button><label>恢复本页备份<input type="file" id="import" accept="application/json,.json"></label><label><input type="checkbox" id="copy-conflicts">允许同编号冲突记录以新编号追加为“恢复副本”，不覆盖原记录</label><p>恢复为追加：相同记录跳过，同编号不同内容整批拒绝，不替换已有历史。主站学习记录与私人题库备份请回对应页面恢复；使用三类功能时需分别导出三份备份，没有跨键统一恢复。</p></section>
+<section id="pending-panel" hidden><h2>待保存副本</h2><p>可能来自上次关闭时尚未完成的保存或另一个标签。只在原版本未变化时恢复；冲突副本只能先导出保留，不会覆盖本机新记录。</p><div id="pending-list"></div></section>
+<section id="builder"><h2>建立一组训练</h2><p>以下题数与时长均为自选练习配置，不对应国考或福建官方卷别。三个便捷方案各60题，重复引用已有原创题，不新增题目。</p><div class="toolbar"><button data-preset="0">60题长题组 A</button><button data-preset="10">60题长题组 B</button><button data-preset="20">60题长题组 C</button></div>
+<form id="create"><label>题组名称<input id="title" maxlength="120" value="我的原创长题组" required></label><label>总预算（1–480分钟，自选）<input id="minutes" type="number" min="1" max="480" step="1" value="60" required></label><div id="module-inputs"></div><button type="submit">建立并保存（初始暂停）</button><p>每组1–200题、最多100组、记录最多2 MiB，这些仅为技术保护上限；不会自动删历史腾空间。开始计时前可先导出。</p></form></section>
+<section><h2>本页记录</h2><div id="history"></div></section>
+<section id="reader" hidden><h2 id="run-title"></h2><p id="run-meta"></p><p id="clock" aria-live="off"></p><div class="toolbar"><button id="resume">继续计时</button><button id="pause">暂停并保存</button><button id="finish">交卷并查看结果</button></div><div id="sections" class="toolbar"></div><div id="report"></div><div id="question"></div><nav class="toolbar" aria-label="题目位置"><button id="prev">上一题</button><button id="next">下一题</button><button id="next-unanswered">下一道未做</button></nav></section>
+</main><footer>仅保存到当前浏览器 · 没有上传接口 · 手机及触屏实测待补，桌面范围见验收记录</footer><noscript>本页需要 JavaScript。</noscript></body></html>

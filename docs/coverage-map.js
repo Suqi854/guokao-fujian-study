@@ -10,7 +10,7 @@
       ],
       [
         "现期比重与两期比重综合",
-        "已有比重入门，复杂口径、跨期比较与多重约束题组仍缺。",
+        "新增9道原创比重口径题，涉及跨期、结构权重和交集去重；复杂真实综合材料与更多口径仍不足。",
       ],
       [
         "指数与不可加指标口径",
@@ -28,7 +28,7 @@
       ],
       [
         "复合论证与多约束逻辑",
-        "基础条件和量词已有，复杂论证链与多题共用条件组不足。",
+        "新增3组共条件9道原创题，练选择、时段排列与开关联立；复杂论证链、更大约束组仍不足。",
       ],
     ],
     言语理解: [
@@ -38,7 +38,7 @@
       ],
       [
         "近义词与成语系统辨析",
-        "当前少量语境填空，词义、搭配、色彩与出处核验尚不成体系。",
+        "新增语境辨析9题，其中末3题为句义范围；系统成语、词义色彩和出处核验仍未成体系。",
       ],
       [
         "标题选择与下文推断",
@@ -107,8 +107,8 @@
       ],
     ],
   };
-  C.coverageAdded = ["mao-living-soul", "unified-market-rules", "compare-transfer-writing"];
-  C.coverageDeepened = ["scoped-reading", "profit-bases", "mixed-weights", "work-stages"];
+  C.coverageAdded = ["pn-context-contrast", "pn-compound-logic", "pn-share-scope"];
+  C.coverageDeepened = [];
 
   C.coverageMatrix = C.categories
     .filter((c) => c !== "全部")

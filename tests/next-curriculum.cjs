@@ -23,13 +23,13 @@ for(const[name,entries]of Object.entries(fixture.collections))for(const[id,h]of 
 for(const[id,h]of Object.entries(fixture.sources))assert.equal(hash(C.sources[id]),h);
 for(const[id,h]of Object.entries(fixture.theoryLearningAids))assert.equal(hash(C.theoryLearningAids[id]),h);
 assert.deepEqual(C.theoryTrack.steps.map(s=>s.lessonId).filter(id=>fixture.theoryStepIds.includes(id)),fixture.theoryStepIds);
-assert.deepEqual([C.lessons.length,C.questions.length,C.writing.length,C.lessons.filter(l=>l.learningLevels).length,Object.keys(C.sources).length],[91,567,65,77,40]);
+assert.deepEqual([C.lessons.length,C.questions.length,C.writing.length,C.lessons.filter(l=>l.learningLevels).length,Object.keys(C.sources).length],[94,594,65,80,40]);
 assert.equal(new Set(C.writing.map(w=>w.material)).size,31);assert.equal(C.lessons.filter(l=>!l.learningLevels).length,14);
 assert.equal(C.theoryTrack.steps.length,10);assert.equal(Object.keys(C.theoryLearningAids).length,10);
 for(const field of ['lessons','questions','writing'])assert.equal(new Set(C[field].map(v=>v.id)).size,C[field].length,field+' unique IDs');
 const extra=C.questions.filter(q=>q.id.startsWith('rx-')||q.id.startsWith('pol3-'));assert.equal(extra.length,48);
 for(const q of extra){assert.equal(q.options.length,4);assert.equal(new Set(q.options).size,4);assert.equal(q.optionReviews.length,4);assert.equal(q.explanation,q.optionReviews[q.answer]);assert.equal(q.meta.source.kind,'original');assert.equal(q.meta.examSource.year,null);assert.equal(q.meta.difficulty.level,null);}
-for(const stage of ['识别概念','迁移运用','检查边界'])assert.equal(C.questions.filter(q=>q.meta.trainingStage===stage).length,161);
+for(const stage of ['识别概念','迁移运用','检查边界'])assert.equal(C.questions.filter(q=>q.meta.trainingStage===stage).length,170);
 for(const id of patchIds){const l=C.lessons.find(l=>l.id===id);assert.equal(l.sections.length,9);assert.deepEqual(plain(Object.values(l.learningLevels).flatMap(g=>g.sections)),[0,1,2,3,4,5,6,7,8]);for(const g of Object.values(l.learningLevels))assert.equal(g.questionIds.length,3);}
 for(const q of old.questions)assert.equal(c.window.STUDY_TRAINING.signature(C.questions.find(v=>v.id===q.id)),base.window.STUDY_TRAINING.signature(q),'Old training fingerprint retained: '+q.id);
 const normalized=s=>[...s.normalize('NFKC').replace(/[\p{P}\p{Z}\s]/gu,'')].length,raw=s=>[...s.replace(/\s/gu,'')].length;
@@ -53,5 +53,5 @@ for(const[label,prepare,error]of cases){const v=preflight(),b=v.window.STUDY_CON
 const frozen=preflight(),prior=frozen.window.STUDY_CONTENT;function freeze(v){if(v&&typeof v==='object'&&!Object.isFrozen(v)){Object.values(v).forEach(freeze);Object.freeze(v);}return v;}freeze(prior);const snapshot=JSON.stringify(prior);execute(frozen,adapter);assert.equal(JSON.stringify(prior),snapshot);for(const l of prior.lessons)if(!patchIds.includes(l.id))assert.strictEqual(frozen.window.STUDY_CONTENT.lessons.find(v=>v.id===l.id),l);
 const final=c.window.STUDY_CONTENT,serialized=JSON.stringify(final);assert.throws(()=>execute(c,adapter),/next-curriculum preflight rejected/);assert.strictEqual(c.window.STUDY_CONTENT,final);assert.equal(JSON.stringify(final),serialized);
 assert.ok(!fs.readFileSync(path.join(root,'docs',adapter),'utf8').match(/\/workspace\/|libfile_|claimIds|answerAudit/),'No private source package metadata');
-console.log('PASS Next batch: 91 lessons/567 original questions/65 writing/77 layered, 10 theory themes, exact old identities except four constrained lesson revisions');
+console.log('PASS Next batch: 94 lessons/594 original questions/65 writing/80 layered, 10 theory themes, exact old identities except four constrained lesson revisions');
 console.log('PASS All 519 prior question fingerprints unchanged, atomic late-conflict/frozen-base imports, original provenance and finite option-pattern guards');

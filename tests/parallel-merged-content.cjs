@@ -13,7 +13,7 @@ for(const [name,entries]of Object.entries(before.collections))for(const[id,expec
 for(const[id,expected]of Object.entries(before.sources))assert.equal(hash(C.sources[id]),expected,'Existing source changed: '+id);
 for(const[id,expected]of Object.entries(before.theoryLearningAids))assert.equal(hash(C.theoryLearningAids[id]),expected,'Existing theory aid changed: '+id);
 assert.deepEqual(C.theoryTrack.steps.slice(0,4).map(s=>s.lessonId),before.theoryStepIds);
-assert.equal(C.lessons.length,91);assert.equal(C.questions.length,567);assert.equal(C.writing.length,65);assert.equal(new Set(C.writing.map(w=>w.material)).size,31);assert.equal(C.lessons.filter(l=>l.learningLevels).length,77);assert.equal(Object.keys(C.sources).length,40);
+assert.equal(C.lessons.length,94);assert.equal(C.questions.length,594);assert.equal(C.writing.length,65);assert.equal(new Set(C.writing.map(w=>w.material)).size,31);assert.equal(C.lessons.filter(l=>l.learningLevels).length,80);assert.equal(Object.keys(C.sources).length,40);
 for(const name of ['lessons','questions','writing'])assert.equal(new Set(C[name].map(x=>x.id)).size,C[name].length,name+' unique IDs');
 const fq=C.questions.filter(q=>q.id.startsWith('fq-')),pol=C.questions.filter(q=>q.id.startsWith('pol2-')),writing=C.writing.filter(w=>w.id.startsWith('w_parallel_'));
 assert.equal(fq.length,36);assert.equal(pol.length,24);assert.equal(writing.length,15);
@@ -21,7 +21,7 @@ for(const q of [...fq,...pol]){
  assert.equal(q.options.length,4);assert.equal(new Set(q.options).size,4);assert.equal(q.optionReviews.length,4);assert.ok(q.options.every(x=>typeof x==='string'&&x.trim()));assert.ok(q.optionReviews.every(x=>typeof x==='string'&&x.trim()));
  assert.ok(Number.isInteger(q.answer)&&q.answer>=0&&q.answer<4);assert.equal(q.meta.source.kind,'original');assert.equal(q.meta.examSource.year,null);assert.equal(q.meta.difficulty.level,null);assert.equal(q.answerAudit,undefined,'Internal author audit is not public question content');
 }
-for(const stage of ['识别概念','迁移运用','检查边界'])assert.equal(C.questions.filter(q=>q.meta.trainingStage===stage).length,161);
+for(const stage of ['识别概念','迁移运用','检查边界'])assert.equal(C.questions.filter(q=>q.meta.trainingStage===stage).length,170);
 const reading=fq.filter(q=>q.lesson==='fq-multi-paragraph');assert.equal(reading.length,9);
 for(const q of reading){assert.ok(q.stem.includes('\n'));assert.equal(q.materialId,undefined,'Embedded passage must not render a second external copy');}
 const positions=[0,0,0,0];for(const q of fq)positions[q.answer]++;assert.deepEqual(positions,[9,9,9,9]);
@@ -46,6 +46,6 @@ for(const file of ['parallel-question-bank.js','parallel-politics.js','parallel-
 }
 const materialRule=fs.readFileSync(path.join(root,'docs/style.css'),'utf8').match(/\.material\s*\{([^}]+)\}/)?.[1];
 assert.ok(materialRule&&materialRule.includes('Noto Sans CJK SC')&&materialRule.includes('system-ui'),'Retain existing CJK font fallbacks after observed desktop glyph failure');
-console.log('PASS Four-line merge: 91 lessons/567 original questions/65 writing tasks, stable IDs, metadata, 10 theory themes and 31 distinct materials');
+console.log('PASS Four-line merge: 94 lessons/594 original questions/65 writing tasks, stable IDs, metadata, 10 theory themes and 31 distinct materials');
 console.log('PASS Hash equality for every unchanged old lesson and every old question, writing task, source and four old memory aids; no duplicate partial imports');
 console.log('PASS Embedded reading passages, source-time boundaries, 15 evidence/rewrite contracts and sample lengths; not a fresh semantic fact audit');

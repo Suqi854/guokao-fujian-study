@@ -27,7 +27,7 @@ function exactText(el, expected, label) {
   assert.equal(el.textContent, expected, label);
   assert.equal(el.childElementCount, 0, label + " must not parse content as markup");
 }
-const visible = sections => sections.filter(s => s && !/来源|归属|出处/.test(s[0]));
+const {visible}=require('./section-visibility.cjs');
 function assertLesson(l, sections, label) {
   exactText(d.querySelector(".reading h1"), l.title, label + " title");
   exactText(d.querySelector(".reading > .subtitle"), l.subtitle, label + " subtitle");
@@ -40,6 +40,7 @@ function assertLesson(l, sections, label) {
   });
 }
 (async () => {
+  if(process.env.STUDY_TEXT_TAIL_ONLY!=="1"){
   const remainder = C.lessons.find(l => l.id === "remainders");
   await route("#lesson/remainders/intro");
   exactText(d.querySelector(".reading > section:not(.level-guide):not(.diagram-box) > p"), remainder.sections[0][1], "regression: 0≤r<m retains the whole first paragraph");
@@ -144,8 +145,9 @@ function assertLesson(l, sections, label) {
   assert.equal(taskLink.firstElementChild.tagName.toLowerCase(), 'svg', 'renderer-owned arrow remains an SVG');
   group.writingIds = oldIds;
   C.writing.pop();
+  }
   await route('#coverage');
-  assert.ok(d.querySelector('main').textContent.includes('当前77课已逐层编写，14课仍待分层'));
+  assert.ok(d.querySelector('main').textContent.includes(`当前${C.lessons.filter(l=>l.learningLevels).length}课已逐层编写，${C.lessons.filter(l=>!l.learningLevels).length}课仍待分层`));
   await route("#lesson/figure-features/practice");
   assert.equal(d.querySelectorAll(".feature-grid rect").length,9);
   await action("feature-turn");
@@ -153,7 +155,7 @@ function assertLesson(l, sections, label) {
   await route("#lesson/cube-net/practice");
   assert.ok(d.querySelector(".net-figure") && d.querySelector(".cube-figure"));
   assert.deepEqual(errors,[]);
-  console.log("PASS Literal < > & quotes and tag-shaped content cannot create nodes; legitimate links, labels, SVGs and controls remain intact");
+  console.log(process.env.STUDY_TEXT_TAIL_ONLY==="1"?"PASS Focused tail: coverage counts and SVG controls only; full-text/literal prefix skipped in this invocation":"PASS Literal < > & quotes and tag-shaped content cannot create nodes; legitimate links, labels, SVGs and controls remain intact");
   console.log("NOT TESTED: real browser pixels, phone widths or touch events");
   dom.window.close();
 })().catch(e=>{console.error(e);dom.window.close();process.exit(1);});

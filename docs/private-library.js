@@ -128,6 +128,7 @@
       if (raw.version !== 1) fail("私人备份版本不支持");
       return normalize(raw.library).packs;
     }
+    if(raw.format === "zhixu-long-mock-backup") fail("这是长题组备份，请在长题组页面恢复，不会改动私人题库");
     if ([1, 2].includes(raw.schemaVersion)) fail("这是原学习记录 v1/v2 备份，请在主站「备份与恢复」导入；它不含私人题库");
     fail("仅接受私人题包或私人题库备份，不支持 PDF、图片、HTML 或自动抓题");
   }
