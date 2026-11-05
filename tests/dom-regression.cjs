@@ -22,7 +22,7 @@ w.URL.createObjectURL = blob => { exported = blob; return "blob:test-backup"; };
 w.URL.revokeObjectURL = () => {};
 const anchorClick = w.HTMLAnchorElement.prototype.click;
 w.HTMLAnchorElement.prototype.click = function () { if (!this.download) anchorClick.call(this); };
-const old = { schemaVersion: 1, exam: "both", read: ["logic"], favorites: ["solid-views"], notes: { logic: "测试旧条件笔记", "solid-views": "测试旧柱高笔记", "figure-features": "测试图形笔记", remainders: "测试旧余数笔记", "geometry-scale": "测试旧几何笔记", arrangement: "测试旧排列笔记" }, attempts: [{ qid: "q07", choice: 0, at: "2026-11-04T12:00:00Z", seconds: 10 }], drafts: { w01: "测试早期草稿", ...Object.fromEntries(Array.from({ length: 15 }, (_, i) => ["w" + (33 + i), "测试保留写作" + (33 + i)])) }, checks: { w01: [0], w37: [1], w47: [0, 2] } };
+const old = { schemaVersion: 1, exam: "both", read: ["logic"], favorites: ["solid-views"], notes: { logic: "测试旧条件笔记", "solid-views": "测试旧柱高笔记", "figure-features": "测试图形笔记", remainders: "测试旧余数笔记", "geometry-scale": "测试旧几何笔记", arrangement: "测试旧排列笔记", "growth-contribution": "测试旧贡献笔记", "multi-table": "测试旧表格笔记", "context-blanks": "测试旧多空笔记", "title-choice": "测试旧标题笔记" }, attempts: [{ qid: "q07", choice: 0, at: "2026-11-04T12:00:00Z", seconds: 10 }], drafts: { w01: "测试早期草稿", ...Object.fromEntries(Array.from({ length: 15 }, (_, i) => ["w" + (33 + i), "测试保留写作" + (33 + i)])) }, checks: { w01: [0], w37: [1], w47: [0, 2] } };
 w.localStorage.setItem("zhixu-study-v1", JSON.stringify(old));
 for (const m of html.matchAll(/src="\.\/([^\"]+)"/g)) w.eval(fs.readFileSync(path.join(root, "docs", m[1]), "utf8") + "\n//# sourceURL=" + m[1]);
 const C = w.STUDY_CONTENT, questions = Object.fromEntries(C.questions.map(q => [q.id, q]));
@@ -44,7 +44,7 @@ function select(selector, value) { const el = d.querySelector(selector); el.valu
       assert.deepEqual([...d.querySelectorAll(".reading > section:not(.level-guide):not(.diagram-box) > h2")].map(el => el.textContent), plain(group.sections.map(i => l.sections[i][0])));
     }
   }
-  for (const id of ["logic", "quantified-logic", "solid-views", "figure-features", "arrangement", "remainders", "geometry-scale"]) for (const level of ["intro", "practice", "advanced"]) {
+  for (const id of ["logic", "quantified-logic", "solid-views", "figure-features", "arrangement", "remainders", "geometry-scale", "growth-contribution", "multi-table", "context-blanks", "title-choice"]) for (const level of ["intro", "practice", "advanced"]) {
     await route("#lesson/" + id + "/" + level);
     const group = C.lessons.find(l => l.id === id).learningLevels[level];
     const link = d.querySelector('.level-guide a[href^="#quiz/"]');
@@ -53,7 +53,7 @@ function select(selector, value) { const el = d.querySelector(selector); el.valu
     link.click(); await pause();
     assert.match(text(".quiz-header"), /1 \/ 2/);
   }
-  console.log("PASS DOM: all 73 full lessons, every existing learning path and twenty-one exact recent quiz paths");
+  console.log("PASS DOM: all 73 full lessons, every existing learning path and thirty-three exact recent quiz paths");
   await route("#lesson/figure-features/practice");
   await action("feature-example", 1);
   assert.match(text(".diagram-caption"), /黑格 5 · 连通部分 1 · 孔洞 0/);
@@ -84,7 +84,7 @@ function select(selector, value) { const el = d.querySelector(selector); el.valu
   assert.equal(d.querySelector("#lesson-note").value, "<img src=x onerror=alert(1)>只作为笔记文字");
   assert.equal(d.querySelectorAll("main img").length, 0);
   console.log("PASS DOM: exact grids, repeated transforms, old projection controls, note retention and HTML escaping");
-  for (let n = 322; n <= 363; n++) {
+  for (let n = 322; n <= 387; n++) {
     await route("#quiz/one/q" + n);
     assert.equal(text(".quiz-card h1"), questions["q" + n].stem);
     if (n >= 340 && n <= 343) assert.equal(d.querySelectorAll(".question-features rect").length, 9);
@@ -119,11 +119,22 @@ function select(selector, value) { const el = d.querySelector(selector); el.valu
     await route("#lesson/" + id + "/advanced");
     assert.equal(d.querySelector("#lesson-note").value, old.notes[id]);
   }
+  for (const id of ["q368", "q381"]) {
+    await route("#quiz/one/" + id); await action("choose", (questions[id].answer + 1) % 4); await action("submit");
+  }
+  for (const [module, expected] of [["资料分析", "q368"], ["言语理解", "q381"]]) {
+    await route("#targeted"); select("#target-module", module); select("#target-stage", "检查边界");
+    const selected = [...d.querySelectorAll("a")].find(a => a.textContent.includes("开始这组")).getAttribute("href").split("/").at(-1).split(",");
+    assert.equal(selected[0], expected); assert.ok(selected.every(id => questions[id].meta.module === module && questions[id].meta.trainingStage === "检查边界"));
+  }
+  for (const id of ["growth-contribution", "multi-table", "context-blanks", "title-choice"]) {
+    await route("#lesson/" + id + "/advanced"); assert.equal(d.querySelector("#lesson-note").value, old.notes[id]);
+  }
   for (const id of ["w01", "w33", "w37", "w42", "w47"]) {
     await route("#write/" + id);
     assert.equal(d.querySelector("#draft").value, old.drafts[id]);
   }
-  console.log("PASS DOM: all 42 recent actual answer flows, four-option feedback, targeted mistakes and old writing drafts");
+  console.log("PASS DOM: all 66 recent actual answer flows, four-option feedback, targeted mistakes and old writing drafts");
   const saved = JSON.parse(w.localStorage.getItem("zhixu-study-v1"));
   assert.deepEqual(saved.drafts, old.drafts);
   assert.deepEqual(saved.checks, old.checks);

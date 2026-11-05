@@ -6,7 +6,7 @@
     资料分析: [
       [
         "多表联读与综合材料组",
-        "新增一组双表定位、换算与日均练习；更多图表形式、复杂综合材料仍不足。",
+        "已有两组双表，覆盖定位、同口径汇总与运营日均；更多图表形式、复杂综合材料仍不足。",
       ],
       [
         "现期比重与两期比重综合",
@@ -42,7 +42,7 @@
       ],
       [
         "标题选择与下文推断",
-        "新增标题、下文推断各一专题与3题；长语境、多段结构及接近干扰项仍需扩充。",
+        "标题已有三层与9题，下文推断仍3题；长语境、多段结构及接近干扰项仍需扩充。",
       ],
     ],
     数量关系: [
@@ -108,7 +108,7 @@
     ],
   };
   C.coverageAdded = [];
-  C.coverageDeepened = ["arrangement", "remainders", "geometry-scale"];
+  C.coverageDeepened = ["growth-contribution", "multi-table", "context-blanks", "title-choice"];
 
   C.coverageMatrix = C.categories
     .filter((c) => c !== "全部")

@@ -57,6 +57,19 @@ function assertLesson(l, sections, label) {
   for (const q of C.questions) {
     await route("#quiz/one/" + q.id);
     exactText(d.querySelector(".quiz-card h1"), q.stem, q.id + " stem");
+    if (q.materialId) {
+      const material = C.questionMaterials[q.materialId];
+      exactText(d.querySelector('.question-material > h2'), material.title, q.id + ' material title');
+      exactText(d.querySelector('.question-material > p'), material.note, q.id + ' material note');
+      const tables = [...d.querySelectorAll('.question-material table')];
+      assert.equal(tables.length, material.tables.length);
+      tables.forEach((table, i) => {
+        const expected = material.tables[i];
+        exactText(table.querySelector('caption'), expected.caption, q.id + ' table caption');
+        assert.deepEqual([...table.querySelectorAll('thead th')].map(el => el.textContent), JSON.parse(JSON.stringify(expected.columns)));
+        assert.deepEqual([...table.querySelectorAll('tbody tr')].map(row => [...row.children].map(el => el.textContent)), JSON.parse(JSON.stringify(expected.rows)));
+      });
+    }
     [...d.querySelectorAll(".option > span:nth-child(2)")].forEach((el, i) => exactText(el, q.options[i], q.id + " option " + i));
     await action("choose", q.answer);
     await action("submit");
@@ -130,7 +143,7 @@ function assertLesson(l, sections, label) {
   group.writingIds = oldIds;
   C.writing.pop();
   await route('#coverage');
-  assert.ok(d.querySelector('main').textContent.includes('当前45课已逐层编写，28课仍待分层'));
+  assert.ok(d.querySelector('main').textContent.includes('当前49课已逐层编写，24课仍待分层'));
   await route("#lesson/figure-features/practice");
   assert.equal(d.querySelectorAll(".feature-grid rect").length,9);
   await action("feature-turn");
