@@ -68,6 +68,8 @@
     subtitle.after(hero);
     const main=document.createElement("div");main.className="focus-teaching";main.innerHTML=data ? customTeaching(data) : guidedTeaching(sections);hero.after(main);
     const check=document.createElement("div");check.innerHTML=questionCard(l,stage,data);main.after(check);
+    const memoryHTML=window.STUDY_MEMORY_METHODS?.render(l.id,stage);
+    if(memoryHTML)main.insertAdjacentHTML("beforebegin",memoryHTML);
     const practice=document.createElement("div");practice.className="focus-practice";
     if(guide){practice.append(guide);guide.querySelector("h2").textContent="再练一组，看看能否独立运用";}
     check.after(practice);
