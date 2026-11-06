@@ -15,14 +15,14 @@ for(const[,file]of html.matchAll(/src="\.\/([^"]+)"/g)){
 }
 const C=w.STUDY_CONTENT,P=w.STUDY_COURSE,M=w.STUDY_MEMORY_METHODS;
 const route=hash=>navigateHash(w,hash,()=>{w.location.hash=hash;});
-const expected=['growth','rate-amount-order','share','average','compound-growth','mixed-growth','logic','definition','argument','mainidea','word','detail-reading','profit-discount','work','summary','proposal'];
+const expected=['growth','rate-amount-order','share','average','compound-growth','mixed-growth','logic','definition','argument','mainidea','word','detail-reading','profit-discount','work','summary','proposal','practice-cognition','contradiction-method','productive-relations','mao-thought-context','social-being-people','mao-living-soul','six-method-principles','new-quality-productivity','reform-framework-2024','unified-market-rules','new-development-pattern','education-strong-2035'];
 (async()=>{
   assert.deepEqual(Object.keys(M.cards),expected);assert.equal(C.lessons.length,105);assert.equal(C.questions.length,753);assert.equal(C.writing.length,87);
   const contentBefore=JSON.stringify(C),stored=snapshot();let views=0;
   for(const [id,card]of Object.entries(M.cards)){
     assert.ok(C.lessons.some(l=>l.id===id));
     for(const field of ['cue','applies','example','avoid'])assert.ok(typeof card[field]==='string'&&card[field].length>=10,id+field);
-    assert.equal(card.contrast.length,3);assert.equal(new Set(Object.values(card.recall).map(r=>r[0])).size,3);
+    assert.equal(card.contrast.length,3);if(card.sourceIds)assert.ok(card.sourceIds.every(s=>C.sources[s]),id+' has resolvable source IDs');assert.equal(new Set(Object.values(card.recall).map(r=>r[0])).size,3);
     const track=P.tracks.find(t=>P.rows(t).some(r=>r.id===id));
     for(const stage of ['intro','practice','advanced']){
       await route(P.link(track,stage,id));
@@ -51,5 +51,13 @@ const expected=['growth','rate-amount-order','share','average','compound-growth'
   eq(1.2*.8-1,-.04);eq(1/(1-.2)-1,.25);eq((100*.2+300*0)/400,.05);eq((100*.2+300*.2)/400,.2);
   eq((150*.8-100)/100,.2);eq(1/(1/6+1/3),2);
   assert.match(M.cards.growth.avoid,/下降 100%/);assert.match(M.cards['rate-amount-order'].applies,/不能为 −100%/);assert.match(M.cards['mixed-growth'].avoid,/下降 100%/);
-  console.log(`PASS memory methods: 16 authored lessons, ${views} stage-specific oral recalls; hidden/repeated reveals, original question/content counts, every storage key unchanged, missing lesson/stage, escaping and numeric exceptions verified.`);dom.window.close();
+  // Keep official names and the two different contradiction levels exact.
+  assert.match(M.cards['new-quality-productivity'].applies,/高科技高效能高质量/);
+  assert.match(M.cards['contradiction-method'].contrast[2][1],/主要矛盾.*次要矛盾.*主要方面.*次要方面/);
+  assert.match(M.cards['mao-living-soul'].contrast[0][1],/实事求是、群众路线、独立自主/);
+  assert.match(M.cards['mao-living-soul'].contrast[1][1],/统一战线、武装斗争、党的建设/);
+  assert.match(M.cards['mao-living-soul'].contrast[2][1],/理论联系实际、密切联系群众、批评与自我批评/);
+  assert.match(M.cards['reform-framework-2024'].example,/2029.*本《决定》/);
+  assert.match(M.cards['education-strong-2035'].contrast[1][1],/2027.*阶段性成效.*2035.*建成教育强国/);
+  console.log(`PASS memory methods: 28 authored lessons, ${views} stage-specific oral recalls; hidden/repeated reveals, original question/content counts, every storage key unchanged, missing lesson/stage, escaping and numeric exceptions verified.`);dom.window.close();
 })().catch(e=>{console.error(e);dom.window.close();process.exitCode=1;});
