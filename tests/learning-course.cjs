@@ -9,9 +9,9 @@ const w = dom.window, d = w.document; installSerialLocks(w); w.scrollTo = () => 
 w.fetch = (...args) => { outgoing.push(args); throw Error("Unexpected network request"); };
 let contentBefore;
 for (const [, file] of html.matchAll(/src="\.\/([^\"]+)"/g)) {
-  if (file === "learning-course-focus.js") contentBefore = JSON.stringify(w.STUDY_CONTENT);
+  if (file === "learning-course-focus-v039.js") contentBefore = JSON.stringify(w.STUDY_CONTENT);
   w.eval(fs.readFileSync(path.join(root, "docs", file), "utf8"));
-  if (file === "learning-course-focus.js") assert.equal(JSON.stringify(w.STUDY_CONTENT), contentBefore, "curriculum does not mutate content");
+  if (file === "learning-course-focus-v039.js") assert.equal(JSON.stringify(w.STUDY_CONTENT), contentBefore, "curriculum does not mutate content");
 }
 const C = w.STUDY_CONTENT, P = w.STUDY_COURSE, plain = x => JSON.parse(JSON.stringify(x));
 const route = hash => navigateHash(w, hash, () => { w.location.hash = hash; });
@@ -21,6 +21,11 @@ const getState = () => w.localStorage.getItem("zhixu-study-v2");
   assert.equal(d.querySelector('#navigation .active').getAttribute('href'), '#course');
   assert.equal(d.querySelector('#navigation a[href="#learn"]'), null);
   await route('#learn'); assert.ok(d.querySelector('#search')); assert.equal(d.querySelector('#navigation .active').getAttribute('href'), '#course');
+  await route('#course');
+  for (const track of P.tracks) {
+    await route('#course/'+track.id+'/intro');
+    for (const phrase of ['先有框架，再学知识点','说清概念，跟着例子走一遍','学完这一章，合上讲义自检','自己解释并找例子，再回看讲义']) assert.ok(!d.querySelector('#main').textContent.includes(phrase), 'Removed repeated directory copy: '+phrase);
+  }
   await route('#course');
   const ids = plain(P.tracks.flatMap(t => P.rows(t).map(r => r.id)));
   assert.equal(ids.length, 123); assert.equal(new Set(ids).size, 123);

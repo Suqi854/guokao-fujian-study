@@ -11,7 +11,7 @@ for(const[,file]of html.matchAll(/src="\.\/([^"]+)"/g)){
  if(file==='political-mao-deng-expansion.js'||file==='political-complete-integration.js')continue;
  w.eval(fs.readFileSync(path.join(base,'docs',file),'utf8'));
  if(file==='memory-methods.js'){const old=snapshot();w.eval(code);assert.deepEqual(snapshot(),old);}
- if(file==='learning-course-focus.js'){
+ if(file==='learning-course-focus-v039.js'){
   // Test-only integration. Production ordering and theoryTrack are owned by the parent.
   w.STUDY_COURSE.tracks.find(t=>t.id==='politics').units.splice(2,0,...w.STUDY_MAO_DENG_EXPANSION.courseUnits);
  }
