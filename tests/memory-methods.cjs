@@ -50,5 +50,6 @@ const expected=['growth','rate-amount-order','share','average','compound-growth'
   eq((1+.2)/(1+.5)-1,-.2);eq((2*10+8*20)/10,18);eq((2*10+8*10)/10,10);
   eq(1.2*.8-1,-.04);eq(1/(1-.2)-1,.25);eq((100*.2+300*0)/400,.05);eq((100*.2+300*.2)/400,.2);
   eq((150*.8-100)/100,.2);eq(1/(1/6+1/3),2);
+  assert.match(M.cards.growth.avoid,/下降 100%/);assert.match(M.cards['rate-amount-order'].applies,/不能为 −100%/);assert.match(M.cards['mixed-growth'].avoid,/下降 100%/);
   console.log(`PASS memory methods: 16 authored lessons, ${views} stage-specific oral recalls; hidden/repeated reveals, original question/content counts, every storage key unchanged, missing lesson/stage, escaping and numeric exceptions verified.`);dom.window.close();
 })().catch(e=>{console.error(e);dom.window.close();process.exitCode=1;});
