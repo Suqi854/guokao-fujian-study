@@ -4,6 +4,7 @@
 const assert = require('node:assert/strict');
 const { baseline, deepened, expanded, levels, questionIds, additionsFor, plain } = require('./v038-test-support.cjs');
 module.exports = function projection(C) {
+  C = require("./v039-identity-projection.cjs")(C);
   if (!C.questions.some(q => questionIds.includes(q.id)) && !deepened.some(id => C.lessons.find(l => l.id === id)?.learningLevels)) return C;
   const permitted = new Set(['minutes', 'sections', 'updated', 'basis', 'versionNote', 'learningLevels', 'practice']);
   const omit = (o, keys) => Object.fromEntries(Object.entries(o).filter(([key]) => !keys.has(key)));

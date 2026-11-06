@@ -141,7 +141,7 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
     "PASS Comparison-to-lesson and tier-to-targeted-practice touch flow",
   );
   await p.goto(base + "/#fujian");
-  assert.match(await p.locator("#fujian-result").textContent(), /105/);
+  assert.match(await p.locator("#fujian-result").textContent(), /123/);
   await p.locator("#fj-class").selectOption("B");
   await p.locator("#fj-scope").selectOption("eligible");
   await p.locator("#fj-police").check();

@@ -17,7 +17,7 @@ const C=w.STUDY_CONTENT,P=w.STUDY_COURSE,M=w.STUDY_MEMORY_METHODS;
 const route=hash=>navigateHash(w,hash,()=>{w.location.hash=hash;});
 const expected=['growth','rate-amount-order','share','average','compound-growth','mixed-growth','logic','definition','argument','mainidea','word','detail-reading','profit-discount','work','summary','proposal','practice-cognition','contradiction-method','productive-relations','mao-thought-context','social-being-people','mao-living-soul','six-method-principles','new-quality-productivity','reform-framework-2024','unified-market-rules','new-development-pattern','education-strong-2035'];
 (async()=>{
-  assert.deepEqual(Object.keys(M.cards),expected);assert.equal(C.lessons.length,105);assert.equal(C.questions.length,753);assert.equal(C.writing.length,87);
+  assert.deepEqual(Object.keys(M.cards),[...expected,...w.STUDY_MAO_DENG_EXPANSION.lessonIds,...w.STUDY_MARXISM_COURSE.lessonIds]);assert.equal(C.lessons.length,123);assert.equal(C.questions.length,861);assert.equal(C.writing.length,87);
   const contentBefore=JSON.stringify(C),stored=snapshot();let views=0;
   for(const [id,card]of Object.entries(M.cards)){
     assert.ok(C.lessons.some(l=>l.id===id));
@@ -29,6 +29,9 @@ const expected=['growth','rate-amount-order','share','average','compound-growth'
       const node=d.querySelector('[data-memory-lesson]');assert.equal(node.dataset.memoryLesson,id);assert.equal(d.querySelectorAll('.memory-card').length,1);
       assert.equal(node.querySelector('.memory-cue').textContent,card.cue);assert.ok(node.querySelector('.memory-applies').textContent.includes(card.applies));
       assert.equal(node.querySelector('.memory-explain').open,false);assert.equal(node.querySelector('.memory-answer').open,false);
+      assert.equal(node.querySelector('.memory-recall h3').textContent,'自测');
+      assert.equal(node.querySelector('.memory-answer summary').textContent,'答案');
+      assert.equal(node.querySelector('.memory-scope'),null);
       assert.equal(node.querySelector('.memory-recall>p').textContent,card.recall[stage][0]);
       assert.equal(node.querySelector('.memory-answer p').textContent,card.recall[stage][1]);
       node.querySelector('.memory-explain>summary').click();assert.equal(node.querySelector('.memory-explain').open,true);

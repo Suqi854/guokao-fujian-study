@@ -15,7 +15,7 @@ async function route(h){await navigateHash(w,h,()=>{w.location.hash=h;});await p
 const plain=x=>JSON.parse(JSON.stringify(x));
 (async()=>{
  const expectedIds=['practice-cognition','contradiction-method','productive-relations','mao-thought-context','social-being-people','six-method-principles','new-quality-productivity','reform-framework-2024','mao-living-soul','unified-market-rules','new-development-pattern','education-strong-2035','phase-change','historiography','material-mapping','answer-revision','fujian-enterprise-service-2025','multi-material','full-essay'];
- assert.deepEqual(Object.keys(C.theoryLearningAids),expectedIds);assert.deepEqual(plain(C.theoryTrack.steps.map(step=>step.lessonId)),['practice-cognition','contradiction-method','productive-relations','mao-thought-context','social-being-people','mao-living-soul','six-method-principles','new-quality-productivity','reform-framework-2024','unified-market-rules','new-development-pattern','education-strong-2035']);
+ assert.deepEqual(Object.keys(C.theoryLearningAids),[...expectedIds,...w.STUDY_MAO_DENG_EXPANSION.lessonIds,...w.STUDY_MARXISM_COURSE.lessonIds]);assert.deepEqual(plain(C.theoryTrack.steps.map(step=>step.lessonId)),plain(w.STUDY_POLITICAL_CURRICULUM.lessonIds));
  for(const [id,a] of Object.entries(C.theoryLearningAids))for(const level of ['', '/intro','/practice','/advanced']){
   await route('#lesson/'+id+level);
   const el=d.querySelector('[data-theory-aids="'+id+'"]');assert.ok(el,id+level);
@@ -32,7 +32,7 @@ const plain=x=>JSON.parse(JSON.stringify(x));
  assert.equal(d.querySelector('#lesson-note').value,old.notes['practice-cognition']);
  const recall=d.querySelector('[data-theory-recall]');recall.open=true;recall.querySelector('details').open=true;await pause();
  assert.equal(w.localStorage.getItem('zhixu-study-v1'),original);assert.equal(w.localStorage.getItem('zhixu-study-v2'),null,'reading and opening recall do not invent records');
- assert.match(d.querySelector('[data-theory-aids]').textContent,/不是官方考频排序/);
+ assert.match(d.querySelector('[data-theory-aids]').textContent,/不代表官方考频/);
  const payload='0≤r<m & <img src=x onerror=bad()> "literal" <script>bad()</script>';
  const a=C.theoryLearningAids['practice-cognition'];
  a.keyPoints[0]={title:payload,text:payload};a.memoryCue=payload;a.plainExample={title:payload,text:payload};a.contrasts[0]={left:{term:payload,text:payload},right:{term:payload,text:payload},cue:payload};a.recall[0]={question:payload,checkpoints:[payload]};a.scope=payload;

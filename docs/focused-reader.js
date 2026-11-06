@@ -40,15 +40,15 @@
     const ids = curated ? [curated.qid] : (l.learningLevels?.[stage]?.questionIds || l.practice || []);
     const q = ids.map(id => C.questions.find(q => q.id === id)).find(q => q && !q.graphic && !q.materialId && !q.materialIds && !q.materialGroup);
     if (!q) return "";
-    return `<section class="focus-check" data-focus-question="${esc(q.id)}"><div class="focus-section-label"><span>02</span><h2>${curated ? "换一组数，自己试试" : "做一道题，检验理解"}</h2></div><p class="focus-question">${esc(q.stem)}</p><ol class="focus-options" type="A">${q.options.map(o => `<li>${esc(o)}</li>`).join("")}</ol><details class="focus-answer"><summary>想好后，展开答案与原因</summary><p><strong>答案：${"ABCD"[q.answer]}</strong></p><p>${esc(q.explanation)}</p></details><a class="focus-practice-link" href="#quiz/one/${esc(q.id)}">独立作答并记录这题 →</a><small>展开答案不产生作答记录；进入练习提交后才会记录。</small></section>`;
+    return `<section class="focus-check" data-focus-question="${esc(q.id)}"><div class="focus-section-label"><span>02</span><h2>自测</h2></div><p class="focus-question">${esc(q.stem)}</p><ol class="focus-options" type="A">${q.options.map(o => `<li>${esc(o)}</li>`).join("")}</ol><details class="focus-answer"><summary>答案与解析</summary><p><strong>答案：${"ABCD"[q.answer]}</strong></p><p>${esc(q.explanation)}</p></details><a class="focus-practice-link" href="#quiz/one/${esc(q.id)}">作答并记录 →</a></section>`;
   }
   function customTeaching(data) {
-    return `<div class="focus-mainline"><div class="focus-section-label"><span>01</span><h2>跟着一个例子走</h2></div><p class="focus-example-question">${esc(data.example)}</p><ol class="focus-worked-steps">${data.steps.map((s,i) => `<li><span class="focus-step-number">${i+1}</span><div><h3>${esc(s[0])}</h3><strong class="focus-calculation">${esc(s[1])}</strong><p>${esc(s[2])}</p></div></li>`).join("")}</ol><p class="focus-pitfall"><strong>最容易错：</strong>${esc(data.pitfall)}</p><p class="focus-boundary">${esc(data.boundary)}</p></div>`;
+    return `<div class="focus-mainline"><div class="focus-section-label"><span>01</span><h2>例题</h2></div><p class="focus-example-question">${esc(data.example)}</p><ol class="focus-worked-steps">${data.steps.map((s,i) => `<li><span class="focus-step-number">${i+1}</span><div><h3>${esc(s[0])}</h3><strong class="focus-calculation">${esc(s[1])}</strong><p>${esc(s[2])}</p></div></li>`).join("")}</ol><p class="focus-pitfall"><strong>最容易错：</strong>${esc(data.pitfall)}</p><p class="focus-boundary">${esc(data.boundary)}</p></div>`;
   }
   function guidedTeaching(sections) {
     const primary = sections.filter(s => !/补充|复盘|出处|归属/.test(s[0]));
     const steps = (primary.length ? primary : sections).slice(0, 4);
-    return `<div class="focus-mainline" data-focus-steps><div class="focus-section-label"><span>01</span><h2>一次弄懂一个知识点</h2></div><div class="focus-step-tabs" role="tablist" aria-label="本轮知识点">${steps.map((s,i) => `<button type="button" role="tab" id="focus-tab-${i}" aria-controls="focus-step-${i}" aria-selected="${i===0}" tabindex="${i===0?0:-1}" data-focus-step="${i}"><span>${i+1}</span>${esc(s[0].replace(/^[^：]+：/, ""))}</button>`).join("")}</div>${steps.map((s,i) => {const parts=sentences(s[1]), examples=parts.slice(1).filter(p=>/例如|比如|举例|设原来|假设/.test(p)), rest=parts.slice(1).filter(p=>!examples.includes(p));return `<section class="focus-step-panel" role="tabpanel" id="focus-step-${i}" aria-labelledby="focus-tab-${i}" tabindex="0" ${i ? "hidden" : ""}><span class="focus-step-count">知识点 ${i+1} / ${steps.length}</span><h3>${esc(s[0].replace(/^[^：]+：/, ""))}</h3><p class="focus-key-sentence">${esc(parts[0])}</p>${examples.length ? `<div class="focus-inline-example"><strong>用例子理解</strong>${examples.map(p=>`<p>${esc(p)}</p>`).join("")}</div>` : ""}<div class="focus-explanation">${rest.map(p=>`<p>${esc(p)}</p>`).join("")}</div>${i < steps.length-1 ? `<button type="button" class="btn secondary focus-next" data-focus-step="${i+1}">看懂了，接着看第 ${i+2} 点 →</button>` : '<p class="focus-finish-hint">接着用下面的题目检验，不需要先背下全文。</p>'}</section>`;}).join("")}</div>`;
+    return `<div class="focus-mainline" data-focus-steps><div class="focus-section-label"><span>01</span><h2>知识点</h2></div><div class="focus-step-tabs" role="tablist" aria-label="本轮知识点">${steps.map((s,i) => `<button type="button" role="tab" id="focus-tab-${i}" aria-controls="focus-step-${i}" aria-selected="${i===0}" tabindex="${i===0?0:-1}" data-focus-step="${i}"><span>${i+1}</span>${esc(s[0].replace(/^[^：]+：/, ""))}</button>`).join("")}</div>${steps.map((s,i) => {const parts=sentences(s[1]), examples=parts.slice(1).filter(p=>/例如|比如|举例|设原来|假设/.test(p)), rest=parts.slice(1).filter(p=>!examples.includes(p));return `<section class="focus-step-panel" role="tabpanel" id="focus-step-${i}" aria-labelledby="focus-tab-${i}" tabindex="0" ${i ? "hidden" : ""}><span class="focus-step-count">知识点 ${i+1} / ${steps.length}</span><h3>${esc(s[0].replace(/^[^：]+：/, ""))}</h3><p class="focus-key-sentence">${esc(parts[0])}</p>${examples.length ? `<div class="focus-inline-example"><strong>例子</strong>${examples.map(p=>`<p>${esc(p)}</p>`).join("")}</div>` : ""}<div class="focus-explanation">${rest.map(p=>`<p>${esc(p)}</p>`).join("")}</div>${i < steps.length-1 ? `<button type="button" class="btn secondary focus-next" data-focus-step="${i+1}">下一知识点 →</button>` : ""}</section>`;}).join("")}</div>`;
   }
   function transform(html, l, stage) {
     const template=document.createElement("template"); template.innerHTML=html;
@@ -63,7 +63,7 @@
     const metadata=subtitle?.nextElementSibling;if(metadata?.matches("span.muted"))metadata.remove();
     reading.classList.add("focus-reading");
     const hero=document.createElement("div");hero.className="focus-hero";
-    hero.innerHTML=`<span class="focus-kicker">本轮先抓住这一点</span><p class="focus-takeaway">${esc(data?.takeaway || selected?.goal || l.subtitle)}</p>${data ? `<p class="focus-goal">${esc(data.goal)}</p><dl class="focus-terms">${data.terms.map(t=>`<div><dt>${esc(t[0])}</dt><dd>${esc(t[1])}</dd></div>`).join("")}</dl>` : `<p class="focus-goal">先理解下面的关键句，再看解释和例子。</p>`}`;
+    hero.innerHTML=`<span class="focus-kicker">要点</span><p class="focus-takeaway">${esc(data?.takeaway || selected?.goal || l.subtitle)}</p>${data ? `<p class="focus-goal">${esc(data.goal)}</p><dl class="focus-terms">${data.terms.map(t=>`<div><dt>${esc(t[0])}</dt><dd>${esc(t[1])}</dd></div>`).join("")}</dl>` : ""}`;
     if(formula&&!data)hero.append(formula);else formula?.remove();
     subtitle.after(hero);
     const main=document.createElement("div");main.className="focus-teaching";main.innerHTML=data ? customTeaching(data) : guidedTeaching(sections);hero.after(main);
@@ -71,10 +71,10 @@
     const memoryHTML=window.STUDY_MEMORY_METHODS?.render(l.id,stage);
     if(memoryHTML)main.insertAdjacentHTML("beforebegin",memoryHTML);
     const practice=document.createElement("div");practice.className="focus-practice";
-    if(guide){practice.append(guide);guide.querySelector("h2").textContent="再练一组，看看能否独立运用";}
+    if(guide){practice.append(guide);guide.querySelector("h2").textContent="配套练习";}
     check.after(practice);
     const original=document.createElement("details");original.className="focus-original";original.dataset.focusOriginal="true";
-    original.innerHTML=`<summary><span><strong>本轮完整讲义与补充</strong><small>${sections.length} 个原文知识点 · 需要时再查</small></span><span aria-hidden="true">＋</span></summary><p class="focus-original-note">完整保留原有条件、推导与边界。先完成上面的学习主线，遇到疑问再展开对照。</p>`;
+    original.innerHTML=`<summary><span><strong>完整讲义</strong><small>${sections.length} 个知识点</small></span><span aria-hidden="true">＋</span></summary>`;
     originalSections.forEach(s=>original.append(s));if(aid)original.append(aid);practice.after(original);
     // Existing diagrams remain interactive; only change their position, not their markup or IDs.
     const diagram=reading.querySelector(":scope > .diagram-box");if(diagram)main.after(diagram);

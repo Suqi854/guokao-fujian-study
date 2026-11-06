@@ -12,6 +12,9 @@ const omitted=new Set(['方法归属与答后检查','历史出处与使用边�
   for(const track of P.tracks)for(const stage of P.stages)for(const row of P.rows(track)){
     await route(P.link(track,stage.id,row.id));const l=C.lessons.find(l=>l.id===row.id),level=l.learningLevels?.[stage.id];
     assert.ok(d.querySelector('.focus-hero'));assert.equal(d.querySelector('.focus-original').open,false);
+    assert.equal(d.querySelector('.focus-original-note'),null);
+    assert.equal(d.querySelector('.focus-finish-hint'),null);
+    assert.doesNotMatch(d.querySelector('.course-reader').textContent,/先不看答案，自己说一遍|我想好了，核对理由|试着不用照读讲义解释一次|不自动判定掌握/);
     const expected=(level?level.sections.map(i=>l.sections[i]):l.sections).filter(s=>!omitted.has(s[0]));
     const actual=[...d.querySelectorAll('.focus-original>section')].map(s=>[s.querySelector('h2').textContent,s.querySelector('p').textContent]);
     assert.deepEqual(actual,JSON.parse(JSON.stringify(expected)),l.id+' exact original teaching preserved');

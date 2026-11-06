@@ -16,9 +16,9 @@ async function action(name,id){const e=d.querySelector('[data-action="'+name+'"]
 function input(sel,value){const e=d.querySelector(sel);assert.ok(e,sel);e.value=value;e.dispatchEvent(new w.Event('input',{bubbles:true}));}
 async function awaitView(test){for(let i=0;i<200;i++){if(test())return;await pause();}throw Error('Expected rendered application view');}
 (async()=>{
- await route('#theory');assert.equal(d.querySelectorAll('[data-theory-lesson]').length,12);assert.match(d.querySelector('main').textContent,/2023.*2025/s);assert.equal(d.querySelector('[data-theory-lesson="phase-change"]'),null,'Science learning aid is not a political-route node');
+ await route('#theory');assert.equal(d.querySelectorAll('[data-theory-lesson]').length,32);assert.match(d.querySelector('main').textContent,/2023.*2025/s);assert.equal(d.querySelector('[data-theory-lesson="phase-change"]'),null,'Science learning aid is not a political-route node');
  for(const id of ['phase-change','historiography','new-development-pattern','education-strong-2035']){
-  await route('#lesson/'+id+'/intro');const l=C.lessons.find(l=>l.id===id),aid=C.theoryLearningAids[id],main=d.querySelector('main');assert.equal(d.querySelector('h1').textContent,l.title);assert.ok(main.textContent.includes(aid.memoryCue));assert.equal(d.querySelector('[data-theory-recall]').open,false);assert.ok(main.textContent.includes('不是官方考频排序'));assert.equal(d.querySelectorAll('.level-guide a[href^="#quiz/"]').length,1);
+  await route('#lesson/'+id+'/intro');const l=C.lessons.find(l=>l.id===id),aid=C.theoryLearningAids[id],main=d.querySelector('main');assert.equal(d.querySelector('h1').textContent,l.title);assert.ok(main.textContent.includes(aid.memoryCue));assert.equal(d.querySelector('[data-theory-recall]').open,false);assert.ok(main.textContent.includes('不代表官方考频'));assert.equal(d.querySelectorAll('.level-guide a[href^="#quiz/"]').length,1);
   if(legacy.notes[id])assert.equal(d.querySelector('#lesson-note').value,legacy.notes[id],'Old note survives lesson deepening');
  }
  const next=C.questions.filter(q=>/^c36-|^pol36-/.test(q.id));assert.equal(next.length,30);

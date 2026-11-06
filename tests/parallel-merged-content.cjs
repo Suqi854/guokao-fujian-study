@@ -2,7 +2,7 @@
 // Integration and provenance guards, not a primary-source or semantic fact-check.
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict'),crypto=require('node:crypto');
 const root=path.join(__dirname,'..'),html=fs.readFileSync(path.join(root,'docs/index.html'),'utf8'),context={window:{}};vm.createContext(context);
-for(const m of html.matchAll(/src="\.\/([^\"]+)"/g))if(!['app.js','curriculum-v036.js','politics-v036.js','curriculum-v037.js','policy-v037.js','curriculum-v038.js','practice-diagnostic-v037.js'].includes(m[1]))vm.runInContext(fs.readFileSync(path.join(root,'docs',m[1]),'utf8'),context,{filename:m[1]});
+for(const m of html.matchAll(/src="\.\/([^\"]+)"/g))if(!['app.js','curriculum-v036.js','politics-v036.js','curriculum-v037.js','policy-v037.js','curriculum-v038.js','practice-diagnostic-v037.js','political-mao-deng-expansion.js','marxism-course.js','political-complete-integration.js'].includes(m[1]))vm.runInContext(fs.readFileSync(path.join(root,'docs',m[1]),'utf8'),context,{filename:m[1]});
 const C=JSON.parse(JSON.stringify(context.window.STUDY_CONTENT));
 const canonical=v=>v===null||typeof v!=='object'?JSON.stringify(v):Array.isArray(v)?'['+v.map(canonical).join(',')+']':'{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+canonical(v[k])).join(',')+'}';
 const hash=v=>crypto.createHash('sha256').update(canonical(v)).digest('hex');

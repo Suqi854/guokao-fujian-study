@@ -5,7 +5,7 @@
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict'),crypto=require('node:crypto');
 const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
 const html=fs.readFileSync(path.join(root,'docs/index.html'),'utf8');
-const scripts=[...html.matchAll(/<script src="\.\/([^"]+)"/g)].map(m=>m[1]).filter(f=>!['app.js','practice-targeted-v035.js','fujian-governance-v035.js','curriculum-v036.js','politics-v036.js','curriculum-v037.js','policy-v037.js','curriculum-v038.js','practice-diagnostic-v037.js'].includes(f));
+const scripts=[...html.matchAll(/<script src="\.\/([^"]+)"/g)].map(m=>m[1]).filter(f=>!['app.js','practice-targeted-v035.js','fujian-governance-v035.js','curriculum-v036.js','politics-v036.js','curriculum-v037.js','policy-v037.js','curriculum-v038.js','practice-diagnostic-v037.js','political-mao-deng-expansion.js','marxism-course.js','political-complete-integration.js'].includes(f));
 const c=vm.createContext({window:{}});
 for(const f of scripts)vm.runInContext(fs.readFileSync(path.join(root,'docs',f),'utf8'),c,{filename:f});
 const snapshot=JSON.stringify(c.window.STUDY_CONTENT.questions);

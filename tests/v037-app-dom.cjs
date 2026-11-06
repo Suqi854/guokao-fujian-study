@@ -84,7 +84,7 @@ async function retainedRecords(e, expected) {
   await retainedRecords(e, legacy);
   assert.equal(e.raw('zhixu-study-v2'), null, 'read-only v1 viewing must not eagerly migrate');
   await e.route('#theory');
-  assert.deepEqual([...d.querySelectorAll('[data-theory-lesson]')].map(node => node.dataset.theoryLesson), baseline.baselineTheoryTrack.steps.map(s => s.lessonId));
+  assert.deepEqual([...d.querySelectorAll('[data-theory-lesson]')].map(node => node.dataset.theoryLesson), plain(w.STUDY_POLITICAL_CURRICULUM.lessonIds));
   for (const id of [...targets, policyLesson]) assert.equal(d.querySelector('[data-theory-lesson="' + id + '"]'), null, 'nonpolitical lesson is not a route node');
   for (const id of [...targets, policyLesson]) for (const level of ['intro', 'practice', 'advanced']) {
     await e.route('#lesson/' + id + '/' + level);
@@ -179,7 +179,7 @@ async function retainedRecords(e, expected) {
   assert.equal(e.raw('zhixu-study-v1'), legacyRaw); e.close();
   // Actual long-paper UI: all presets remain 60 despite the eighth module.
   e = setup({ page: 'long-mock.html' }); ({ C, d, w } = e); await pause();
-  assert.equal(w.LONG_MOCK_MODEL.pool().length, 730); assert.equal(w.LONG_MOCK_MODEL.modules().length, 8);
+  assert.equal(w.LONG_MOCK_MODEL.pool().length, 838); assert.equal(w.LONG_MOCK_MODEL.modules().length, 8);
   assert.match(d.querySelector('#scope').textContent, /申论方法.*选择辨析.*不替代主观写作.*不是行测标准模块/);
   const inputs = () => [...d.querySelectorAll('#module-inputs input')];
   assert.equal(inputs().reduce((sum, input) => sum + Number(input.value), 0), 60);
