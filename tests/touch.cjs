@@ -26,9 +26,10 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
     path: path.join(evidence, "mobile-home.png"),
     fullPage: true,
   });
-  await p.locator('nav a[href="#learn"]').tap();
+  await p.locator('#navigation a[href="#course"]').tap();
+  await p.getByRole('link', { name: '搜索全部讲义 ↗', exact: true }).tap();
   await p.getByRole("button", { name: "判断推理", exact: true }).tap();
-  assert.equal(await p.locator(".lesson-card").count(), 12);
+  assert.equal(await p.locator(".lesson-card").count(), await p.evaluate(() => window.STUDY_CONTENT.lessons.filter(l => l.category === "判断推理").length));
   await p.locator(".lesson-card h3").first().tap();
   await p.getByRole("link", { name: "练配套题" }).tap();
   await p.locator(".option").first().tap();
@@ -42,13 +43,13 @@ const base = process.env.STUDY_BASE_URL || "http://127.0.0.1:4173";
   await p.getByRole("link", { name: "开始写作" }).first().tap();
   await p.locator("#draft").tap();
   await p.locator("#draft").fill("先概括，再归类。");
-  await p.locator("summary").tap();
+  await p.getByRole("button", { name: "展开参考要点与表达示例", exact: true }).tap();
   await p.locator(".reference").waitFor({ state: "visible" });
   await p.reload();
   assert.equal(await p.locator("#draft").inputValue(), "先概括，再归类。");
   assert.deepEqual(external, []);
   console.log(
-    "PASS Real touch: navigation, filters, quiz, writing, reload; no outgoing content requests",
+    "PASS Touch-enabled Chromium emulation (not physical-device testing): navigation, filters, quiz, writing, reload; no outgoing content requests",
   );
   const results = JSON.parse(
     fs.readFileSync(path.join(evidence, "test-results.json")),

@@ -231,7 +231,7 @@
   function nav(active) {
     $("#navigation").innerHTML = [
       ["home", "home", "学习概览"],
-      ["learn", "book", "知识地图"],
+      ["course", "book", "连续学习"],
       ["practice", "pen", "专项练习"],
       ["writing", "write", "申论写作"],
       ["mistakes", "wrong", "错题回顾"],
@@ -293,7 +293,7 @@
         "一个知识点，一组练习。按自己的节奏，稳稳向前。",
         '<span class="pill green">' + icon("shield") + " 本机记录</span>",
       ) +
-      studyRoutes() +
+      window.STUDY_COURSE.entry() + studyRoutes() +
       `<div class="stats">${stats.map((s) => `<div class="stat"><div class="stat-label">${s[0]}${icon(s[4])}</div><div class="stat-value">${s[1]}<small>${s[2]}</small></div><div class="stat-foot">${s[3]}</div></div>`).join("")}</div><div class="dashboard-grid"><div><section class="card focus-card"><div class="focus-top"><span class="pill">下一步 · 学懂再练</span><span class="muted" style="font-size:11px">约 ${next.minutes} 分钟</span></div><h2>${esc(next.title)}</h2><p>${esc(next.subtitle)}</p><div class="focus-bottom">${btn("开始学习", "#lesson/" + next.id)}<small>${done} / ${C.lessons.length} 篇已读 · 不等同掌握</small></div></section><div class="section-head"><h2>切换一种学习方式</h2><a href="#practice">全部练习 →</a></div><div class="compact-links"><a class="compact-link" href="#practice"><span class="tile-icon">${icon("pen")}</span><div><strong>来一组专项练习</strong><small>${C.questions.length} 道原创示例 · 每题都有解析</small></div>${icon("arrow")}</a><a class="compact-link" href="#writing"><span class="tile-icon">${icon("write")}</span><div><strong>把思路写成申论答案</strong><small>${C.writing.length} 个虚构材料练习 · 草稿自动保存</small></div>${icon("arrow")}</a><a class="compact-link" href="#mistakes"><span class="tile-icon">${icon("wrong")}</span><div><strong>回看错题，找到原因</strong><small>${wrong ? `${wrong} 道题等待巩固` : "完成练习后，错题会自动收集在这里"}</small></div>${icon("arrow")}</a></div></div><div class="stack"><section class="panel"><div class="panel-head"><h2>讲练之间，走三步</h2></div>${[
         ["读懂知识", "看公式、适用条件和常见陷阱。"],
         ["带着问题练", "提交答案后，逐题拆解思路。"],
@@ -654,7 +654,7 @@
         "先看懂方法，再到练习里检验。收藏值得反复读的内容。",
         btn("查看覆盖矩阵", "#coverage", true),
       ) +
-      studyRoutes() +
+      window.STUDY_COURSE.entry() + studyRoutes() +
       `<section class="panel"><h2>从你需要的地方开始</h2><p>小白先懂概念，基础阶段练迁移，高手阶段检查条件与边界。选择路径后，显示已有对应讲解的专题；完整讲义保留全部内容。</p>${pathChoices("#learn",learningPath)}<p class="stat-foot">当前${C.lessons.filter(l=>l.learningLevels).length}课已逐层编写，其他专题仍可从完整讲义进入。路径不是考试难度或能力等级认证。</p></section>` +
       roadmap() +
       `<label class="search-box">${icon("search")}<input id="search" aria-label="搜索知识点" placeholder="搜索知识点、公式或技巧…" value="${esc(query)}"></label><div class="filters">${C.categories.map((c) => `<button class="chip ${c === catalogFilter ? "active" : ""}" data-action="filter" data-id="${c}" aria-pressed="${c === catalogFilter}">${c}</button>`).join("")}<button class="chip ${onlySaved ? "active" : ""}" data-action="saved-filter" aria-pressed="${onlySaved}">★ 收藏</button></div><div id="catalog">${lessonCards()}</div>`
@@ -1069,24 +1069,27 @@
     const page = parts[0];
     const active =
       {
-        lesson: "learn",
-        theory: "learn",
+        lesson: "course",
+        learn: "course",
+        course: "course",
+        theory: "course",
         quiz: "practice",
         bank: "practice",
         targeted: "practice",
         diagnostics: "practice",
         training: "practice",
         papers: "practice",
-        coverage: "learn",
-        methods: "learn",
-        fujian: "learn",
+        coverage: "course",
+        methods: "course",
+        fujian: "course",
         write: "writing",
       }[page] || page;
     nav(active);
     $("#page-title").textContent =
       {
         home: "学习概览",
-        learn: "知识地图",
+        learn: "讲义搜索",
+        course: "连续学习",
         practice: "专项练习",
         writing: "申论写作",
         mistakes: "错题回顾",
@@ -1097,6 +1100,7 @@
     const views = {
       home,
       learn,
+      course: () => window.STUDY_COURSE.render(parts, state, lessonPage),
       theory: theoryPage,
       lesson: () => lessonPage(parts[1],parts[2]),
       practice,
@@ -1118,12 +1122,14 @@
     $("#main").innerHTML =
       (storageError
         ? `<div id="storage-save-error" class="storage-alert" role="alert">${esc(storageError)}</div>`
-        : "") + (views[page] || missing)();
+        : "") + window.STUDY_COURSE.trainingReturn(parts) + (views[page] || missing)();
     if (focus) {
       window.scrollTo({ top: 0 });
       $("#main").focus({ preventScroll: true });
     }
     if (page === "theory") $("#page-title").textContent = "政治理论入门";
+    if (page === "learn") $("#page-title").textContent = "讲义搜索";
+    if (page === "course") $("#page-title").textContent = "连续学习";
     if (page === "diagnostics") $("#page-title").textContent = "薄弱点线索";
     if (page === "training") $("#page-title").textContent = "训练记录与复盘";
     if (page === "papers") $("#page-title").textContent = "原创方法训练短卷";
@@ -1202,7 +1208,7 @@
       if (a === "rotate-demo") diagramStep = (diagramStep + 1) % 4;
       if (a === "reset-demo") diagramStep = 0;
       if (a === "overlay-demo") diagramRule = id;
-      const activeLesson = lesson(location.hash.split("/")[1]);
+      const activeLesson = lesson(location.hash.split("/")[location.hash.startsWith("#course/") ? 3 : 1]);
       if (activeLesson && $("#lesson-demo"))
         $("#lesson-demo").outerHTML = diagram(activeLesson);
     }
@@ -1213,7 +1219,7 @@
       if (a === "feature-reset") { featureTurns = 0; featureMirrored = false; }
       if (a === "solid-turn") solidTurns = (solidTurns + 1) % 4;
       if (a === "solid-reset") solidTurns = 0;
-      const current = lesson(location.hash.split("/")[1]);
+      const current = lesson(location.hash.split("/")[location.hash.startsWith("#course/") ? 3 : 1]);
       const keepFocus = document.activeElement === b;
       if (current && $("#lesson-demo")) {
         $("#lesson-demo").outerHTML = diagram(current);
@@ -1225,7 +1231,7 @@
       if (a === "cube-turn") cubeBack = !cubeBack;
       if (a === "solid-view" && ["front", "top", "side"].includes(id))
         solidView = id;
-      const current = lesson(location.hash.split("/")[1]);
+      const current = lesson(location.hash.split("/")[location.hash.startsWith("#course/") ? 3 : 1]);
       if (current && $("#lesson-demo"))
         $("#lesson-demo").outerHTML = diagram(current);
     }
@@ -1433,10 +1439,16 @@
       }
     }
   });
+  // Course context changes navigation, not the identity of a running writing task.
+  function trainingRouteHash(hash) {
+    const parts = hash.slice(1).split("/");
+    return parts[0] === "write" && window.STUDY_COURSE.trainingReturn(parts)
+      ? "#write/" + parts[1] : hash;
+  }
   window.addEventListener("hashchange", async () => {
     if(replacing)return;
     if (!location.hash.startsWith("#quiz/") || location.hash.startsWith("#quiz/timed/")) quiz = null;
-    await trainingUI.routeChanged(location.hash);
+    await trainingUI.routeChanged(trainingRouteHash(location.hash));
     render({focus:true});
   });
   setInterval(() => {
@@ -1448,6 +1460,6 @@
       );
   }, 1000);
   $("#settings-link").innerHTML = icon("settings");
-  trainingUI.routeChanged(location.hash).then(()=>render());
+  trainingUI.routeChanged(trainingRouteHash(location.hash)).then(()=>render());
   render();
 })();

@@ -1,0 +1,31 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const {JSDOM,VirtualConsole}=require('jsdom');
+const {installSerialLocks,navigateHash}=require('./progress-dom-support.cjs');
+const root=path.join(__dirname,'..','docs'),html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+const pause=()=>new Promise(r=>setTimeout(r,20));
+(async()=>{
+ const errors=[],vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));
+ const dom=new JSDOM(html,{url:'https://compact-preview.example/#practice',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc});const w=dom.window,d=w.document;
+ installSerialLocks(w);w.matchMedia=()=>({matches:true});w.scrollTo=()=>{};let scrolled=null;w.HTMLElement.prototype.scrollIntoView=function(){scrolled=this;};w.fetch=()=>{throw Error('Unexpected network request');};
+ for(const file of [...html.matchAll(/src="\.\/([^"]+)"/g)].map(m=>m[1]))w.eval(fs.readFileSync(path.join(root,file),'utf8'));
+ await pause();
+ assert.equal(d.querySelector('.practice-more').open,false);assert.equal(d.querySelector('.practice-shortcuts').children.length,4);assert.equal(d.querySelectorAll('.practice-module-links a').length,9);
+ const before=w.localStorage.getItem('zhixu-study-v2');
+ const route=async hash=>{await navigateHash(w,hash,()=>{w.location.hash=hash;});await pause();};
+ const q=w.STUDY_CONTENT.questions.find(q=>q.id==='t35-context-reading-02');
+ await route('#quiz/one/'+q.id);assert.equal(d.querySelector('.quiz-card h1').textContent,q.stem);assert.equal(d.querySelectorAll('.mobile-page-nav').length,1);
+ const click=text=>[...d.querySelectorAll('.mobile-page-nav button')].find(b=>b.textContent===text).click();
+ click('设问');assert.equal(scrolled,d.querySelector('.inline-prompt'));assert.equal(d.activeElement,scrolled);
+ d.querySelector('.inline-material-toggle').click();assert.equal(d.querySelector('.inline-passage').hidden,true);assert.equal(d.querySelector('.quiz-card h1').textContent,q.stem);
+ d.querySelector('[data-action=choose]').click();await pause();assert.equal(d.querySelector('.inline-passage').hidden,true,'collapse survives choice rerender');assert.equal(d.querySelectorAll('.mobile-page-nav').length,1);
+ click('材料');assert.equal(d.querySelector('.inline-passage').hidden,false);assert.equal(d.querySelector('.inline-material-toggle').getAttribute('aria-expanded'),'true');
+ assert.equal(w.localStorage.getItem('zhixu-study-v2'),before,'presentation/selection does not save attempts');
+ d.querySelector('[data-action=submit]').click();await pause();await pause();assert.ok(d.querySelector('.feedback'));assert.ok([...d.querySelectorAll('.mobile-page-nav button')].some(b=>b.textContent==='解析'));
+ const saved=JSON.parse(w.localStorage.getItem('zhixu-study-v2'));assert.equal(saved.attempts.length,1);assert.ok(saved.attempts[0].snapshot,'ordinary snapshot preserved');
+ await route('#quiz/one/q130');assert.ok(d.querySelector('.mobile-material').open);assert.equal(d.querySelectorAll('.question-material').length,1);d.querySelector('.mobile-material').open=false;await pause();click('材料');assert.equal(d.querySelector('.mobile-material').open,true);
+ const wq=w.STUDY_CONTENT.writing.find(x=>x.id==='w47');await route('#write/'+wq.id);assert.equal(d.querySelector('.material').textContent,wq.material);assert.equal(d.querySelectorAll('.mobile-page-nav button').length,4);click('作答');assert.equal(d.activeElement.id,'draft');
+ const hostile=w.STUDY_CONTENT.questions[0], original=hostile.stem;hostile.stem='文字'.repeat(110)+'<img src=x onerror=bad()>\n【问题】<script>bad()</script>';await route('#quiz/one/'+hostile.id);assert.equal(d.querySelector('.quiz-card h1').textContent,hostile.stem);assert.equal(d.querySelectorAll('.quiz-card img,.quiz-card script,[onerror]').length,0);assert.ok([...d.querySelector('.quiz-card h1').children].every(e=>e.tagName==='SPAN'&&e.childElementCount===0));hostile.stem=original;await route('#practice');assert.equal(d.querySelectorAll('.practice-shortcuts').length,1);assert.equal(d.querySelectorAll('.practice-module-links a').length,9);assert.deepEqual(errors,[]);w.close();
+ for(const file of ['long-mock.html','private-library.html']){const h=fs.readFileSync(path.join(root,file),'utf8');const dom=new JSDOM(h,{url:'https://compact-preview.example/'+file,runScripts:'outside-only'});dom.window.matchMedia=()=>({matches:true});dom.window.HTMLElement.prototype.scrollIntoView=function(){};dom.window.eval(fs.readFileSync(path.join(root,'mobile-workspace.js'),'utf8'));assert.equal(dom.window.document.querySelectorAll('.standalone-page-nav').length,1);assert.ok([...dom.window.document.querySelectorAll('.compact-utility')].every(e=>!e.open));assert.equal(dom.window.localStorage.length,0);dom.window.close();}
+ console.log('PASS compact UI: intact content, module shortcuts, section jump/focus, disclosure persistence, repeated render, ordinary snapshots, writing, standalone navigation; synthetic DOM only.');
+})().catch(e=>{console.error(e);process.exit(1)});

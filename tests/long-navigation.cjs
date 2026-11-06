@@ -15,7 +15,8 @@ const root=path.join(__dirname,'..'),html=fs.readFileSync(path.join(root,'docs/i
  assert.match(d.querySelector('main').textContent,/私人题库仅接收UTF-8 JSON/);
  assert.equal(d.querySelector('a[href="./long-mock.html"]').textContent,'打开长题组与其独立备份 →');
  await navigateHash(w,'#practice',()=>{w.location.hash='#practice';});await new Promise(r=>setTimeout(r,20));
- assert.equal(d.querySelector('a[href="./long-mock.html"]').textContent,'打开长题组');
+ assert.equal(d.querySelector('.practice-shortcuts a[href="./long-mock.html"]').textContent,'长题组 / 固定卷');
+ assert.equal(d.querySelector('.practice-more a[href="./long-mock.html"]').textContent,'打开长题组');
  assert.match(d.querySelector('main').textContent,/753 道原创练习/);assert.deepEqual(errors,[]);dom.window.close();
  console.log('PASS bounded main DOM: long-page links, three separate backups, no stale two-backup instruction, independent value reads forbidden');
 })().catch(e=>{console.error(e);process.exit(1);});
