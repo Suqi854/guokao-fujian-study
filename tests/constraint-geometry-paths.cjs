@@ -5,8 +5,8 @@ vm.createContext(context);
 for (const m of fs.readFileSync(path.join(root, "docs/index.html"), "utf8").matchAll(/src="\.\/([^\"]+)"/g)) if (m[1] !== "app.js") vm.runInContext(fs.readFileSync(path.join(root, "docs", m[1]), "utf8"), context);
 const C = JSON.parse(JSON.stringify(context.window.STUDY_CONTENT)), q = Object.fromEntries(C.questions.map(x => [x.id, x]));
 assert.equal(C.lessons.length, 105);
-assert.equal(C.questions.length, 717);
-assert.equal(C.lessons.filter(l => l.learningLevels).length, 95);
+assert.equal(C.questions.length, 753);
+assert.equal(C.lessons.filter(l => l.learningLevels).length, 97);
 for (const id of ["arrangement", "remainders", "geometry-scale"]) {
   const l = C.lessons.find(l => l.id === id);
   assert.equal(l.sections.length, 9);

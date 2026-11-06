@@ -1,2 +1,13 @@
 :root{color-scheme:light;font-family:"Noto Sans CJK SC","Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;color:#23332f;background:#f4f6f3;line-height:1.7}
 *{box-sizing:border-box}body{margin:0}main{max-width:960px;margin:0 auto;padding:24px}h1{font-size:2rem}h2{font-size:1.2rem}section{margin:20px 0;padding:20px;background:white;border:1px solid #cad6d0;border-radius:12px}li{margin-bottom:8px}.private-warning,#private-preview{border-left:4px solid #9a6b1a;background:#fff6e5;padding:14px}.private-text{white-space:pre-wrap;overflow-wrap:anywhere}button,input,select,textarea{font:inherit}button,select{min-height:44px;padding:8px 12px}button{border:1px solid #376451;border-radius:6px;background:#f0f8f4;cursor:pointer}button:disabled{opacity:.5;cursor:default}a{color:#24563f}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #b36e1c;outline-offset:3px}.private-actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:12px 0}.private-choice{display:flex;gap:12px;padding:10px;border-bottom:1px solid #dde3df;overflow-wrap:anywhere}.private-choice input{flex:none}textarea{display:block;width:100%;margin:12px 0}select{max-width:100%}fieldset{border:1px solid #cad6d0}details{margin:16px 0;padding:12px;border:1px solid #cad6d0}summary{cursor:pointer}#private-status{min-height:2em;overflow-wrap:anywhere}#private-reader h2{font-size:1.15rem}[hidden]{display:none!important}@media(max-width:600px){main{padding:14px}section{padding:14px}.private-actions>label{width:100%}}
+
+/* User-supplied titles and file names must not widen the phone viewport. */
+@media (max-width:600px) {
+  main { padding-left:max(14px,env(safe-area-inset-left)); padding-right:max(14px,env(safe-area-inset-right)); padding-bottom:max(14px,env(safe-area-inset-bottom)); overflow-wrap:anywhere; }
+  section,fieldset,.private-actions > *,.private-choice > * { min-width:0; }
+  input,select,textarea { font-size:16px; max-width:100%; }
+  input[type=file] { display:block; width:100%; min-width:0; }
+  input:not([type=checkbox]):not([type=radio]),summary,.private-choice { min-height:44px; }
+  .private-actions select { display:block; width:100%; }
+  .private-actions button { flex:1 1 auto; }
+}

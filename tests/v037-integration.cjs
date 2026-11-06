@@ -1,5 +1,6 @@
 'use strict';
-// Final public entrypoints, reviewed content, and fail-closed adapter boundaries.
+// Historical v0.37 entrypoint projection, reviewed content, and fail-closed adapter boundaries.
+// Later adapters are excluded; current release coverage is tested separately.
 // This is a content/protocol regression, not independent semantic grading.
 const fs = require('node:fs');
 const vm = require('node:vm');
@@ -10,12 +11,23 @@ const root = path.join(__dirname, '..');
 const read = name => fs.readFileSync(path.join(root, 'docs', name), 'utf8');
 const scriptNames = page => [...read(page).matchAll(/src="\.\/([^"]+)"/g)].map(m => m[1]);
 const adapters = ['curriculum-v037.js', 'policy-v037.js'];
+const laterAdapters = ['curriculum-v038.js', 'practice-diagnostic-v037.js'];
 const targets = ['material-mapping', 'answer-revision'];
 const policyLesson = 'fujian-enterprise-service-2025';
 const sourceId = 'fujian-four-access-2025';
 const baseline = require('./fixtures/v036-public-identities.json');
+const historicalCoverage = require('./fixtures/v037-public-identities.json');
 const reviewed = require('./fixtures/v037-reviewed-content.json');
 const plain = value => JSON.parse(JSON.stringify(value));
+const restoreHistoricalCoverage = c => {
+  // Freeze only the four historical summaries derived by coverage-map.js.
+  // Current v0.38 coverage is checked without this projection in its own suite.
+  for (const [key, snapshot] of Object.entries({ coverage: 'baselineCoverage', coverageMatrix: 'baselineCoverageMatrix', coverageAdded: 'baselineCoverageAdded', coverageDeepened: 'baselineCoverageDeepened' })) {
+    assert.ok(Array.isArray(historicalCoverage[snapshot]), snapshot + ' frozen v0.37 coverage');
+    c.window.STUDY_CONTENT[key] = plain(historicalCoverage[snapshot]);
+  }
+  delete c.window.STUDY_CONTENT.coveragePracticeExpanded;
+};
 const canonical = value => value === null || typeof value !== 'object' ? JSON.stringify(value)
   : Array.isArray(value) ? '[' + value.map(canonical).join(',') + ']'
   : '{' + Object.keys(value).sort().map(key => JSON.stringify(key) + ':' + canonical(value[key])).join(',') + '}';
@@ -30,7 +42,7 @@ const context = () => {
   return vm.createContext(c);
 };
 const execute = (c, file) => vm.runInContext(read(file), c, { filename: file, timeout: 2000 });
-const contentScripts = scriptNames('index.html').filter(file => file !== 'app.js');
+const contentScripts = scriptNames('index.html').filter(file => file !== 'app.js' && !laterAdapters.includes(file));
 for (const file of adapters) {
   const embedded = read(file).match(/\bconst B = ([\s\S]+?);\s*const C=window\.STUDY_CONTENT;/);
   assert.ok(embedded, file + ' self-contained reviewed payload');
@@ -48,6 +60,7 @@ for (const page of ['index.html', 'long-mock.html']) {
 }
 const c = context();
 for (const file of contentScripts) execute(c, file);
+restoreHistoricalCoverage(c);
 const C = c.window.STUDY_CONTENT, T = c.window.STUDY_TRAINING;
 assert.deepEqual([C.lessons.length, C.questions.length, C.writing.length, C.lessons.filter(l => l.learningLevels).length, C.lessons.filter(l => !l.learningLevels).length, Object.keys(C.sources).length], [105, 717, 81, 95, 10, 43]);
 assert.deepEqual([Object.keys(baseline.collections.lessons).length, Object.keys(baseline.collections.questions).length, Object.keys(baseline.collections.writing).length, Object.keys(baseline.questionSignatures).length], [104, 699, 75, 699]);
@@ -248,7 +261,8 @@ rejectsAtomically(adapters[1], C => { C.sources[sourceId] = { synthetic: true };
 rejectsAtomically(adapters[1], C => { C.lessons.push(plain(historical)); }, 'lesson ID conflict');
 // The shared long-paper entrypoint must load exactly the same published content.
 const long = context();
-for (const file of scriptNames('long-mock.html')) if (!['long-mock-workspace.js', 'long-mock-store.js'].includes(file)) execute(long, file);
+for (const file of scriptNames('long-mock.html')) if (!['long-mock-workspace.js', 'long-mock-store.js', ...laterAdapters].includes(file)) execute(long, file);
+restoreHistoricalCoverage(long);
 assert.equal(hash(long.window.STUDY_CONTENT), hash(C));
 const M = long.window.LONG_MOCK_MODEL;
 assert.equal(M.pool().length, 694, 'generic original text pool includes 12 method-choice and 6 policy items');

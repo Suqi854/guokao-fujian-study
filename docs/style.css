@@ -2059,3 +2059,27 @@ footer a {
 .diagnostic-card details { margin-top: 14px; }
 .diagnostic-card details > ol > li { margin: 12px 0; }
 .diagnostic-writing { margin: 18px 0; padding-top: 12px; border-top: 1px solid var(--line, #e5e7ef); }
+
+/* Phone layout: keep controls reachable without clipping content or disabling zoom. */
+@media (max-width: 640px) {
+  html { scroll-padding-bottom: calc(90px + env(safe-area-inset-bottom)); }
+  .workspace { padding-bottom: calc(90px + env(safe-area-inset-bottom)); }
+  main { padding-left: max(14px, env(safe-area-inset-left)); padding-right: max(14px, env(safe-area-inset-right)); }
+  main, main > *, .panel, .reading, .quiz-card, .option > span, .top-actions { min-width: 0; }
+  main { overflow-wrap: anywhere; }
+  .sidebar { padding-left: max(5px, env(safe-area-inset-left)); padding-right: max(5px, env(safe-area-inset-right)); }
+  #navigation { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .nav-item { min-width: 0; min-height: 52px; font-size: 11px; }
+  .topbar { padding-left: max(12px, env(safe-area-inset-left)); padding-right: max(12px, env(safe-area-inset-right)); gap: 8px; }
+  .top-actions { gap: 6px; }
+  .mobile-brand span { display: none; }
+  .top-actions select { max-width: 174px; }
+  input, select, textarea, .top-actions select, .bank-field input, .bank-field select { font-size: 16px; max-width: 100%; }
+  input:not([type=checkbox]):not([type=radio]), select, .btn, .chip, .top-actions .icon-button, summary { min-height: 44px; }
+  input[type=file] { width: 100%; min-width: 0; }
+  .page-heading, .section-head, .quiz-header, .quiz-actions { flex-wrap: wrap; }
+  .page-heading .btn { white-space: normal; }
+  .quiz-actions .btn { flex: 1 1 auto; }
+  .option { min-width: 0; width: 100%; }
+  #toast { bottom: calc(90px + env(safe-area-inset-bottom)); }
+}

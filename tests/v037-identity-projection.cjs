@@ -4,6 +4,8 @@
 const assert=require('node:assert/strict'),base=require('./fixtures/v036-public-identities.json');
 const plain=x=>JSON.parse(JSON.stringify(x));
 module.exports=function projection(C){
+ // Undo only the separately constrained v0.38 changes before v0.37 comparisons.
+ C=require('./v038-identity-projection.cjs')(C);
  const ids=['material-mapping','answer-revision'],added='fujian-enterprise-service-2025';
  if(!C.lessons.some(l=>l.id===added)&&!ids.some(id=>C.lessons.find(l=>l.id===id)?.learningLevels))return C;
  const allowed=new Set(['sections','minutes','updated','practice','learningLevels','versionNote','basis']);

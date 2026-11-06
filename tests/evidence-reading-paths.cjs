@@ -3,15 +3,15 @@ const fs=require("node:fs"),vm=require("node:vm"),path=require("node:path"),asse
 const root=path.join(__dirname,".."),context={window:{}};vm.createContext(context);
 for(const m of fs.readFileSync(path.join(root,"docs/index.html"),"utf8").matchAll(/src="\.\/([^\"]+)"/g))if(m[1]!=="app.js")vm.runInContext(fs.readFileSync(path.join(root,"docs",m[1]),"utf8"),context);
 const C=JSON.parse(JSON.stringify(context.window.STUDY_CONTENT)),q=Object.fromEntries(C.questions.map(x=>[x.id,x]));
-assert.equal(C.questions.length,717);assert.equal(C.lessons.length,105);assert.equal(C.lessons.filter(l=>l.learningLevels).length,95);
+assert.equal(C.questions.length,753);assert.equal(C.lessons.length,105);assert.equal(C.lessons.filter(l=>l.learningLevels).length,97);
 for(const id of ["growth-contribution","multi-table","context-blanks","title-choice"]){
-  const l=C.lessons.find(l=>l.id===id);assert.equal(l.sections.length,9);assert.equal(l.practice.length,9);
+  const l=C.lessons.find(l=>l.id===id);assert.equal(l.sections.length,9);assert.equal(l.practice.length,id==="multi-table"?12:9);
   assert.deepEqual(Object.values(l.learningLevels).flatMap(g=>g.sections),[...Array(9).keys()]);
-  for(const g of Object.values(l.learningLevels)){assert.equal(g.questionIds.length,2);assert.ok(g.questionIds.every(id=>q[id].lesson===l.id&&q[id].meta.trainingStage===g.stage));}
+  for(const g of Object.values(l.learningLevels)){assert.equal(g.questionIds.length,id==="multi-table"?3:2);assert.ok(g.questionIds.every(id=>q[id].lesson===l.id&&q[id].meta.trainingStage===g.stage));}
 }
 assert.deepEqual([...Array(24)].map((_,i)=>q['q'+(364+i)].answer),[1,3,0,2,3,0,1,0,2,1,3,1,0,2,1,3,0,2,0,3,1,2,3,1]);
 for(let n=364;n<=387;n++){const x=q['q'+n];assert.equal(x.optionReviews.length,4);assert.equal(x.meta.source.kind,'original');assert.equal(x.meta.examSource.year,null);assert.equal(x.meta.difficulty.level,null);}
-console.log('PASS Four exact lessons, twelve two-question paths, original provenance and all 24 frozen answer choices');
+console.log('PASS Four exact lessons, twelve current paths including three multi-table transfers, original provenance and all 24 frozen answer choices');
 const sum=a=>a.reduce((s,n)=>s+n,0),ledger=(before,after)=>({base:sum(before),change:sum(after)-sum(before),parts:after.map((n,i)=>n-before[i])});
 const contribution=(x,i)=>{if(!x.change)throw new RangeError('zero total increment');return 100*x.parts[i]/x.change;};
 const pull=(x,i)=>{if(!x.base)throw new RangeError('zero base total');return 100*x.parts[i]/x.base;};

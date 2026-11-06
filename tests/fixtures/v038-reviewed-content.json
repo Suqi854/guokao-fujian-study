@@ -1,0 +1,341 @@
+{
+  "baseCommit": "38d99cbf1b9b404bfa2224625b5e38950910b565",
+  "reviewScope": "Independent editorial reviewed source JSON plus frozen v0.37 baseline transformations. Not derived from integrated runtime.",
+  "adapterPayloads": {
+    "curriculum-v038.js": "393eb315787ae33299088ee2950ff53e33feb7b39d870b0545e44574dcd7c352",
+    "practice-diagnostic-v037.js": "ebb4f701d9cc849aae08d1e7345166d36030b7eca61fd86125b8ee2847465679"
+  },
+  "collections": {
+    "lessons": {
+      "multi-material": "f0f4701cdd4db6e2dcdd64a052d5710bb692418683ca5caf6823cee8106b918d",
+      "full-essay": "42e42a795d638bc9105fee9129fe3e287f76137d864be2c14d2c51ebe2f7b0cc",
+      "multi-table": "ae8ca188c8fe913b4c2ed49637d232231f02d486997e5d11b2b4d2dfa4063048",
+      "pn-compound-logic": "0e02b10d8249a33c45a7611e84d5ed8939ff3db5aaf8eeb4d023487d6382a251",
+      "pn-share-scope": "4109bdca2dc31cdcce5cbd97d491799d2c86cea89c30c1c73b821bbe7f3821b0",
+      "on-source-reading": "b5283e78b7257c8695522e86bc928c4f5fc474c36e30cf894745a658005479bc",
+      "on-period-scope": "4e8f353e607cb3f780787137c8d7874dfa7aebee589dbce8d94fd93c3de1f94c",
+      "t35-context-reading": "09732b3d06ba8ec0d3d0e5fb2ac4214123647835faaa8f4f26c9696007811784",
+      "t35-spatial-transform": "b62198f8c7f741f2c4904c7e7aeaf8b55e835b49efa2ccd1dde3947e32de42f2",
+      "t35-group-statistics": "172d58d5e3dda7e9b7bb5b99b2d27ca16e84583337602e17d047a7e5179a434a"
+    },
+    "questions": {
+      "c38-01": "4d8c41ea70a744f737aca703035210ece2f102a677310ab35f9caf580bd233ce",
+      "c38-02": "ac4d66ced0fb34520bada39db23947d068b16b22e9fec3e70eb2cffca4833158",
+      "c38-03": "7e3f5bfd227d56984296c02bba3a062a7bda34061de8881ef0c8d6c31d4e2eda",
+      "c38-04": "f3ecf65eba318c4d20a0116f3003ef5f02cbcdf92abfe5e7cee13e08c8ef19d8",
+      "c38-05": "057cb1e55bd41393240ae121c62f32837ee491c58953a17f8c9909354ae5a702",
+      "c38-06": "94c3aa423f96c261cb61c78f2c2c25da696d9a62349dd53c359405e120d3284e",
+      "c38-07": "7ff671599a80851f2509f97b58ecde0fc8c0ac70e987bcb6ceeb00f7b881696d",
+      "c38-08": "481169616d37b7a3645f8b552490d561d762b3c65faa5b96a50d5530d3453fa3",
+      "c38-09": "156b4c15d6cc8c0924e6e9f3b218728e64310cfd496816665060f434d4665eed",
+      "c38-10": "5b3f135a0dfd193ccb3e3c1184ab71c96e5db1488ed209da94686894bb568c62",
+      "c38-11": "e4809c070c93448ec6744cb850be6ad8489a9db36bd779a00227ab40d6221765",
+      "c38-12": "1207c09c3c372a2c492100077690a7ce5a048756c32c83075b1a50a4d09abdd6",
+      "d37-transfer-01": "43463cb133ceb60a0f94d7f49e065cc014d3f7a7479b02aed10995e5944c506c",
+      "d37-transfer-02": "a89b455723ad96d611a1294fc51f7fec515a865638b745c040d9afedf82105b3",
+      "d37-transfer-03": "45b3d04f20aec02c46a48cd2a329cdf851090dab874266a3bc4d5fae4384f9e9",
+      "d37-transfer-04": "b47be226f77a4c2ebe17a67ee859cf9bb90e49a0159893621bfb46db38f891a2",
+      "d37-transfer-05": "910ff21c3de1f9ea4055622ec97780464fa366afa8f75ec9fd5ea1a22d3469eb",
+      "d37-transfer-06": "1a6dbb0004053f985064b2a5cc03c0a3241cbedeb942162351926e4d7098421d",
+      "d37-transfer-07": "257001ae7bee204877df80e79cd20148defa2b394d7445911aeb05f87d51f717",
+      "d37-transfer-08": "a95247d4c6c809e63ef2d896b27a6e838d13c6a11f3c55ed7ef94b82778c9e38",
+      "d37-transfer-09": "81c8d514389974f76a07d9c418c21390a6e711f568433da09f9548e6a730faed",
+      "d37-transfer-10": "77acbe95bc3ffbb1d8bebab60d101e148f96f294c2df413e1ab980eb9f058ad3",
+      "d37-transfer-11": "a0e48a5a4aa3d2051f0b15c399cd95b007f7b5a5cfcc019df35ae2ffe5f12ef4",
+      "d37-transfer-12": "cd8fba38c1516ea996116f95b4e138f7eb7368ab97b4fdceeb9f629ca8620259",
+      "d37-transfer-13": "46adf0f10da838084ef0a5a3528e8eeee4f83be4d30fadab320190df71485ca8",
+      "d37-transfer-14": "f1519286a9a6400baef02b6b5cafb0766bec89a4870d01a380530df7c1d617ae",
+      "d37-transfer-15": "4396dbe4940fbd397566ce28c8cfcbcbf03e0d107a7aa599186e64fbd60ca63b",
+      "d37-transfer-16": "5d3f8c9495d4511d612cd1e18602b59262453ba5f266d56610565491fac96aac",
+      "d37-transfer-17": "35b450f559642c9e1810dc0c1bb516799be8261c9a0d1d3f69bed7496ffd2c0d",
+      "d37-transfer-18": "0673a531b8d9eff62d476b016ac7ad641a51da0b8c8d2c6994e02e2835c20cb4",
+      "d37-transfer-19": "0ea9723eac39d2ab01131ad59f692eb728587b544bd4c2ccbf44d66cf27564f1",
+      "d37-transfer-20": "b032a0d158e9ba8b6ca53ef2cd0571753fed209f7889a07ea2332f1adc0b6de3",
+      "d37-transfer-21": "39ff7a35f425399580b9eb247d1997d7f0fa4d64da90ecb7f3b5db907c4ca7a1",
+      "d37-transfer-22": "cf883f1ada57a2631ddf04a6be60673668b05400f21ce9fab717bce881237607",
+      "d37-transfer-23": "5f65d28e2ee20bdedd65b87044d480640d64442c5f2561f7e6f851e8451c6600",
+      "d37-transfer-24": "e5d6c9130db53aa4c71e7445f0f5a7d5f692bd4b5b5977f5ace4b6fc6121f54a"
+    },
+    "writing": {
+      "w_c38_mapping_intro": "6863017aa057bd794106b0e9820f784083521a5105e86fde64729f55a4aba231",
+      "w_c38_mapping_practice": "9155a438b98478df2e96525de52bdb52e4695e514def1c62f400819242b0a815",
+      "w_c38_mapping_advanced": "903789c76f9acce03083333add2741addfda7a9ba8670732a1819d2d5bab07ab",
+      "w_c38_essay_intro": "78ea2f577b7d58bf13d34386d6b2faf29105bff55801401d82bb21c78644110f",
+      "w_c38_essay_practice": "aec07f62a745fc95c5936bbdb888c13736eb43576f3650c51e6f6235d891cd17",
+      "w_c38_essay_advanced": "4025165e1ced5c875fd0f2098f7043eb01ca8eef45885350707c9b52edcdaacc"
+    }
+  },
+  "learningAids": {
+    "multi-material": "8f8be17f1235e4eb85006b4243c10019cdc63a399e040d91f3e0450e65927f13",
+    "full-essay": "a36d8f4bba5e393cb9f44e618ef22f85fa2abfb66b86a831fce6a0b6987c0066"
+  },
+  "transferMaterials": {
+    "d37-transfer-01": {
+      "id": "d37-transfer-01-material",
+      "title": "包裹量与退件率",
+      "text": "某配送中心甲、乙两条线路本月承运的包裹互不重叠，且每个包裹至多退回一次。表一统计承运量，表二的退件率均以该线路本月承运量为分母，各数为精确值。\n表一：甲线路承运量为0.24万件，乙线路为1600件。\n表二：甲线路退件率为2.5%，乙线路为5.0%。",
+      "provenance": "original-fictional",
+      "questionIds": [
+        "d37-transfer-01"
+      ]
+    },
+    "d37-transfer-02": {
+      "id": "d37-transfer-02-material",
+      "title": "窗口开放与业务办理",
+      "text": "甲、乙两处咨询点本月的业务均只在所列开放时段办理，每笔业务只计一次。每天所有窗口都全程开放，各数为精确值。\n表一（本月业务）：甲点900笔，乙点1200笔。\n表二（开放配置）：甲点开放5天、每天3个窗口；乙点开放8天、每天2个窗口。\n本题将“每窗口日平均业务量”定义为业务总笔数÷（开放天数×每天窗口数）。",
+      "provenance": "original-fictional",
+      "questionIds": [
+        "d37-transfer-02"
+      ]
+    },
+    "d37-transfer-03": {
+      "id": "d37-transfer-03-material",
+      "title": "购置费用的嵌套口径",
+      "text": "某地甲年度有如下两张同口径统计表，金额均为精确值。\n表一：全体企业设备购置费用为120亿元；其中规模以上工业企业设备购置费用为80亿元。\n表二：规模以上工业企业中，绿色设备购置费用为48亿元；其余设备购置费用为32亿元。\n规模以上工业企业是全体企业的子集，每笔费用只归入一个企业、一个设备类别；其他企业的绿色设备费用未提供，所有费用均非负。",
+      "provenance": "original-fictional",
+      "questionIds": [
+        "d37-transfer-03"
+      ]
+    },
+    "d37-transfer-04": {
+      "id": "d37-transfer-04-material",
+      "title": "四场报告的排序",
+      "text": "一场交流会把甲、乙、丙、丁四场报告分别安排在第1至第4时段，每时段恰好一场，全部规则如下：\n①甲在乙之前；②如果丙在第1时段，则丁在第4时段；③丁不在第4时段；④乙不在第3时段。\n“之前”只要求时段编号较小，不要求紧邻。",
+      "provenance": "original-fictional",
+      "questionIds": [
+        "d37-transfer-04"
+      ]
+    },
+    "d37-transfer-05": {
+      "id": "d37-transfer-05-material",
+      "title": "两种报名方式与核验",
+      "text": "某次活动对每一份有效报名记录都满足以下条件：\n①“线上报名”和“现场报名”至少有一项为真；②线上报名必有电子归档；③现场报名必已人工核验；④电子归档和已人工核验不能同时为真。\n记录状态只有真或假，除此以外没有其他限制。现知某份有效报名记录“已人工核验”为真。",
+      "provenance": "original-fictional",
+      "questionIds": [
+        "d37-transfer-05"
+      ]
+    },
+    "d37-transfer-06": {
+      "id": "d37-transfer-06-material",
+      "title": "展区开放状态的反例",
+      "text": "展馆的甲、乙、丙、丁四个展区各有“开放”或“关闭”两种状态，允许出现的状态只受以下规则限制：\n①甲开放则乙开放；②丙开放则甲关闭；③甲、丁至少有一个开放。\n有人据此断言：“只要丙开放，乙就一定关闭。”",
+      "provenance": "original-fictional",
+      "questionIds": [
+        "d37-transfer-06"
+      ]
+    },
+    "d37-transfer-07": {
+      "id": "d37-transfer-07-material",
+      "title": "线上订单两期比重",
+      "text": "某店本期共有1500笔订单，比上期增长25%；本期线上订单450笔，比上期增长50%。每笔订单只计一次，线上订单是全部订单的子集，两期统计口径相同，各数均为精确值。",
+      "provenance": "original-fictional",
+      "questionIds": [
+        "d37-transfer-07"
+      ]
+    },
+    "d37-transfer-08": {
+      "id": "d37-transfer-08-material",
+      "title": "家庭设备使用的去重",
+      "text": "一个社区共调查300户家庭，每户只填一份问卷。其中90户使用太阳能热水器，120户使用智能温控设备，同时使用这两种设备的有30户。除上述两种设备外是否还有其他设备，不影响本题分类。",
+      "provenance": "original-fictional",
+      "questionIds": [
+        "d37-transfer-08"
+      ]
+    },
+    "d37-transfer-09": {
+      "id": "d37-transfer-09-material",
+      "title": "合格率与产品构成",
+      "text": "某厂只生产精密型和普通型两类产品，类别互不重叠。甲期、乙期的产量均为1000件。甲期精密型占20%，乙期精密型占50%。两期各类别的合格率都保持不变：精密型90%，普通型60%。所有数值均为精确值，未提供技术改造或人员变化情况。",
+      "provenance": "original-fictional",
+      "questionIds": [
+        "d37-transfer-09"
+      ]
+    },
+    "d37-transfer-10": {
+      "id": "d37-transfer-10-material",
+      "title": "夜间阅读活动的两版文件",
+      "text": "一所图书馆的两份文件如下，均为本题虚构文本。\n文件甲，3月1日《讨论稿》：“拟从4月起连续六周，每周三18时至20时开放夜间阅读；对象及预约方式待定。”\n文件乙，3月20日正式《试行通知》：“原讨论稿仅作筹备参考。首轮只在4月第一个、第二个周三18时至19时开放；参加者须提前预约且预约成功。后续是否继续，另行通知。”\n除这两份文件外没有其他已发布安排。",
+      "provenance": "original-fictional",
+      "questionIds": [
+        "d37-transfer-10"
+      ]
+    },
+    "d37-transfer-11": {
+      "id": "d37-transfer-11-material",
+      "title": "意愿问卷与到访记录",
+      "text": "社区书房讨论开放时段时收到两份记录。\n记录甲：“在宣传页上自愿填答的100份问卷中，70份表示更希望书房晚间开放；问卷未记录答题者是否曾到访。”\n记录乙：“本周共100次到访记录，其中晚间20次、白天80次；同一个人可能多次到访，未记录到访者是否填写过上述问卷。”\n两份记录本身均被如实转录，未提供抽样代表性或个人身份对应表。",
+      "provenance": "original-fictional",
+      "questionIds": [
+        "d37-transfer-11"
+      ]
+    },
+    "d37-transfer-12": {
+      "id": "d37-transfer-12-material",
+      "title": "检测摘录与宣传初稿",
+      "text": "资料员拿到以下三段文字。\n技术要求节选：“本次尺寸抽检只检查连接孔间距。标称间距为40毫米，允许误差为正负2毫米；不涉及承重、耐久或其他尺寸指标。”\n检测记录：“从该批产品中抽取20件，孔间距均在38至42毫米内。本记录未作全批逐件检验。”\n宣传初稿：“经过检验，本批所有产品的各项质量指标均已达标。”\n假定技术要求和检测记录准确、完整，暂不使用其他资料。",
+      "provenance": "original-fictional",
+      "questionIds": [
+        "d37-transfer-12"
+      ]
+    },
+    "d37-transfer-13": {
+      "id": "d37-transfer-13-material",
+      "title": "季度完成量的环比",
+      "text": "某工作室本年度一季度累计完成420件，1至6月累计完成1100件，第三季度单季完成580件。各季度不重叠，完成件数按完成日期记录，不重复计数，均为精确值。",
+      "provenance": "original-fictional",
+      "questionIds": [
+        "d37-transfer-13"
+      ]
+    },
+    "d37-transfer-14": {
+      "id": "d37-transfer-14-material",
+      "title": "预约待处理量的增减",
+      "text": "某预约平台月初有260笔待处理预约。本月新进入待处理队列180笔，完成处理140笔，另有32笔在处理前由申请人撤回。撤回与完成处理是互不重叠的出队原因，每笔只出队一次；没有其他进出队、重复记录或期末跨账处理。",
+      "provenance": "original-fictional",
+      "questionIds": [
+        "d37-transfer-14"
+      ]
+    },
+    "d37-transfer-15": {
+      "id": "d37-transfer-15-material",
+      "title": "十二个月滚动销售额",
+      "text": "某店以连续12个完整自然月的销售额之和作为“滚动12个月销售额”。截至本年5月末，该指标为980万元，覆盖上年6月至本年5月；上年6月销售额80万元，本年6月销售额120万元。销售额按月归属，口径相同且无修订。",
+      "provenance": "original-fictional",
+      "questionIds": [
+        "d37-transfer-15"
+      ]
+    },
+    "d37-transfer-16": {
+      "id": "d37-transfer-16-material",
+      "title": "方言存档与日常使用",
+      "text": "①一支方言记录小组为旧城的日常对话录音，整理了读音、词义和说话情境。负责人说，档案能使后来者反复聆听已经记录的声音，却不能让未被记录的交谈自动留下。\n②有人认为，有了完整录音库，方言就不需要在日常生活中继续使用。另一名成员指出，档案固定的是某次说话，实际交谈还会产生新的搭配、情境与表达。没有使用者之间的往来，保存再多声音也不能替代这种生成过程。\n③不过，成员们也反对以“活的语言”为由轻视记录。老一辈不再使用的表达，有时正靠旧录音被重新理解。他们主张把可追溯的档案与能持续交谈的场景放在一起考虑：前者帮助回看，后者让表达继续发生，两者服务不同但相互联系的需要。",
+      "provenance": "original-fictional",
+      "questionIds": [
+        "d37-transfer-16"
+      ]
+    },
+    "d37-transfer-17": {
+      "id": "d37-transfer-17-material",
+      "title": "种子的分类标签",
+      "text": "①一家教学园把种子按发芽时的主要环境要求分组，标签写有“需较长湿润期”“需较大昼夜温差”等。本题中的标签只概括各组在该园观察条件下较突出的发芽要求，不表示全部需求。\n②参观者提出，既然已经分组，园方可以把某组称为“优等种子”，其余称为“次等种子”。讲解员不同意：分类是在回答“培养时应留意什么”，并未比较产量、风味或生态适应性，也没有为这些指标确定共同的评价尺度。\n③讲解员补充，同组也不等于每一种种子的所有要求都相同。标签是开始查阅记录的入口，实际培养时仍要查看具体品种的温度、湿度和处理时长。删去标签会使查阅失去线索，把标签当成完整配方则会遗漏条件。",
+      "provenance": "original-fictional",
+      "questionIds": [
+        "d37-transfer-17"
+      ]
+    },
+    "d37-transfer-18": {
+      "id": "d37-transfer-18-material",
+      "title": "维修记录为什么找不到原因",
+      "text": "①一支维修队整理旧记录，发现表格中“已修复”的勾选很齐全，故障原因一栏却常为空白。有人建议增加一个“再次故障”的勾选框，希望借此知道哪些维修方法可靠。\n②负责人说，新框能记录故障是否再出现，却仍不能单独解释为什么。有的设备换了零件，有的同时调整了工作负载；若只看再次故障与否，方法差异和使用条件差异就混在一起。更完整的表格也不意味着已有足够材料，关键是过去实际留下了什么。\n③团队因此暂缓设计统一的新表。下一步先抽取几份已结束工单，逐项核对维修动作、设备使用变化和后续观察分别记在哪里，找出哪些信息可追溯、哪些只能重新询问。完成这一步后，才讨论新增字段及记录责任。",
+      "provenance": "original-fictional",
+      "questionIds": [
+        "d37-transfer-18"
+      ]
+    },
+    "d37-transfer-19": {
+      "id": "d37-transfer-19-material",
+      "title": "长方体箱子的连续翻倒",
+      "text": "一个刚性长方体箱子最初放在水平桌面上，沿桌面东西方向的边长为2厘米、南北方向为3厘米、竖直高度为5厘米。所有翻倒均绕与桌面接触的一条棱转90°，无滑动、变形或额外旋转。\n先向东翻倒一次，即绕南北方向的棱翻倒，使东西长度与高度互换；再从该状态向北翻倒一次，即绕东西方向的棱翻倒，使南北长度与高度互换。桌面东、北方向始终固定。",
+      "provenance": "original-fictional",
+      "questionIds": [
+        "d37-transfer-19"
+      ]
+    },
+    "d37-transfer-20": {
+      "id": "d37-transfer-20-material",
+      "title": "长方体的斜截面面积",
+      "text": "一个实心长方体在互相垂直的坐标轴下满足0≤x≤3、0≤y≤2、0≤z≤4，长度单位为厘米。用平面z=2y切开它。\n截面指平面与长方体的交集，面积按截面自身平面内的真实面积计算，不按投影面积计算。",
+      "provenance": "original-fictional",
+      "questionIds": [
+        "d37-transfer-20"
+      ]
+    },
+    "d37-transfer-21": {
+      "id": "d37-transfer-21-material",
+      "title": "经过中心的正方体切面",
+      "text": "一个实心正方体的中心为O。现用一个穿过O的平面切它，得到面积大于0的多边形截面。平面可任意倾斜，不要求平行于某个面。\n可使用以下几何事实：正方体关于O中心对称；过O的平面也关于O中心对称；中心对称把每个点P映为O另一侧等距离的点P′。截面的边只计外轮廓，不计内部辅助线。",
+      "provenance": "original-fictional",
+      "questionIds": [
+        "d37-transfer-21"
+      ]
+    },
+    "d37-transfer-22": {
+      "id": "d37-transfer-22-material",
+      "title": "两个班的平均成绩",
+      "text": "一次同卷测验中，甲班30名学生的平均成绩为72分，乙班20名学生的平均成绩为87分。两班学生互不重叠，全部学生均参加且每人只计一次，平均成绩均为精确值。",
+      "provenance": "original-fictional",
+      "questionIds": [
+        "d37-transfer-22"
+      ]
+    },
+    "d37-transfer-23": {
+      "id": "d37-transfer-23-material",
+      "title": "两档袋装物品重量",
+      "text": "共有100袋物品，按实际重量w（克）分为两组：40袋满足400≤w<500，另60袋满足500≤w≤600。每袋只在一组中；重量可为区间内任意实数，未给各袋具体值，也不把组中点当作实际重量。",
+      "provenance": "original-fictional",
+      "questionIds": [
+        "d37-transfer-23"
+      ]
+    },
+    "d37-transfer-24": {
+      "id": "d37-transfer-24-material",
+      "title": "同一批设备的两次检查",
+      "text": "同一批100台设备在甲、乙两次检查中全部受检，每次只分合格或不合格。甲次合格70台、乙次合格85台。两次检查对象完全相同，未提供逐台结果对应表，也没有规定设备不能由合格变不合格。",
+      "provenance": "original-fictional",
+      "questionIds": [
+        "d37-transfer-24"
+      ]
+    }
+  },
+  "writingEvidenceScopes": {
+    "w_c38_mapping_intro": [
+      2,
+      3,
+      6
+    ],
+    "w_c38_mapping_practice": [
+      3,
+      6,
+      4,
+      5,
+      7,
+      8
+    ],
+    "w_c38_mapping_advanced": [
+      3,
+      6,
+      7,
+      5,
+      8,
+      4,
+      1
+    ],
+    "w_c38_essay_intro": [
+      1,
+      2,
+      3,
+      4,
+      6,
+      8,
+      7
+    ],
+    "w_c38_essay_practice": [
+      2,
+      3,
+      4,
+      5,
+      "任务"
+    ],
+    "w_c38_essay_advanced": [
+      1,
+      8,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      "任务"
+    ]
+  }
+}

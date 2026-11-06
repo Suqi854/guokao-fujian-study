@@ -86,9 +86,9 @@ assert.equal(Object.keys(lessons).length, C.lessons.length, "unique lesson IDs a
 assert.equal(Object.keys(questions).length, C.questions.length, "unique question IDs across the loaded site");
 assert.deepEqual(C.questions.filter(question => question.id.startsWith("pol2-")).map(question => question.id), questionIds);
 assert.deepEqual(C.theoryTrack.steps.map(step => step.lessonId), [...originalIds, 'social-being-people', 'mao-living-soul', 'six-method-principles', 'new-quality-productivity', 'reform-framework-2024', 'unified-market-rules','new-development-pattern','education-strong-2035']);
-assert.deepEqual(Object.keys(C.theoryLearningAids), [...originalIds, ...newIds, 'mao-living-soul', 'unified-market-rules','new-development-pattern','education-strong-2035','phase-change','historiography','material-mapping','answer-revision','fujian-enterprise-service-2025']);
+assert.deepEqual(Object.keys(C.theoryLearningAids), [...originalIds, ...newIds, 'mao-living-soul', 'unified-market-rules','new-development-pattern','education-strong-2035','phase-change','historiography','material-mapping','answer-revision','fujian-enterprise-service-2025','multi-material','full-essay']);
 assert.equal(C.theoryTrack.steps.length, 12);
-assert.equal(Object.keys(C.theoryLearningAids).length, 17);
+assert.equal(Object.keys(C.theoryLearningAids).length, 19);
 assert.match(C.theoryTrack.intro, /十二个主题/);
 assert.match(C.theoryTrack.scope, /十二主题/);
 for (const phrase of ["2026年完整时政", "十五五正式纲要", "福建专项政策", "福建新年度考试规则", "不是完整", "没有官方评分"]) {
