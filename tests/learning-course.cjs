@@ -9,9 +9,9 @@ const w = dom.window, d = w.document; installSerialLocks(w); w.scrollTo = () => 
 w.fetch = (...args) => { outgoing.push(args); throw Error("Unexpected network request"); };
 let contentBefore;
 for (const [, file] of html.matchAll(/src="\.\/([^\"]+)"/g)) {
-  if (file === "learning-course.js") contentBefore = JSON.stringify(w.STUDY_CONTENT);
+  if (file === "learning-course-focus.js") contentBefore = JSON.stringify(w.STUDY_CONTENT);
   w.eval(fs.readFileSync(path.join(root, "docs", file), "utf8"));
-  if (file === "learning-course.js") assert.equal(JSON.stringify(w.STUDY_CONTENT), contentBefore, "curriculum does not mutate content");
+  if (file === "learning-course-focus.js") assert.equal(JSON.stringify(w.STUDY_CONTENT), contentBefore, "curriculum does not mutate content");
 }
 const C = w.STUDY_CONTENT, P = w.STUDY_COURSE, plain = x => JSON.parse(JSON.stringify(x));
 const route = hash => navigateHash(w, hash, () => { w.location.hash = hash; });
