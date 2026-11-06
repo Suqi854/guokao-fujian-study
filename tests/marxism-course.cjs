@@ -16,7 +16,7 @@ const C=w.STUDY_CONTENT,M=w.STUDY_MEMORY_METHODS,P=w.STUDY_COURSE,B=w.STUDY_MARX
 const route=hash=>navigateHash(w,hash,()=>{w.location.hash=hash;});
 (async()=>{
  assert.ok(baseline,'module present in HTML');assert.equal(B.lessonIds.length,10);assert.equal(B.questionIds.length,60);
- assert.equal(C.lessons.length,baseline.lessons.length+10);assert.equal(C.questions.length,baseline.questions.length+60);
+ assert.equal(C.lessons.length,baseline.lessons.length+10+w.STUDY_POLICY_2026.lessonIds.length);assert.equal(C.questions.length,baseline.questions.length+60+w.STUDY_POLICY_2026.questionIds.length);
  assert.deepEqual(clone(C.lessons.slice(0,baseline.lessons.length)),baseline.lessons,'existing lesson content unchanged');
  assert.deepEqual(clone(C.questions.slice(0,baseline.questions.length)),baseline.questions,'existing question content unchanged');
  assert.deepEqual(clone(C.writing),baseline.writing);

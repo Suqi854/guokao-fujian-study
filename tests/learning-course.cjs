@@ -28,10 +28,10 @@ const getState = () => w.localStorage.getItem("zhixu-study-v2");
   }
   await route('#course');
   const ids = plain(P.tracks.flatMap(t => P.rows(t).map(r => r.id)));
-  assert.equal(ids.length, 123); assert.equal(new Set(ids).size, 123);
+  assert.equal(ids.length, 127); assert.equal(new Set(ids).size, 127);
   assert.deepEqual(ids.slice().sort(), plain(C.lessons.map(l => l.id)).sort());
   assert.equal(P.tracks[0].id, "data"); assert.ok(P.tracks.some(t => t.id === "writing"));
-  assert.equal(C.lessons.filter(l => l.learningLevels).length, 115);
+  assert.equal(C.lessons.filter(l => l.learningLevels).length, 119);
   for (const track of P.tracks) for (const u of track.units) {
     for (const key of ["goal", "bridge", "check"]) assert.ok(u[key].length > 12);
     for (const id of u.ids) assert.equal(C.lessons.find(l => l.id === id).category, track.title);
@@ -95,6 +95,6 @@ const getState = () => w.localStorage.getItem("zhixu-study-v2");
   const u = P.tracks[0].units[0], saved = u.bridge; u.bridge = '<img src=x onerror=alert(1)> a < b';
   await route("#course/data"); assert.ok(d.querySelector(".course-bridge").textContent.includes(u.bridge)); assert.equal(d.querySelector(".course-page img"), null); u.bridge = saved;
   assert.equal(getState(), stored); assert.deepEqual(errors, []); assert.deepEqual(outgoing, []);
-  console.log(`PASS continuous course: 123 unique lessons / 8 subjects, ${lessonViews} course views, ${exactQuizLinks} exact level quiz links, ${writingLinks} writing links; previous/next, stage jump, chapter closure, unlayered disclosure, malformed routes, read/note compatibility, no automatic completion or outgoing requests.`);
+  console.log(`PASS continuous course: 127 unique lessons / 8 subjects, ${lessonViews} course views, ${exactQuizLinks} exact level quiz links, ${writingLinks} writing links; previous/next, stage jump, chapter closure, unlayered disclosure, malformed routes, read/note compatibility, no automatic completion or outgoing requests.`);
   dom.window.close();
 })().catch(e => { console.error(e); dom.window.close(); process.exitCode = 1; });

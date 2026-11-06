@@ -6,7 +6,7 @@ const html=fs.readFileSync(path.join(base,'docs/index.html'),'utf8'),scripts=[..
 assert.equal(scripts.filter(f=>f==='practice-next.js').length,1);
 assert.ok(scripts.indexOf('focused-methods.js')<scripts.indexOf('practice-next.js')&&scripts.indexOf('practice-next.js')<scripts.indexOf('coverage-map.js'));
 const adapter=fs.readFileSync(path.join(base,'docs/practice-next.js'),'utf8');
-function load(include){const c=vm.createContext({window:{}});for(const f of scripts){if(['practice-overnight.js','practice-targeted-v035.js','fujian-governance-v035.js','curriculum-v036.js','politics-v036.js','curriculum-v037.js','policy-v037.js','curriculum-v038.js','practice-diagnostic-v037.js','political-mao-deng-expansion.js','marxism-course.js','political-complete-integration.js'].includes(f)||(f==='practice-next.js'&&!include))continue;vm.runInContext(fs.readFileSync(path.join(base,'docs',f),'utf8'),c,{filename:f});}return c;}
+function load(include){const c=vm.createContext({window:{}});for(const f of scripts){if(['practice-overnight.js','practice-targeted-v035.js','fujian-governance-v035.js','curriculum-v036.js','politics-v036.js','curriculum-v037.js','policy-v037.js','curriculum-v038.js','practice-diagnostic-v037.js','political-mao-deng-expansion.js','marxism-course.js','political-complete-integration.js','policy-current-2026.js'].includes(f)||(f==='practice-next.js'&&!include))continue;vm.runInContext(fs.readFileSync(path.join(base,'docs',f),'utf8'),c,{filename:f});}return c;}
 const orig=load(false),extended=load(true),old=orig.window.STUDY_CONTENT,now=extended.window.STUDY_CONTENT;
 const oldQ=new Set(old.questions.map(q=>q.id)),oldL=new Set(old.lessons.map(l=>l.id));
 const data=plain({questions:now.questions.filter(q=>!oldQ.has(q.id)),lessons:now.lessons.filter(l=>!oldL.has(l.id)),papers:extended.window.STUDY_PRACTICE_NEXT.papers});
@@ -62,7 +62,7 @@ for(const item of old.questions){const n=now.questions.find(q=>q.id===item.id);a
 for(const item of old.lessons)assert.equal(JSON.stringify(now.lessons.find(l=>l.id===item.id)),JSON.stringify(item),'Existing lesson unchanged '+item.id);
 const canonical=v=>v===null||typeof v!=='object'?JSON.stringify(v):Array.isArray(v)?'['+v.map(canonical).join(',')+']':'{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+canonical(v[k])).join(',')+'}',hash=v=>crypto.createHash('sha256').update(canonical(v)).digest('hex');
 const fixture=JSON.parse(fs.readFileSync(path.join(here,'fixtures/v032-public-identities.json'),'utf8'));
-for(const[name,entries]of Object.entries(fixture.collections))for(const[id,expected]of Object.entries(entries))assert.equal(hash(now[name].find(v=>v.id===id)),expected,'v0.32 identity: '+name+'/'+id);
+for(const[name,entries]of Object.entries(fixture.collections))for(const[id,expected]of Object.entries(entries))assert.equal(hash(require("./learning-release-identity-projection.cjs")(now)[name].find(v=>v.id===id)),expected,'v0.32 identity: '+name+'/'+id);
 for(const[name,expected]of Object.entries(fixture.immutableParts))assert.equal(hash(now[name]),expected,'v0.32 immutable global: '+name);
 const normalized=s=>s.normalize('NFKC').replace(/[\p{P}\p{Z}\s]/gu,'');const oldStems=new Set(old.questions.map(q=>normalized(q.stem)));for(const q of qs)assert.ok(!oldStems.has(normalized(q.stem)),'Exact stem duplicate '+q.id);
 for(const l of ls)assert.ok(now.coverageMatrix.some(m=>m.topics.some(t=>t.id===l.id)),'Coverage sees candidate '+l.id);

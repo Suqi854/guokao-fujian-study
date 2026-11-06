@@ -38,7 +38,7 @@ const live=(()=>{
   const c=vm.createContext({window:{}}),html=baseline('index.html');
   let oldQuestions,oldLessons,oldCopies;
   for(const [,file] of html.matchAll(/src="\.\/([^"]+)"/g)){
-    if(['app.js','practice-next.js','practice-overnight.js','practice-targeted-v035.js','fujian-governance-v035.js','curriculum-v036.js','politics-v036.js','curriculum-v037.js','policy-v037.js','curriculum-v038.js','practice-diagnostic-v037.js','political-mao-deng-expansion.js','marxism-course.js','political-complete-integration.js'].includes(file))continue;
+    if(['app.js','practice-next.js','practice-overnight.js','practice-targeted-v035.js','fujian-governance-v035.js','curriculum-v036.js','politics-v036.js','curriculum-v037.js','policy-v037.js','curriculum-v038.js','practice-diagnostic-v037.js','political-mao-deng-expansion.js','marxism-course.js','political-complete-integration.js','policy-current-2026.js'].includes(file))continue;
     if(file==='coverage-map.js'){
       oldQuestions=c.window.STUDY_CONTENT.questions.slice();oldLessons=c.window.STUDY_CONTENT.lessons.slice();
       oldCopies=copy(oldQuestions);

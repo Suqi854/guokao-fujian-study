@@ -15,7 +15,7 @@ async function route(h){await navigateHash(w,h,()=>{w.location.hash=h;});await p
 const plain=x=>JSON.parse(JSON.stringify(x));
 (async()=>{
  const expectedIds=['practice-cognition','contradiction-method','productive-relations','mao-thought-context','social-being-people','six-method-principles','new-quality-productivity','reform-framework-2024','mao-living-soul','unified-market-rules','new-development-pattern','education-strong-2035','phase-change','historiography','material-mapping','answer-revision','fujian-enterprise-service-2025','multi-material','full-essay'];
- assert.deepEqual(Object.keys(C.theoryLearningAids),[...expectedIds,...w.STUDY_MAO_DENG_EXPANSION.lessonIds,...w.STUDY_MARXISM_COURSE.lessonIds]);assert.deepEqual(plain(C.theoryTrack.steps.map(step=>step.lessonId)),plain(w.STUDY_POLITICAL_CURRICULUM.lessonIds));
+ assert.deepEqual(Object.keys(C.theoryLearningAids),[...expectedIds,...w.STUDY_MAO_DENG_EXPANSION.lessonIds,...w.STUDY_MARXISM_COURSE.lessonIds,...w.STUDY_POLICY_2026.lessonIds]);assert.deepEqual(plain(C.theoryTrack.steps.map(step=>step.lessonId)),plain(w.STUDY_POLITICAL_CURRICULUM.lessonIds));
  for(const [id,a] of Object.entries(C.theoryLearningAids))for(const level of ['', '/intro','/practice','/advanced']){
   await route('#lesson/'+id+level);
   const el=d.querySelector('[data-theory-aids="'+id+'"]');assert.ok(el,id+level);

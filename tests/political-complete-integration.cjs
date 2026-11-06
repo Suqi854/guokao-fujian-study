@@ -10,10 +10,10 @@ for(const page of ['index.html','long-mock.html']){
  for(const k of ['localStorage','sessionStorage','indexedDB','fetch'])for(const target of [c,c.window])Object.defineProperty(target,k,{get(){throw Error('unexpected data or network access '+k);}});
  const scripts=[...fs.readFileSync(path.join(root,'docs',page),'utf8').matchAll(/src="\.\/([^"]+)"/g)].map(m=>m[1]);
  for(const file of ['political-mao-deng-expansion.js','marxism-course.js','political-complete-integration.js'])assert.equal(scripts.filter(x=>x===file).length,1);
- for(const f of scripts)if(!['app.js','long-mock-workspace.js','long-mock-store.js'].includes(f))vm.runInContext(fs.readFileSync(path.join(root,'docs',f),'utf8'),c,{filename:f});
+ for(const f of scripts)if(!['app.js','long-mock-workspace.js','long-mock-store.js','policy-current-2026.js'].includes(f))vm.runInContext(fs.readFileSync(path.join(root,'docs',f),'utf8'),c,{filename:f});
  const C=c.window.STUDY_CONTENT,plain=x=>JSON.parse(JSON.stringify(x));
  assert.deepEqual([C.lessons.length,C.questions.length,C.writing.length,C.lessons.filter(l=>l.learningLevels).length,Object.keys(C.sources).length],[123,861,87,115,74]);
- for(const [name,rows]of Object.entries(base.collections))for(const [id,wanted]of Object.entries(rows))assert.equal(hash(C[name].find(x=>x.id===id)),wanted,page+' old '+name+'/'+id);
+ for(const [name,rows]of Object.entries(base.collections))for(const [id,wanted]of Object.entries(rows))assert.equal(hash(require("./learning-release-identity-projection.cjs")(C)[name].find(x=>x.id===id)),wanted,page+' old '+name+'/'+id);
  for(const [name,rows]of Object.entries(base.maps))for(const [id,wanted]of Object.entries(rows))assert.equal(hash(name==='memoryCards'?c.window.STUDY_MEMORY_METHODS.cards[id]:C[name][id]),wanted,page+' old '+name+'/'+id);
  for(const [name,wanted]of Object.entries(base.fixed))assert.equal(hash(C[name]),wanted,page+' old '+name);
  const P=c.window.STUDY_POLITICAL_CURRICULUM;assert.equal(P.newLessonIds.length,18);assert.equal(P.newQuestionIds.length,108);assert.deepEqual(plain(P.lessonIds),order);assert.deepEqual(plain(C.theoryTrack.steps.map(x=>x.lessonId)),order);
@@ -36,4 +36,4 @@ for(const page of ['index.html','long-mock.html']){
  for(const id of P.newQuestionIds){const q=C.questions.find(x=>x.id===id);assert.equal(q.meta.source.kind,'original');assert.equal(q.meta.difficulty.level,null);assert.equal(q.meta.examSource.year,null);assert.equal(q.optionReviews.length,4);assert.ok(q.meta.source.referenceIds.every(s=>C.sources[s]));}
  if(page==='index.html')main=hash(C);else{assert.equal(hash(C),main,'both public question pools contain exactly the same content');const fixed=c.window.FULL_TRAINING_PAPERS.papers.flatMap(p=>p.sections.flatMap(s=>s.items));assert.equal(fixed.length,240);for(const item of fixed)assert.equal(c.window.STUDY_TRAINING.signature(C.questions.find(q=>q.id===item.questionId)),item.signature);assert.equal(c.window.LONG_MOCK_MODEL.pool().length,838);}
 }
-console.log('PASS integrated 123 lessons / 861 questions / 87 writing; exact 105/753/87 baseline records and all old sources, aids/cards preserved; both entrypoint pools match; ordered 32-lesson route, 35 chapters, coverage, new references and 240 fixed-paper signatures.');
+console.log('PASS historical political integration (policy additions excluded): 123 lessons / 861 questions / 87 writing; exact 105/753/87 baseline records and all old sources, aids/cards preserved; both entrypoint pools match; ordered 32-lesson route, 35 chapters, coverage, new references and 240 fixed-paper signatures.');

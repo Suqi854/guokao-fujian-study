@@ -11,7 +11,7 @@ const root = path.join(__dirname, '..');
 const read = name => fs.readFileSync(path.join(root, 'docs', name), 'utf8');
 const scriptNames = page => [...read(page).matchAll(/src="\.\/([^"]+)"/g)].map(m => m[1]);
 const adapters = ['curriculum-v037.js', 'policy-v037.js'];
-const laterAdapters = ['political-mao-deng-expansion.js','marxism-course.js','political-complete-integration.js','curriculum-v038.js', 'practice-diagnostic-v037.js'];
+const laterAdapters = ['political-mao-deng-expansion.js','marxism-course.js','political-complete-integration.js','policy-current-2026.js','curriculum-v038.js', 'practice-diagnostic-v037.js'];
 const targets = ['material-mapping', 'answer-revision'];
 const policyLesson = 'fujian-enterprise-service-2025';
 const sourceId = 'fujian-four-access-2025';
@@ -67,7 +67,7 @@ assert.deepEqual([Object.keys(baseline.collections.lessons).length, Object.keys(
 let oldLessonCount = 0;
 for (const [collection, rows] of Object.entries(baseline.collections)) {
   for (const [id, expected] of Object.entries(rows)) {
-    const item = C[collection].find(row => row.id === id);
+    const item = require("./learning-release-identity-projection.cjs")(C)[collection].find(row => row.id === id);
     assert.ok(item, collection + '/' + id + ' retained');
     if (collection === 'lessons' && targets.includes(id)) continue;
     assert.equal(hash(item), expected, collection + '/' + id + ' unchanged');

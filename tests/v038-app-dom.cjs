@@ -81,7 +81,7 @@ async function retainedRecords(e, expected) {
 }
 (async () => {
  let e=setup(), {C,d,w}=e;
- assert.deepEqual([C.lessons.length,C.questions.length,C.writing.length],[123,861,87]);
+ assert.deepEqual([C.lessons.length,C.questions.length,C.writing.length],[127,885,87]);
  await retainedRecords(e,legacy);
  assert.equal(e.raw('zhixu-study-v2'),null,'reading legacy alone does not migrate');
  for(const id of targets){
@@ -122,6 +122,6 @@ async function retainedRecords(e, expected) {
  }
  e.close();
  const long=setup({page:'long-mock.html'});
- assert.equal(long.C.questions.length,861);long.close();
+ assert.equal(long.C.questions.length,885);long.close();
  console.log('PASS v038: six lecture/writing routes and draft reloads, 36 answer explanations, coverage labels, legacy notes/favorites/read state, isolated storage and long-page content; simulated DOM only');
 })().catch(error=>{for(const dom of alive)dom.window.close();console.error(error);process.exitCode=1;});

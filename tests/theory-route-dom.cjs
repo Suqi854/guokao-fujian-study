@@ -18,7 +18,7 @@ async function click(sel){const e=d.querySelector(sel);assert.ok(e,sel);if(e.tag
  const expectedIds=['practice-cognition','contradiction-method','productive-relations','mao-thought-context','social-being-people','mao-living-soul','six-method-principles','new-quality-productivity','reform-framework-2024','unified-market-rules','new-development-pattern','education-strong-2035'];
  assert.deepEqual(plain(C.theoryTrack.steps.map(step=>step.lessonId)),plain(w.STUDY_POLITICAL_CURRICULUM.lessonIds));
  assert.equal(d.querySelectorAll('[data-study-routes] a').length,4);await click('[data-study-routes] a[href="#theory"]');assert.equal(w.location.hash,'#theory');assert.equal(d.querySelector('#page-title').textContent,'政治理论入门');assert.equal(d.querySelector('#navigation .active').getAttribute('href'),'#course');
- assert.equal(d.querySelectorAll('[data-theory-lesson]').length,32);assert.equal(d.querySelector('h1').textContent,C.theoryTrack.title);assert.ok(d.querySelector('main').textContent.includes('已标记已读 0 / 32'));
+ assert.equal(d.querySelectorAll('[data-theory-lesson]').length,35);assert.equal(d.querySelector('h1').textContent,C.theoryTrack.title);assert.ok(d.querySelector('main').textContent.includes('已标记已读 0 / 35'));
  for(const step of C.theoryTrack.steps){const panel=d.querySelector('[data-theory-lesson="'+step.lessonId+'"]');assert.ok(!panel.querySelector('.stat-foot').textContent.includes('。。'),'version notice ends in one full stop');for(const level of ['intro','practice','advanced'])assert.ok(panel.querySelector('a[href="#lesson/'+step.lessonId+'/'+level+'"]'));assert.ok(panel.querySelector('a[href="#quiz/lesson/'+step.lessonId+'"]'));}
  for(const id of expectedIds.slice(4))for(const level of ['intro','practice','advanced']){
   const lesson=C.lessons.find(item=>item.id===id),group=lesson.learningLevels[level];
@@ -27,11 +27,11 @@ async function click(sel){const e=d.querySelector(sel);assert.ok(e,sel);if(e.tag
   const practice=d.querySelector('.level-guide a[href^="#quiz/"]');assert.ok(practice,id+':'+level);
   assert.deepEqual(practice.getAttribute('href').split('/').at(-1).split(','),plain(group.questionIds));
   await click('.level-guide a[href^="#quiz/"]');assert.match(d.querySelector('.quiz-header').textContent,/1 \/ 2/);
-  await route('#theory');assert.ok(d.querySelector('main').textContent.includes('已标记已读 0 / 32'));
+  await route('#theory');assert.ok(d.querySelector('main').textContent.includes('已标记已读 0 / 35'));
  }
- await click('a[href="#lesson/practice-cognition/intro"]');assert.equal(d.querySelector('#lesson-note').value,old.notes['practice-cognition']);await click('[data-action="read"][data-id="practice-cognition"]');await click('a[href="#theory"]');assert.ok(d.querySelector('main').textContent.includes('已标记已读 1 / 32'));
- await route('#lesson/practice-cognition/intro');await click('a[href="#theory"]');assert.ok(d.querySelector('main').textContent.includes('已标记已读 1 / 32'));
- await route('#lesson/practice-cognition/intro');await click('[data-action="read"][data-id="practice-cognition"]');await click('a[href="#theory"]');assert.ok(d.querySelector('main').textContent.includes('已标记已读 0 / 32'));
+ await click('a[href="#lesson/practice-cognition/intro"]');assert.equal(d.querySelector('#lesson-note').value,old.notes['practice-cognition']);await click('[data-action="read"][data-id="practice-cognition"]');await click('a[href="#theory"]');assert.ok(d.querySelector('main').textContent.includes('已标记已读 1 / 35'));
+ await route('#lesson/practice-cognition/intro');await click('a[href="#theory"]');assert.ok(d.querySelector('main').textContent.includes('已标记已读 1 / 35'));
+ await route('#lesson/practice-cognition/intro');await click('[data-action="read"][data-id="practice-cognition"]');await click('a[href="#theory"]');assert.ok(d.querySelector('main').textContent.includes('已标记已读 0 / 35'));
  await click('a[href="#targeted"]');assert.ok(d.querySelector('#target-module'));await route('#theory');await click('a[href="#writing"]');await route('#write/w47');assert.equal(d.querySelector('#draft').value,old.drafts.w47);
  await route('#learn');assert.ok(d.querySelector('[data-study-routes] a[href="#theory"]'));assert.equal(d.querySelector('#exam').value,'fujian');
  const saved=JSON.parse(w.localStorage.getItem('zhixu-study-v2'));assertV2Snapshot(saved);assert.equal(saved.revision,2);assert.deepEqual(withoutRevision(saved),{...old,schemaVersion:2,runs:[],activeRun:null});assert.equal(w.localStorage.getItem('zhixu-study-v1'),legacyRaw);

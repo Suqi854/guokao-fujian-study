@@ -2,7 +2,7 @@
 // Atomic integration and compatibility guards, not a claim of full semantic review.
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict'),crypto=require('node:crypto');
 const root=path.join(__dirname,'..'),html=fs.readFileSync(path.join(root,'docs/index.html'),'utf8');
-const scripts=[...html.matchAll(/src="\.\/([^\"]+)"/g)].map(m=>m[1]).filter(f=>!['app.js','curriculum-v036.js','politics-v036.js','curriculum-v037.js','policy-v037.js','curriculum-v038.js','practice-diagnostic-v037.js','political-mao-deng-expansion.js','marxism-course.js','political-complete-integration.js'].includes(f)),adapter='next-curriculum.js';
+const scripts=[...html.matchAll(/src="\.\/([^\"]+)"/g)].map(m=>m[1]).filter(f=>!['app.js','curriculum-v036.js','politics-v036.js','curriculum-v037.js','policy-v037.js','curriculum-v038.js','practice-diagnostic-v037.js','political-mao-deng-expansion.js','marxism-course.js','political-complete-integration.js','policy-current-2026.js'].includes(f)),adapter='next-curriculum.js';
 assert.equal(scripts.filter(f=>f===adapter).length,1);assert.ok(scripts.indexOf(adapter)<scripts.indexOf('catalog.js'));
 const execute=(c,f)=>vm.runInContext(fs.readFileSync(path.join(root,'docs',f),'utf8'),c,{filename:f});
 const context=()=>vm.createContext({window:{}}),plain=x=>JSON.parse(JSON.stringify(x));
@@ -12,7 +12,7 @@ const C=plain(c.window.STUDY_CONTENT),old=plain(base.window.STUDY_CONTENT),patch
 const canonical=v=>v===null||typeof v!=='object'?JSON.stringify(v):Array.isArray(v)?'['+v.map(canonical).join(',')+']':'{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+canonical(v[k])).join(',')+'}',hash=v=>crypto.createHash('sha256').update(canonical(v)).digest('hex');
 const fixture=JSON.parse(fs.readFileSync(path.join(__dirname,'fixtures/v030-public-identities.json'),'utf8'));
 for(const[name,entries]of Object.entries(fixture.collections))for(const[id,h]of Object.entries(entries)){
- const current=C[name].find(v=>v.id===id);assert.ok(current,name+'/'+id);
+ const current=require("./learning-release-identity-projection.cjs")(C)[name].find(v=>v.id===id);assert.ok(current,name+'/'+id);
  if(name==='lessons'&&patchIds.includes(id)){
   const prior=fixture.revisedLessons[id],rest=v=>Object.fromEntries(Object.entries(v).filter(([key])=>!['sections','minutes','updated','practice','learningLevels'].includes(key)));
   assert.deepEqual(plain(rest(current)),rest(prior),id+' only allowed lesson fields changed');

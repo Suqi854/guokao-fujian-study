@@ -11,7 +11,7 @@ const source = fs.readFileSync(path.join(root, "docs", adapter), "utf8");
 const indexScripts = [...fs.readFileSync(path.join(root, "docs/index.html"), "utf8").matchAll(/src="\.\/([^\"]+)"/g)].map(match => match[1]);
 const wired = indexScripts.includes(adapter);
 // Historical adapter guards; v039 integration independently checks current full entrypoints.
-const scripts = indexScripts.filter(file => !["app.js","political-mao-deng-expansion.js","marxism-course.js","political-complete-integration.js"].includes(file));
+const scripts = indexScripts.filter(file => !["app.js","political-mao-deng-expansion.js","marxism-course.js","political-complete-integration.js","policy-current-2026.js"].includes(file));
 if (wired) {
   for (const file of ["political-foundations-paths.js", "theory-learning-aids.js", adapter, "catalog.js"]) {
     assert.equal(scripts.filter(item => item === file).length, 1, `${file}: exactly one script entry`);
