@@ -90,9 +90,11 @@
     const lastInUnit = id === current.unit.ids.at(-1);
     // Keep the course context in the URL, including after reload or browser Back.
     // Existing quiz/write routes read their original leading segments unchanged.
-    const body = renderLesson(id, hasLevel ? stage : "").replace(/href="(#(?:quiz|write)\/[^"]+)"/g,
+    const lessonHTML = renderLesson(id, hasLevel ? stage : "");
+    const focusedHTML = window.STUDY_FOCUSED_READER ? window.STUDY_FOCUSED_READER.transform(lessonHTML, l, stage) : lessonHTML;
+    const body = focusedHTML.replace(/href="(#(?:quiz|write)\/[^"]+)"/g,
       (_, href) => `href="${href}/course/${track.id}/${stage}/${id}"`);
-    return `<div class="course-reader" data-course-reader="${id}">${navigation}${context}<div class="course-lesson-body">${body}</div><section class="course-exit"><h2>读完这课，再往下走</h2><p><strong>先自检：</strong>${esc(goal).replace(/[。]+$/, "")}。试着不用照读讲义解释一次，再完成本页对应练习${track.id === "writing" ? "或实际写作" : ""}。</p>${lastInUnit ? `<p><strong>本章收束：</strong>${esc(current.unit.check)}</p>` : ""}${after ? `<p><strong>下一课：</strong>${esc(lesson(after.id).title)}${after.unit !== current.unit ? "。" + esc(after.unit.bridge) : "。"}</p>` : '<p>你已到达本轮目录末尾，这只表示浏览位置。是否需要重读或换轮次，由你根据自检和练习决定。</p>'}${navigation}<p class="course-muted">翻课、做题和打开下一轮都不会自动标记已读，也不记录或宣称掌握。</p></section></div>`;
+    return `<div class="course-reader" data-course-reader="${id}">${navigation}<details class="course-tools"><summary>${esc(track.title)} · 第${current.unitIndex + 1}章 · 课程导航与关联</summary>${context}</details><div class="course-lesson-body">${body}</div><section class="course-exit"><h2>读完这课，再往下走</h2><p><strong>先自检：</strong>${esc(goal).replace(/[。]+$/, "")}。试着不用照读讲义解释一次，再完成本页对应练习${track.id === "writing" ? "或实际写作" : ""}。</p>${lastInUnit ? `<p><strong>本章收束：</strong>${esc(current.unit.check)}</p>` : ""}${after ? `<p><strong>下一课：</strong>${esc(lesson(after.id).title)}${after.unit !== current.unit ? "。" + esc(after.unit.bridge) : "。"}</p>` : '<p>你已到达本轮目录末尾，这只表示浏览位置。是否需要重读或换轮次，由你根据自检和练习决定。</p>'}${navigation}<p class="course-muted">翻课、做题和打开下一轮都不会自动标记已读，也不记录或宣称掌握。</p></section></div>`;
   }
   function trainingReturn(parts) {
     if (!["quiz", "write"].includes(parts[0])) return "";
