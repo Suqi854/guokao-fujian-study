@@ -11,7 +11,7 @@
     "test:dom": "node tests/dom-regression.cjs && node tests/text-rendering.cjs && node tests/theory-route-dom.cjs && node tests/theory-learning-dom.cjs",
     "test:text": "node tests/text-rendering.cjs",
     "test:training": "node tests/training-records.cjs && node tests/local-progress-store.cjs && node tests/training-integration.cjs",
-    "test:program": "npm run check && npm run test:content && npm run test:training && npm run test:dom && npm run test:parallel && npm run test:next && npm run test:adaptive && npm run test:capacity && npm run test:papers-private && npm run test:practice-next && npm run test:long-mock && npm run test:adaptive-groups && npm run test:overnight && npm run test:fixed-papers && npm run test:v035 && npm run test:v036 && npm run test:v037 && npm run test:v038 && npm run test:mobile",
+    "test:program": "npm run test:ordinary-snapshots && npm run check && npm run test:content && npm run test:training && npm run test:dom && npm run test:parallel && npm run test:next && npm run test:adaptive && npm run test:capacity && npm run test:papers-private && npm run test:practice-next && npm run test:long-mock && npm run test:adaptive-groups && npm run test:overnight && npm run test:fixed-papers && npm run test:v035 && npm run test:v036 && npm run test:v037 && npm run test:v038 && npm run test:mobile",
     "test:training:browser": "node tests/training-browser.cjs",
     "test:parallel": "node tests/parallel-politics.cjs && node tests/parallel-merged-content.cjs && node tests/parallel-merged-dom.cjs",
     "test:next": "node tests/next-curriculum.cjs && node tests/next-curriculum-dom.cjs",
@@ -27,7 +27,8 @@
     "test:v036": "node tests/v036-integration.cjs && node tests/v036-app-dom.cjs",
     "test:v037": "node tests/v037-integration.cjs && node tests/v037-app-dom.cjs",
     "test:v038": "node tests/v038-integration.cjs && node tests/v038-app-dom.cjs",
-    "test:mobile": "node tests/mobile-layout.cjs"
+    "test:mobile": "node tests/mobile-layout.cjs",
+    "test:ordinary-snapshots": "node tests/ordinary-attempt-snapshots.cjs"
   },
   "devDependencies": {
     "@playwright/test": "1.64.1",

@@ -97,7 +97,7 @@
         !question(a.qid) ||
         !Number.isInteger(a.choice) ||
         a.choice < 0 ||
-        a.choice > 3 ||
+        a.choice > 19 ||
         typeof a.at !== "string" ||
         !Number.isFinite(Date.parse(a.at)) ||
         !Number.isFinite(a.seconds) ||
@@ -105,7 +105,11 @@
         a.seconds > 31536000
       )
         throw Error("答题记录内容无效");
-      return { qid: a.qid, choice: a.choice, at: a.at, seconds: a.seconds };
+      const attempt = { qid: a.qid, choice: a.choice, at: a.at, seconds: a.seconds };
+      if (raw.schemaVersion === 2 && Object.prototype.hasOwnProperty.call(a, "snapshot")) {
+        attempt.snapshot = T.validateAttemptSnapshot(a.snapshot, question(a.qid), a.choice);
+      } else if (a.choice > 3) throw Error("旧答题记录选项无效");
+      return attempt;
     });
     for (const key of ["notes", "drafts"]) {
       if (!raw[key] || typeof raw[key] !== "object" || Array.isArray(raw[key]))
@@ -1043,7 +1047,7 @@
         "把进度，留在自己手里。",
         "备份包含笔记、草稿、作答和计时训练记录。请保存在私人位置，不要上传公开仓库。",
       ) +
-      `<div class="settings-grid"><div class="stack"><section class="panel"><h2>备份与恢复</h2><p>记录只保存在当前设备、浏览器及网站地址下。清除网站数据、换设备或更换网址后不会自动同步，请定期导出。</p><div class="actions"><button class="btn" data-action="backup">${icon("download")}导出学习记录备份</button><label class="btn secondary file-button" for="import-file">导入学习记录备份</label><input class="sr-only" type="file" id="import-file" accept="application/json,.json"></div><p class="stat-foot">可导入旧v1和新v2学习记录备份；导出为包含训练记录的v2，旧版网页不能完整读取。私人题库另存，不在此备份中；私人临时答案和草稿不持久化。导入文件最多10 MiB，普通导出使用同一文件上限。导入先校验再确认，运行中计时按暂停快照恢复。建议先导出。</p><div id="import-status" role="status"></div><p class="stat-foot">公开内容保留全部旧题号；缺失或未知题号会拒绝导入并保留现有记录，不静默丢条。私人题库缺失不会影响这份学习记录，可到独立入口恢复私人备份。</p><p>逐题记录上限50,000条、计时历史500组。达到保护上限前请先备份；不会自动删除旧记录，浏览器仍可能更早因配额不足停止保存。</p><a class="btn secondary" href="./private-library.html">打开本机私人题库与独立备份</a><p><a class="text-button" href="./long-mock.html">打开长题组与其独立备份 →</a></p><p class="stat-foot">使用三类功能时，请分别导出学习记录、私人题库、长题组三份备份；本页学习记录备份不含另两类内容，没有跨键统一恢复。长题组不进入本页逐题统计或薄弱点诊断，只提供本组复习线索。</p><p class="stat-foot">私人题库仅接收UTF-8 JSON，来源/答案未经本站核验，不上传或计入公开题量。其内容需在私人题库入口另行备份。</p><button class="text-button" data-action="page-recovery">导出应急本页副本（不保证可直接导入）</button><p class="stat-foot">仅在普通备份失败时保存当前页原始状态，可能包含未保存笔记、草稿与答案；需私人保管并另行核验恢复，不包含私人题库。</p>${storageError ? '<button class="btn secondary" data-action="raw-backup">导出存储原文（受限时用缓存）</button><p class="stat-foot">缓存副本不保证最新，文件名会注明；可另导出完整本页副本。</p>' : ""}</section><section class="panel"><h2>当前记录</h2><p>已读 ${state.read.length} 篇 · 收藏 ${state.favorites.length} 篇<br>作答 ${state.attempts.length} 次 · 草稿 ${Object.values(state.drafts).filter(Boolean).length} 篇 · 计时训练 ${state.runs.length} 组</p><div class="note">网站无账号、广告、分析追踪或远程同步。打开页面时托管方仍可处理常规访问请求。公开代码中不包含你的学习记录。</div></section><section class="panel danger-zone"><h2>重置本机记录</h2><p>重置当前v2记录，其他网站不受影响。首次迁移保留的v1原文不改动，也不会在重置后自动恢复。旧标签页后续修改不会同步到新版；需要彻底清除本站数据时，可在浏览器清除站点数据，务必先备份。</p><button class="btn danger" data-action="reset">重置当前新版记录</button></section></div><div class="stack"><section class="panel"><h2>内容范围 · 知识基础版</h2><p>当前提供 ${C.lessons.length} 篇基础讲义、${C.questions.length} 道原创选择题、${C.writing.length} 个原创虚构材料写作练习。适用于通用方法入门，不声称覆盖国考或福建省考全部大纲。</p><ul><li>已扩展到政治理论、常识、福建地理、平面图形、更多言语数量资料题型，以及材料分析、对策落实、应用文和论证段方法。</li><li>仍未覆盖完整理论与时政、断代史与文学全体系、复杂空间重构、全部言语数量题型和福建文化政策专题。<a class="source" href="#sources">查看逐模块覆盖与来源 →</a></li><li>尚无历年真题库；已有原型和知识手册尚未成功取回，未并入本版。</li><li>备考方向选项仅用于记录目标，不会把同一内容包装成两套专属题库。</li></ul><p>申论参考要点与框架是学习提示，不是官方评分。不要把模板当成固定答案。</p></section><section class="panel"><h2>官方信息入口</h2><p><a class="source" href="#sources">讲义来源、年份与编写边界 →</a>以下是官方招录信息入口，供核对公告与考试要求；它们不是本站原创题目的出处。请以报考年度和具体职位公告为准。</p><a class="source" href="https://bm.scs.gov.cn/pp/gkweb/core/web/ui/business/home/gkhome.html" target="_blank" rel="noopener noreferrer">国家公务员考试专题 ↗</a><a class="source" href="https://gwykl.fujian.gov.cn/" target="_blank" rel="noopener noreferrer">福建省公务员考试录用网 ↗</a><p class="stat-foot">入口检索核对：2026-11-05。本站没有提供报名时间、资格判断或最新政策解读。</p></section></div></div>`
+      `<div class="settings-grid"><div class="stack"><section class="panel"><h2>备份与恢复</h2><p>记录只保存在当前设备、浏览器及网站地址下。清除网站数据、换设备或更换网址后不会自动同步，请定期导出。</p><div class="actions"><button class="btn" data-action="backup">${icon("download")}导出学习记录备份</button><label class="btn secondary file-button" for="import-file">导入学习记录备份</label><input class="sr-only" type="file" id="import-file" accept="application/json,.json"></div><p class="stat-foot">可导入旧v1和新v2学习记录备份；导出为包含训练记录的v2。新版普通作答带题目版本快照，旧网页可能丢弃快照，请用当前或更新版本恢复，不要在升级前的标签页继续保存。旧记录不会补造版本。私人题库另存，不在此备份中；私人临时答案和草稿不持久化。导入文件最多10 MiB，普通导出使用同一文件上限。导入先校验再确认，运行中计时按暂停快照恢复。建议先导出。</p><div id="import-status" role="status"></div><p class="stat-foot">公开内容保留全部旧题号；缺失或未知题号会拒绝导入并保留现有记录，不静默丢条。私人题库缺失不会影响这份学习记录，可到独立入口恢复私人备份。</p><p>逐题记录上限50,000条、计时历史500组。达到保护上限前请先备份；不会自动删除旧记录，浏览器仍可能更早因配额不足停止保存。</p><a class="btn secondary" href="./private-library.html">打开本机私人题库与独立备份</a><p><a class="text-button" href="./long-mock.html">打开长题组与其独立备份 →</a></p><p class="stat-foot">使用三类功能时，请分别导出学习记录、私人题库、长题组三份备份；本页学习记录备份不含另两类内容，没有跨键统一恢复。长题组不进入本页逐题统计或薄弱点诊断，只提供本组复习线索。</p><p class="stat-foot">私人题库仅接收UTF-8 JSON，来源/答案未经本站核验，不上传或计入公开题量。其内容需在私人题库入口另行备份。</p><button class="text-button" data-action="page-recovery">导出应急本页副本（不保证可直接导入）</button><p class="stat-foot">仅在普通备份失败时保存当前页原始状态，可能包含未保存笔记、草稿与答案；需私人保管并另行核验恢复，不包含私人题库。</p>${storageError ? '<button class="btn secondary" data-action="raw-backup">导出存储原文（受限时用缓存）</button><p class="stat-foot">缓存副本不保证最新，文件名会注明；可另导出完整本页副本。</p>' : ""}</section><section class="panel"><h2>当前记录</h2><p>已读 ${state.read.length} 篇 · 收藏 ${state.favorites.length} 篇<br>作答 ${state.attempts.length} 次 · 草稿 ${Object.values(state.drafts).filter(Boolean).length} 篇 · 计时训练 ${state.runs.length} 组</p><div class="note">网站无账号、广告、分析追踪或远程同步。打开页面时托管方仍可处理常规访问请求。公开代码中不包含你的学习记录。</div></section><section class="panel danger-zone"><h2>重置本机记录</h2><p>重置当前v2记录，其他网站不受影响。首次迁移保留的v1原文不改动，也不会在重置后自动恢复。旧标签页后续修改不会同步到新版；需要彻底清除本站数据时，可在浏览器清除站点数据，务必先备份。</p><button class="btn danger" data-action="reset">重置当前新版记录</button></section></div><div class="stack"><section class="panel"><h2>内容范围 · 知识基础版</h2><p>当前提供 ${C.lessons.length} 篇基础讲义、${C.questions.length} 道原创选择题、${C.writing.length} 个原创虚构材料写作练习。适用于通用方法入门，不声称覆盖国考或福建省考全部大纲。</p><ul><li>已扩展到政治理论、常识、福建地理、平面图形、更多言语数量资料题型，以及材料分析、对策落实、应用文和论证段方法。</li><li>仍未覆盖完整理论与时政、断代史与文学全体系、复杂空间重构、全部言语数量题型和福建文化政策专题。<a class="source" href="#sources">查看逐模块覆盖与来源 →</a></li><li>尚无历年真题库；已有原型和知识手册尚未成功取回，未并入本版。</li><li>备考方向选项仅用于记录目标，不会把同一内容包装成两套专属题库。</li></ul><p>申论参考要点与框架是学习提示，不是官方评分。不要把模板当成固定答案。</p></section><section class="panel"><h2>官方信息入口</h2><p><a class="source" href="#sources">讲义来源、年份与编写边界 →</a>以下是官方招录信息入口，供核对公告与考试要求；它们不是本站原创题目的出处。请以报考年度和具体职位公告为准。</p><a class="source" href="https://bm.scs.gov.cn/pp/gkweb/core/web/ui/business/home/gkhome.html" target="_blank" rel="noopener noreferrer">国家公务员考试专题 ↗</a><a class="source" href="https://gwykl.fujian.gov.cn/" target="_blank" rel="noopener noreferrer">福建省公务员考试录用网 ↗</a><p class="stat-foot">入口检索核对：2026-11-05。本站没有提供报名时间、资格判断或最新政策解读。</p></section></div></div>`
     );
   }
   function missing() {
@@ -1134,12 +1138,14 @@
     if (!quiz || quiz.choice === null || quiz.submitted) return;
     const q = question(quiz.ids[quiz.index]);
     const currentQuiz = quiz;
-    const seconds = Math.max(0,Math.round((Date.now() - quiz.questionStart) / 1000));
+    const now = Date.now();
+    const seconds = Math.max(0,Math.round((now - quiz.questionStart) / 1000));
     const a = {
       qid: q.id,
       choice: quiz.choice,
-      at: new Date().toISOString(),
+      at: new Date(now).toISOString(),
       seconds,
+      snapshot: T.attemptSnapshot(q, now < quiz.questionStart),
     };
     const capacity=assessCapacity(state,{additionalAttempt:a});
     if(!capacity.ok){capacityMessage=capacityReason(capacity)+" 本次没有提交，请先备份学习记录。";showToast(capacityMessage);render();return;}

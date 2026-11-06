@@ -1,14 +1,14 @@
 "use strict";
 /* Read-only local study evidence. No storage, network, score prediction or AI calls.
  * Input must be the application's already validated v1/v2 snapshot.
- * Integration deliberately leaves the existing persistence schema unchanged.
+ * Optional ordinary-attempt snapshots extend v2; older records stay historical.
  */
 (function (root, factory) {
   const api = factory();
   if (typeof module === "object" && module.exports) module.exports = api;
   else root.STUDY_ADAPTIVE = api;
 })(typeof window === "object" ? window : globalThis, function () {
-  const VERSION = "local-evidence-2";
+  const VERSION = "local-evidence-3";
   const DAY = 86400000;
   const RULE = Object.freeze({ windowDays: 30, minDistinct: 5, minGroups: 5, minDays: 2, minWrong: 2, minWrongGroups: 2 });
   const terminal = new Set(["finished", "early", "timeout"]);
@@ -74,10 +74,24 @@
       if(mirrored.has(key)){omitted.mirroredAttempts++;return;}
       if(legacySeen.has(key)){omitted.duplicateLegacy++;return;} legacySeen.add(key);
       const q=questions.get(a.qid);
-      if(!q || !lessons.has(q.lesson) || !Number.isInteger(a.choice) || a.choice<0 || a.choice>=q.options.length){omitted.invalid++;return;}
-      add({ref:`attempt:${index}`, source:"legacy-attempt", qid:q.id, lessonId:q.lesson, at:a.at, choice:a.choice,
-        frozenAnswer:null, outcome:a.choice===q.answer ? "current-key-match" : "current-key-mismatch", reach:"submitted",
-        version:"unrecorded", clockIssue:"unknown", submittedSeconds:Number.isFinite(a.seconds) && a.seconds>=0 ? a.seconds : null, pageElapsedMs:null});
+      const hasSnapshot=state.schemaVersion===2 && Object.prototype.hasOwnProperty.call(a,"snapshot");
+      if(!q || !lessons.has(q.lesson) || !Number.isInteger(a.choice) || a.choice<0 || (!hasSnapshot && a.choice>=q.options.length)){omitted.invalid++;return;}
+      const snapshot=hasSnapshot ? a.snapshot : null;
+      if(hasSnapshot){
+        // The app validates this extension before derive; stay conservative when
+        // this pure API is called directly with malformed snapshots as well.
+        const match=snapshot && typeof snapshot.signature==="string" && /^v1:q([0-9]{1,2}):[0-9a-f]{16}$/.exec(snapshot.signature);
+        if(!match || snapshot.schemaVersion!==1 || snapshot.optionCount!==Number(match[1]) || snapshot.optionCount<2 || snapshot.optionCount>20 || !Number.isInteger(snapshot.answer) || snapshot.answer<0 || snapshot.answer>=snapshot.optionCount || a.choice>=snapshot.optionCount || typeof snapshot.clockIssue!=="boolean") {omitted.invalid++;return;}
+        const sameVersion=Boolean(currentSignature(q) && snapshot.signature===currentSignature(q) && snapshot.answer===q.answer && snapshot.optionCount===q.options.length);
+        add({ref:`attempt:${index}`,source:"ordinary-attempt",qid:q.id,lessonId:q.lesson,at:a.at,choice:a.choice,
+          frozenAnswer:snapshot.answer,outcome:a.choice===snapshot.answer?"correct":"wrong",reach:"submitted",
+          version:sameVersion?"current":"changed-or-unknown",clockIssue:snapshot.clockIssue?"clock-backward":"",
+          submittedSeconds:Number.isFinite(a.seconds)&&a.seconds>=0?a.seconds:null,pageElapsedMs:null});
+      } else {
+        add({ref:`attempt:${index}`, source:"legacy-attempt", qid:q.id, lessonId:q.lesson, at:a.at, choice:a.choice,
+          frozenAnswer:null, outcome:a.choice===q.answer ? "current-key-match" : "current-key-mismatch", reach:"submitted",
+          version:"unrecorded", clockIssue:"unknown", submittedSeconds:Number.isFinite(a.seconds) && a.seconds>=0 ? a.seconds : null, pageElapsedMs:null});
+      }
     });
     events.sort((a,b) => a.ms-b.ms || a.order-b.order);
     const cutoff=now-RULE.windowDays*DAY;

@@ -90,6 +90,18 @@
     if (!match || !integer(Number(match[1]), 2, 20)) fail("选择题内容指纹无效。");
     return Number(match[1]);
   }
+  // Optional v2 attempt extension. Missing snapshots remain historical evidence;
+  // never synthesize a content version for an imported or pre-upgrade attempt.
+  function validateAttemptSnapshot(raw, q, choice) {
+    if (!object(raw) || raw.schemaVersion !== 1 || typeof raw.clockIssue !== "boolean") fail("普通作答快照版本或时钟状态无效。");
+    const count = frozenOptionCount(raw.signature);
+    if (raw.optionCount !== count || !integer(raw.answer, 0, count - 1) || !integer(choice, 0, count - 1)) fail("普通作答快照的选项或冻结答案无效。");
+    if (raw.signature === signature(q) && (raw.answer !== q.answer || count !== q.options.length)) fail("普通作答冻结答案与同版本内容不一致。");
+    return { schemaVersion: 1, signature: raw.signature, answer: raw.answer, optionCount: count, clockIssue: raw.clockIssue };
+  }
+  function attemptSnapshot(q, clockIssue = false) {
+    return validateAttemptSnapshot({ schemaVersion: 1, signature: signature(q), answer: q.answer, optionCount: q.options.length, clockIssue }, q, q.answer);
+  }
   const isTerminal = (run) => Boolean(run && TERMINAL.has(run.status));
   const empty = () => ({ runs: [], activeRun: null });
   function base(id, now, kind, budgetMs) {
@@ -305,5 +317,5 @@
     for (const row of modules) for (const key of Object.keys(total)) total[key] += row[key];
     return { modules, total };
   }
-  window.STUDY_TRAINING = Object.freeze({ empty, signature, newChoice, newWriting, validate, isTerminal, compatible, project, settle, pause, resume, submit, advance, finish, choiceSummary });
+  window.STUDY_TRAINING = Object.freeze({ empty, signature, attemptSnapshot, validateAttemptSnapshot, newChoice, newWriting, validate, isTerminal, compatible, project, settle, pause, resume, submit, advance, finish, choiceSummary });
 })();
