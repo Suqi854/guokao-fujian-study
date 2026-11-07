@@ -12,7 +12,7 @@ const legacy = {schemaVersion:1, exam:'fujian', read:['growth','marx-connection'
 w.localStorage.setItem('zhixu-study-v1', JSON.stringify(legacy));
 let beforeContent;
 for(const [,file] of html.matchAll(/src="\.\/([^\"]+)"/g)) {
-  if(file === 'theory-originals-20261107.js') beforeContent = JSON.stringify(w.STUDY_CONTENT);
+  if(file === 'theory-originals-all-20261107.js') beforeContent = JSON.stringify(w.STUDY_CONTENT);
   w.eval(fs.readFileSync(root + '/docs/' + file, 'utf8'));
 }
 const original = w.STUDY_THEORY_ORIGINALS;
@@ -24,9 +24,16 @@ const submit = () => d.querySelector('[data-original-form]').dispatchEvent(new w
 (async () => {
   await new Promise(r => setTimeout(r,30));
   const before = store();
-  assert.equal(Object.keys(original.data).length,4);
-  assert.equal(Object.values(original.data).reduce((n,x)=>n+x.excerpts.length,0),5);
-  assert.equal(Object.values(original.data).reduce((n,x)=>n+x.blanks.length,0),9);
+  assert.equal(Object.keys(original.data).length,13);
+  const expectedTopics=w.STUDY_COMPLETE_TOPICS.topics.filter(t=>t.track==='politics').map(t=>t.id).sort();
+  assert.deepEqual(Object.keys(original.data).sort(),Array.from(expectedTopics),'all existing political topic IDs covered');
+  const reviewed=JSON.parse(fs.readFileSync(root+'/tests/fixtures/theory-expansion-sources.json','utf8'));
+  for(const [id,item] of Object.entries(reviewed))assert.deepEqual(JSON.parse(JSON.stringify(original.data[id])),item,'source-reviewed data fixture: '+id);
+  const workTotals={};
+  for(const item of Object.values(original.data)){const key=item.fullWork||item.work;workTotals[key]=(workTotals[key]||0)+item.excerpts.reduce((n,e)=>n+[...e.text].length,0);}
+  for(const count of Object.values(workTotals))assert.ok(count<=25,'per-work excerpt cap, including multiple passages');
+  assert.equal(Object.values(original.data).reduce((n,x)=>n+x.excerpts.length,0),15);
+  assert.equal(Object.values(original.data).reduce((n,x)=>n+x.blanks.length,0),28);
   for(const [id,item] of Object.entries(original.data)) {
     await route('#course/politics/topic/'+id);
     const panel=d.querySelector('[data-original-topic]');assert.equal(panel.dataset.originalTopic,id);
@@ -74,9 +81,9 @@ const submit = () => d.querySelector('[data-original-form]').dispatchEvent(new w
   await route('#course/politics/topic/dialectics');assert.equal(d.querySelector('[data-original-input="0"]').value,'继续修改','route preserves ephemeral values');
   assert.equal(d.querySelectorAll('.topic-recall').length,1,'existing topic summary still present');
   await route('#course/data/topic/growth-analysis');assert.equal(d.querySelector('.theory-original'),null);assert.equal(d.querySelectorAll('.topic-recall').length,1);
-  await route('#course/politics/topic/historical-materialism');assert.equal(d.querySelector('.theory-original'),null,'not all theory claimed done');
+  await route('#course/politics/topic/historical-materialism');assert.equal(d.querySelector('[data-original-topic]').dataset.originalTopic,'historical-materialism','all political topics have a scoped short excerpt');
   assert.equal(store(),before,'original study records byte-identical');assert.equal(w.sessionStorage.length,0,'no additional persistence');
   assert.equal(JSON.stringify(w.STUDY_CONTENT),beforeContent);assert.deepEqual(errors,[]);assert.deepEqual(requests,[]);
-  console.log('PASS original-text candidate: 4 topics / 5 short excerpts / 9 blanks; exact text, metadata, editorial distinction, hidden references, fill/edit/reset/cancel/routes/XSS, no network or legacy-record changes.');
+  console.log('PASS original-text candidate: 13 topics / 15 short excerpts / 28 blanks; exact text, metadata, editorial distinction, hidden references, fill/edit/reset/cancel/routes/XSS, no network or legacy-record changes.');
   dom.window.close();
 })().catch(e=>{console.error(e);dom.window.close();process.exitCode=1;});

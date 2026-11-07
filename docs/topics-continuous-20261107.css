@@ -1,0 +1,31 @@
+/* Continuous source reading: grouping preserves content, not the old card boundaries. */
+.continuous-source-topic .topic-block[id^="topic-part-"] > header { margin-bottom: 16px; }
+.continuous-source-topic .topic-block-number { display: none; }
+.continuous-source-topic .topic-concept { margin: 0; padding: 0; border: 0; background: none; }
+.continuous-source-topic .topic-concept + .topic-concept { margin-top: 0; }
+.continuous-source-topic .topic-concept p { margin: 0 0 15px; line-height: 1.85; }
+.continuous-source-topic .topic-core { font-weight: 650; color: #344c67; }
+.continuous-source-topic .topic-condition { text-decoration-color: #c3cde1; }
+.continuous-source-topic .topic-keypoints { padding: 14px 18px; margin-bottom: 20px; }
+.continuous-source-topic .topic-keypoints h2 { font-size: 16px; margin-bottom: 4px; }
+.continuous-source-topic .topic-keypoints p { font-size: 14px; margin: 0; }
+.continuous-source-topic .topic-inline-lead { font-size: 15px; color: #344c67; font-weight: 650; }
+.continuous-source-topic .continuous-examples { margin-top: 18px; }
+.continuous-source-topic .continuous-examples > section { padding-left: 14px; border-left: 3px solid #d5c49d; margin: 14px 0; }
+.continuous-source-topic .topic-toc { max-height: calc(100vh - 40px); }
+@media(max-width:700px) {
+ .continuous-source-topic .topic-reading { padding: 18px 14px; }
+ .continuous-source-topic .topic-block[id^="topic-part-"] h2 { font-size: 19px; }
+ .continuous-source-topic .topic-concept p { line-height: 1.85; }
+ .continuous-source-topic .topic-keypoints { padding: 12px; }
+}
+
+.continuous-source-topic .topic-back { min-height: 32px; margin-bottom: 3px; }
+.continuous-source-topic .topic-hero { margin-bottom: 16px; }
+.continuous-source-topic .topic-hero h1 { margin: 5px 0; font-size: 29px; }
+.continuous-source-topic .topic-hero > p { margin: 4px 0 10px; }
+.continuous-source-topic .topic-hero-meta { margin-top: 6px; }
+.continuous-source-topic .topic-keypoints { padding: 0; background: none; border: 0; margin-bottom: 8px; }
+.continuous-source-topic .topic-keypoints h2 { color: #68758a; font-size: 13px; font-weight: 500; margin: 0; }
+.continuous-source-topic .topic-keypoints + .topic-block { border-top: 0; margin-top: 0; padding-top: 0; }
+@media(max-width:700px) {.continuous-source-topic .topic-hero h1 {font-size:26px;} }
