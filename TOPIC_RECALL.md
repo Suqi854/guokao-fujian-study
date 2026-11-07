@@ -26,4 +26,4 @@
 
 ## 文件与依据
 
-`topic-recall-cards.js` 保存首批文案，`topic-recall.js` 为增量渲染、临时答案和判定，`topic-recall.css` 仅作用于新区域。新资源名通过 index.html 接入，不改旧 app 及完整专题模块。正文依据是仓库已核过的 topic-edits.js 与对应增长/马原讲义；本轮没有新增外部来源核验。
+`topic-recall-cards.js` 保存首批文案，`topic-recall-summary-20261107.js` 为增量渲染、临时答案和判定，`topic-recall-summary-20261107.css` 仅作用于新区域。单卡版采用独立版本资源名，通过 index.html 接入，避免短期缓存旧分卡版；旧资源保留供缓存页面兼容。新资源，不改旧 app 及完整专题模块。正文依据是仓库已核过的 topic-edits.js 与对应增长/马原讲义；本轮没有新增外部来源核验。
