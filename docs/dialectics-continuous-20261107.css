@@ -1,0 +1,12 @@
+.continuous-topic .topic-block[id^="topic-part-"] { padding-top: 22px; margin-top: 24px; }
+.continuous-topic .topic-block[id^="topic-part-"] h2 { font-size: 21px; margin-bottom: 14px; }
+.continuous-topic .continuous-prose p { margin: 0 0 15px; line-height: 1.9; }
+.continuous-topic .continuous-prose strong { color: #344c67; font-weight: 650; }
+.continuous-topic .topic-keypoints { padding: 16px 20px; margin-bottom: 20px; }
+.continuous-topic .topic-keypoints p { margin: 0; }
+.continuous-topic .topic-toc { max-height: none; }
+@media(max-width:700px) {
+  .continuous-topic .topic-block[id^="topic-part-"] h2 { font-size: 19px; line-height: 1.6; }
+  .continuous-topic .continuous-prose p { line-height: 1.85; margin-bottom: 14px; }
+  .continuous-topic .topic-keypoints { padding: 14px; }
+}
