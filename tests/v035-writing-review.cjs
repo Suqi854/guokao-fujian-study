@@ -19,7 +19,7 @@ const read = file => {
 };
 const html = read(path.join(docs, 'index.html'));
 const scripts = [...html.matchAll(/<script\b[^>]*\bsrc=["']\.\/([^"']+)["'][^>]*>/g)]
-  .map(m => m[1]).filter(name => name !== 'app.js');
+  .map(m => m[1]).filter(name => name !== 'app-topics-20261107.js');
 assert.ok(scripts.length > 0 && scripts.length < 100, 'bounded local script inventory');
 const context = { window: {} };
 for (const property of ['localStorage', 'sessionStorage', 'indexedDB']) {

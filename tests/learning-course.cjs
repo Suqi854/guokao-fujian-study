@@ -93,7 +93,7 @@ const getState = () => w.localStorage.getItem("zhixu-study-v2");
   assert.equal(P.trainingReturn(["quiz", "one", "q01", "course", "data", "intro", "summary"]), "");
   assert.equal(P.trainingReturn(["write", "w01", "course", "data", "intro", "growth", "extra"]), "");
   const u = P.tracks[0].units[0], saved = u.bridge; u.bridge = '<img src=x onerror=alert(1)> a < b';
-  await route("#course/data"); assert.ok(d.querySelector(".course-bridge").textContent.includes(u.bridge)); assert.equal(d.querySelector(".course-page img"), null); u.bridge = saved;
+  await route("#course/data/intro"); assert.ok(d.querySelector(".course-bridge").textContent.includes(u.bridge)); assert.equal(d.querySelector(".course-page img"), null); u.bridge = saved;
   assert.equal(getState(), stored); assert.deepEqual(errors, []); assert.deepEqual(outgoing, []);
   console.log(`PASS continuous course: 127 unique lessons / 8 subjects, ${lessonViews} course views, ${exactQuizLinks} exact level quiz links, ${writingLinks} writing links; previous/next, stage jump, chapter closure, unlayered disclosure, malformed routes, read/note compatibility, no automatic completion or outgoing requests.`);
   dom.window.close();

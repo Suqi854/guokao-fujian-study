@@ -8,9 +8,9 @@ const w=dom.window,d=w.document;installSerialLocks(w);w.scrollTo=()=>{};w.HTMLEl
 const clone=x=>JSON.parse(JSON.stringify(x)),store=()=>Array.from({length:w.localStorage.length},(_,i)=>{let k=w.localStorage.key(i);return[k,w.localStorage.getItem(k)]}).sort();
 let baseline,beforeStore;
 for(const[,file]of html.matchAll(/src="\.\/([^"]+)"/g)){
- if(file==='marxism-course.js'){baseline=clone(w.STUDY_CONTENT);beforeStore=store();}
+ if(file==='marxism-course-20261107.js'){baseline=clone(w.STUDY_CONTENT);beforeStore=store();}
  w.eval(fs.readFileSync(path.join(root,'docs',file),'utf8'));
- if(file==='marxism-course.js')assert.deepEqual(store(),beforeStore,'registration must not write storage');
+ if(file==='marxism-course-20261107.js')assert.deepEqual(store(),beforeStore,'registration must not write storage');
 }
 const C=w.STUDY_CONTENT,M=w.STUDY_MEMORY_METHODS,P=w.STUDY_COURSE,B=w.STUDY_MARXISM_COURSE;
 const route=hash=>navigateHash(w,hash,()=>{w.location.hash=hash;});

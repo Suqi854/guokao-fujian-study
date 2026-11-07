@@ -1,7 +1,7 @@
 "use strict";
 const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path'),assert=require('node:assert/strict');
 const root=path.join(__dirname,'..'),ctx={window:{}};vm.createContext(ctx);
-for(const m of fs.readFileSync(path.join(root,'docs/index.html'),'utf8').matchAll(/src="\.\/([^\"]+)"/g))if(m[1]!=='app.js')vm.runInContext(fs.readFileSync(path.join(root,'docs',m[1]),'utf8'),ctx);
+for(const m of fs.readFileSync(path.join(root,'docs/index.html'),'utf8').matchAll(/src="\.\/([^\"]+)"/g))if(m[1]!=='app-topics-20261107.js')vm.runInContext(fs.readFileSync(path.join(root,'docs',m[1]),'utf8'),ctx);
 const C=JSON.parse(JSON.stringify(ctx.window.STUDY_CONTENT)),q=Object.fromEntries(C.questions.map(x=>[x.id,x]));
 assert.equal(C.lessons.length,127);assert.equal(C.questions.length,885);assert.equal(C.lessons.filter(l=>l.learningLevels).length,119);assert.equal(Object.keys(C.sources).length,80);
 for(const id of ['cpi','fujian-geography','constitutional-rights','admin-review']){

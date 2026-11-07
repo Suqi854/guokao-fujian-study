@@ -7,9 +7,9 @@ async function setup(prepare){
  const errors=[],requests=[],vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));const dom=new JSDOM(html,{url:'https://isolated-study.example/#settings',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc}),w=dom.window,d=w.document;let now=Date.parse('2026-11-05T18:00:00Z');
  w.TextEncoder=TextEncoder;w.Blob=Blob;w.scrollTo=()=>{};w.HTMLElement.prototype.scrollIntoView=()=>{};w.Date.now=()=>now;w.confirm=()=>true;w.setInterval=()=>1;installSerialLocks(w);
  w.fetch=(...args)=>{requests.push(args);throw Error('Outbound blocked in test');};let exported=null;w.URL.createObjectURL=b=>{exported=b;return 'blob:synthetic-backup';};w.URL.revokeObjectURL=()=>{};w.HTMLAnchorElement.prototype.click=function(){};
- for(const f of scripts.filter(f=>f!=='app.js'))w.eval(fs.readFileSync(root+'/docs/'+f,'utf8'));
+ for(const f of scripts.filter(f=>f!=='app-topics-20261107.js'))w.eval(fs.readFileSync(root+'/docs/'+f,'utf8'));
  const state=blank();prepare?.({w,state,C:w.STUDY_CONTENT,T:w.STUDY_TRAINING});const raw=JSON.stringify(state);w.localStorage.setItem('zhixu-study-v2',raw);w.localStorage.setItem('zhixu-private-library-v1','PRIVATE-SENTINEL-DO-NOT-READ');const read=w.Storage.prototype.getItem;w.Storage.prototype.getItem=function(k){if(String(k).startsWith('zhixu-private'))throw Error('Main app must not read private storage');return read.call(this,k);};
- w.eval(fs.readFileSync(root+'/docs/app.js','utf8'));await pause();
+ w.eval(fs.readFileSync(root+'/docs/app-topics-20261107.js','utf8'));await pause();
  return {w,d,dom,raw,get exported(){return exported;},get(){return JSON.parse(w.localStorage.getItem('zhixu-study-v2'));},advance(ms){now+=ms;},async route(hash){await navigateHash(w,hash,()=>{w.location.hash=hash;});await pause();},async click(selector){const b=d.querySelector(selector);assert.ok(b,selector);b.click();await pause();await pause();},close(){assert.deepEqual(errors,[]);assert.deepEqual(requests,[]);dom.window.close();}};
 }
 async function importFile(e,obj){const input=e.d.querySelector('#import-file'),text=JSON.stringify(obj);Object.defineProperty(input,'files',{configurable:true,value:[{size:Buffer.byteLength(text),text:async()=>text}]});input.dispatchEvent(new e.w.Event('change',{bubbles:true}));await pause();await pause();}

@@ -3,7 +3,7 @@ const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),asse
 const base=path.resolve(process.argv[2]||path.join(__dirname,'..'));
 const modulePath=path.resolve(process.argv[3]||path.join(__dirname,'../docs/political-mao-deng-expansion.js'));
 const code=fs.readFileSync(modulePath,'utf8');
-function context(){const c={window:{}};vm.createContext(c);for(const m of fs.readFileSync(path.join(base,'docs/index.html'),'utf8').matchAll(/src="\.\/([^\"]+)"/g)){if(m[1]==='app.js'||m[1]==='political-mao-deng-expansion.js'||m[1]==='political-complete-integration.js')continue;vm.runInContext(fs.readFileSync(path.join(base,'docs',m[1]),'utf8'),c,{filename:m[1]});}return c;}
+function context(){const c={window:{}};vm.createContext(c);for(const m of fs.readFileSync(path.join(base,'docs/index.html'),'utf8').matchAll(/src="\.\/([^\"]+)"/g)){if(m[1]==='app-topics-20261107.js'||m[1]==='political-mao-deng-expansion.js'||m[1]==='political-complete-integration.js')continue;vm.runInContext(fs.readFileSync(path.join(base,'docs',m[1]),'utf8'),c,{filename:m[1]});}return c;}
 const c=context(),before=JSON.parse(JSON.stringify(c.window.STUDY_CONTENT));
 const oldCards=JSON.parse(JSON.stringify(c.window.STUDY_MEMORY_METHODS.cards));
 vm.runInContext(code,c,{filename:'political-mao-deng-expansion.js'});

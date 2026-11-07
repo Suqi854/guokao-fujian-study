@@ -11,7 +11,7 @@ const root = path.join(__dirname, '..');
 const read = name => fs.readFileSync(path.join(root, 'docs', name), 'utf8');
 const scriptNames = page => [...read(page).matchAll(/src="\.\/([^"]+)"/g)].map(m => m[1]);
 const adapters = ['curriculum-v037.js', 'policy-v037.js'];
-const laterAdapters = ['political-mao-deng-expansion.js','marxism-course.js','political-complete-integration.js','policy-current-2026.js','curriculum-v038.js', 'practice-diagnostic-v037.js'];
+const laterAdapters = ['political-mao-deng-expansion.js','marxism-course-20261107.js','political-complete-integration.js','policy-current-2026.js','curriculum-v038.js', 'practice-diagnostic-v037.js'];
 const targets = ['material-mapping', 'answer-revision'];
 const policyLesson = 'fujian-enterprise-service-2025';
 const sourceId = 'fujian-four-access-2025';
@@ -42,7 +42,7 @@ const context = () => {
   return vm.createContext(c);
 };
 const execute = (c, file) => vm.runInContext(read(file), c, { filename: file, timeout: 2000 });
-const contentScripts = scriptNames('index.html').filter(file => file !== 'app.js' && !laterAdapters.includes(file));
+const contentScripts = scriptNames('index.html').filter(file => file !== 'app-topics-20261107.js' && !laterAdapters.includes(file));
 for (const file of adapters) {
   const embedded = read(file).match(/\bconst B = ([\s\S]+?);\s*const C=window\.STUDY_CONTENT;/);
   assert.ok(embedded, file + ' self-contained reviewed payload');

@@ -106,7 +106,7 @@ test('missing signature capability is conservative, not a current-version guess'
 });
 test('actual current content and training model integrate read-only',()=>{
   const root=require('node:path').join(__dirname,'..','docs');const html=fs.readFileSync(root+'/index.html','utf8');const context={window:{}};vm.createContext(context);
-  const excluded=new Set(['app.js','local-progress-store.js','training-workspace.js','shenlun-feedback.js']);
+  const excluded=new Set(['app-topics-20261107.js','local-progress-store.js','training-workspace.js','shenlun-feedback.js']);
   for(const m of html.matchAll(/src="\.\/([^\"]+\.js)"/g))if(!excluded.has(m[1]))vm.runInContext(fs.readFileSync(root+'/'+m[1],'utf8'),context);
   const C=context.window.STUDY_CONTENT,T=context.window.STUDY_TRAINING,q=C.questions[0],s=blank();
   const r=T.newChoice({id:'synthetic-adaptive',now:now-60000,ids:[q.id],budgetSeconds:120});const response=T.submit(r,q.answer,now-30000);T.finish(r,now,{reason:'finished'});

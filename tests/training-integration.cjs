@@ -27,12 +27,12 @@ async function fixture({ hash = '#settings', seed, noLocks = false, legacyOnly =
       const job=tail.then(()=>gate).then(callback);tail=job.catch(()=>{});job.then(resolve,reject);
     }),
   } });
-  for (const m of html.matchAll(/src="\.\/([^"]+)"/g)) if (m[1] !== 'app.js') w.eval(fs.readFileSync(root + '/docs/' + m[1], 'utf8'));
+  for (const m of html.matchAll(/src="\.\/([^"]+)"/g)) if (m[1] !== 'app-topics-20261107.js') w.eval(fs.readFileSync(root + '/docs/' + m[1], 'utf8'));
   const state = fresh();
   seed?.(state, w, now);
   if(legacyOnly){const old={...state,schemaVersion:1};delete old.revision;delete old.runs;delete old.activeRun;w.localStorage.setItem(V1,JSON.stringify(old));}
   else if(!empty)w.localStorage.setItem(V2, JSON.stringify(state));
-  w.eval(fs.readFileSync(root + '/docs/app.js', 'utf8'));
+  w.eval(fs.readFileSync(root + '/docs/app-topics-20261107.js', 'utf8'));
   await pause();
   const x = { w, d, errors, now: () => now, advance: ms => { now += ms; }, tick: () => interval(),
     hold: () => { held = true; }, release: () => { held = false; jobs.splice(0).forEach(job => job()); },

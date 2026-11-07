@@ -10,9 +10,9 @@ function setup(prepare){
  const dom=new JSDOM(html,{url:'https://isolated-study.example/',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc}),w=dom.window,d=w.document;
  installSerialLocks(w);w.scrollTo=()=>{};w.HTMLElement.prototype.scrollIntoView=()=>{};w.Date.now=()=>now;w.confirm=()=>true;
  w.fetch=(...args)=>{requests.push(args);throw Error('Unexpected outbound request');};
- for(const f of scripts.filter(f=>f!=='app.js'))w.eval(fs.readFileSync(path.join(root,'docs',f),'utf8'));
+ for(const f of scripts.filter(f=>f!=='app-topics-20261107.js'))w.eval(fs.readFileSync(path.join(root,'docs',f),'utf8'));
  const state=blank();if(prepare)prepare({w,d,state,C:w.STUDY_CONTENT,T:w.STUDY_TRAINING});
- const raw=JSON.stringify(state);w.localStorage.setItem('zhixu-study-v2',raw);w.eval(fs.readFileSync(path.join(root,'docs/app.js'),'utf8'));
+ const raw=JSON.stringify(state);w.localStorage.setItem('zhixu-study-v2',raw);w.eval(fs.readFileSync(path.join(root,'docs/app-topics-20261107.js'),'utf8'));
  return {w,d,dom,errors,requests,state,raw,async route(hash){await navigateHash(w,hash,()=>{w.location.hash=hash;});await pause();},close(){assert.deepEqual(errors,[]);assert.deepEqual(requests,[]);dom.window.close();}};
 }
 function finished(T,ids,day,wrong=0,id='synthetic-'+day){

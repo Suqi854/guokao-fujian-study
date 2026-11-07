@@ -16,10 +16,10 @@ async function setup({state=blank(),prepare,legacy=false}={}){
  w.Blob=Blob;w.File=File;w.URL.createObjectURL=b=>{blob=b;return 'blob:ordinary-test';};w.URL.revokeObjectURL=()=>{};
  const anchor=w.HTMLAnchorElement.prototype.click;w.HTMLAnchorElement.prototype.click=function(){if(!this.download)anchor.call(this);};
  w.fetch=(...args)=>{requests.push(args);throw Error('Unexpected outbound request');};
- for(const file of scripts.filter(f=>f!=='app.js'))w.eval(fs.readFileSync(path.join(root,'docs',file),'utf8'));
+ for(const file of scripts.filter(f=>f!=='app-topics-20261107.js'))w.eval(fs.readFileSync(path.join(root,'docs',file),'utf8'));
  prepare?.({w,state});
  w.localStorage.setItem(legacy?'zhixu-study-v1':key,JSON.stringify(state));
- w.eval(fs.readFileSync(path.join(root,'docs/app.js'),'utf8'));await pause();
+ w.eval(fs.readFileSync(path.join(root,'docs/app-topics-20261107.js'),'utf8'));await pause();
  return {w,d,C:w.STUDY_CONTENT,T:w.STUDY_TRAINING,clock:n=>{now=n;},disk:()=>JSON.parse(w.localStorage.getItem(key)),
   async route(hash){await navigateHash(w,hash,()=>{w.location.hash=hash;});await pause();},
   async choose(q,correct=true){await this.route('#quiz/one/'+q.id);d.querySelector('[data-action="choose"][data-id="'+(correct?q.answer:(q.answer+1)%q.options.length)+'"]').click();await pause();const b=d.querySelector('[data-action="submit"]');b.click();b.click();await pause();await pause();},
