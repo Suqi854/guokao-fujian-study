@@ -287,17 +287,26 @@
       ],
       ["待巩固错题", wrong, "题", "再次答对后自动移出", "wrong"],
     ];
-    return (
-      heading(
-        "YOUR STUDY SPACE",
-        "学习工作台",
-        "",
-        '<span class="pill green">' + icon("shield") + " 本机记录</span>",
-      ) +
-      window.STUDY_COURSE.entry() + studyRoutes() +
-      `<div class="stats">${stats.map((s) => `<div class="stat"><div class="stat-label">${s[0]}${icon(s[4])}</div><div class="stat-value">${s[1]}<small>${s[2]}</small></div><div class="stat-foot">${s[3]}</div></div>`).join("")}</div><div class="dashboard-grid"><div><section class="card focus-card"><div class="focus-top"><span class="pill">继续学习</span><span class="muted" style="font-size:11px">${nextTopic ? "完整专题" : "约 "+next.minutes+" 分钟"}</span></div><h2>${esc(nextTopic?.title || next.title)}</h2><p>${esc(nextTopic?.summary || next.subtitle)}</p><div class="focus-bottom">${btn("开始学习", nextTopic ? window.STUDY_COMPLETE_TOPICS.link(nextTopic) : "#lesson/" + next.id)}<small>${done} / ${C.lessons.length} 篇已读</small></div></section><div class="section-head"><h2>练习与复习</h2><a href="#practice">全部练习 →</a></div><div class="compact-links"><a class="compact-link" href="#practice"><span class="tile-icon">${icon("pen")}</span><div><strong>专项练习</strong><small>${C.questions.length} 道原创示例 · 每题都有解析</small></div>${icon("arrow")}</a><a class="compact-link" href="#writing"><span class="tile-icon">${icon("write")}</span><div><strong>申论写作</strong><small>${C.writing.length} 个虚构材料练习 · 草稿自动保存</small></div>${icon("arrow")}</a><a class="compact-link" href="#mistakes"><span class="tile-icon">${icon("wrong")}</span><div><strong>错题集</strong><small>${wrong ? `${wrong} 道题等待巩固` : "暂无错题"}</small></div>${icon("arrow")}</a></div></div><div class="stack"><section class="panel"><div class="panel-head"><h2>最近 7 天</h2><span class="pill gray">作答次数</span></div>${activity()}<p class="stat-foot">记录属于这台设备、这个浏览器。</p><a class="text-button" href="#settings">导出一份备份 ${icon("arrow")}</a></section></div></div><div class="note notice">当前为知识基础版，含 ${C.lessons.length} 篇讲义、${C.questions.length} 道原创题和 ${C.writing.length} 个写作练习。不代表完整考试范围。<a href="#settings">了解覆盖范围</a></div>`
-    );
+    const subjects = [
+      ["data","资料分析","量、率与计算","01"], ["reasoning","判断推理","逻辑、论证与图形","02"],
+      ["verbal","言语理解","语境、主旨与表达","03"], ["quant","数量关系","模型、比例与计数","04"],
+      ["politics","政治理论","原文、框架与辨析","05"], ["general","常识判断","法律、科技与人文","06"],
+      ["writing","申论方法","材料、结构与成文","07"], ["fujian","福建专题","省情与政策学习","08"]
+    ];
+    const topics = window.STUDY_COMPLETE_TOPICS?.topics || [];
+    return `<section class="studio-home">
+      <div class="studio-heading"><div><span class="studio-kicker">知序 / 学习工作台</span><h1>把知识连成体系。</h1></div><a class="studio-search" href="#learn">${icon("search")} 查知识点</a></div>
+      <section class="studio-hero"><div class="studio-hero-main"><span class="studio-label">接着学</span><h2>${esc(nextTopic?.title || next.title)}</h2><p>${esc(nextTopic?.summary || next.subtitle)}</p><a class="studio-start" href="${nextTopic ? window.STUDY_COMPLETE_TOPICS.link(nextTopic) : "#lesson/"+next.id}">进入完整专题 ${icon("arrow")}</a></div><div class="studio-progress"><div class="studio-ring" style="--progress:${Math.round(done/C.lessons.length*100)}%"><span><strong>${done}</strong><small>/ ${C.lessons.length} 篇已读</small></span></div><span>从理解到运用</span></div></section>
+      <div class="studio-metrics">${stats.slice(1).map(s=>`<div><span>${s[0]}</span><strong>${s[1]}<small>${s[2]}</small></strong></div>`).join("")}</div>
+      <div class="studio-section-heading"><h2>知识体系</h2><span>${topics.length} 个完整专题</span></div>
+      <div class="studio-subjects">${subjects.map(([id,title,desc,num])=>{const group=topics.filter(t=>t.track===id);return `<a class="studio-subject" href="#course/${id}"><span class="studio-subject-top"><span class="studio-subject-number">${num}</span><span>${group.length} 专题</span></span><h3>${title}</h3><p>${desc}</p><span class="studio-subject-bottom">学习 · 记忆 · 配套练习 ${icon("arrow")}</span></a>`;}).join("")}</div>
+      <div class="studio-section-heading"><h2>练习与复习</h2><a href="#practice">全部练习 →</a></div>
+      <div class="studio-actions"><a href="#practice">${icon("pen")}<span><strong>专项刷题</strong><small>${C.questions.length} 道原创题</small></span>${icon("arrow")}</a><a href="#writing">${icon("write")}<span><strong>申论写作</strong><small>${C.writing.length} 个材料练习</small></span>${icon("arrow")}</a><a href="#mistakes">${icon("wrong")}<span><strong>错题巩固</strong><small>${wrong} 题待复习</small></span>${icon("arrow")}</a><a href="#diagnostics">${icon("chart")}<span><strong>薄弱点分析</strong><small>根据本机作答记录</small></span>${icon("arrow")}</a></div>
+      <details class="studio-records"><summary>最近 7 天的练习记录</summary>${activity()}</details>
+      <div class="studio-footnote">原创学习与练习内容，仍在补充。<a href="#coverage">查看覆盖范围</a> · <a href="#settings">备份本机记录</a></div>
+    </section>`;
   }
+
   function activity() {
     const days = [];
     for (let i = 6; i >= 0; i--) {

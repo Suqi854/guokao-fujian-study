@@ -54,7 +54,7 @@ function select(selector, value) { const el = d.querySelector(selector); el.valu
     assert.ok(link, id + ":" + level);
     assert.deepEqual(link.getAttribute("href").split("/").at(-1).split(","), plain(group.questionIds));
     await navigateHash(w,link.hash,()=>link.click()); await pause();
-    assert.match(text(".quiz-header"), new RegExp("1 / " + (id === "multi-table" ? 3 : 2)));
+    assert.match(text(".quiz-header"), new RegExp("1 / " + Math.min(12, group.questionIds.length)));
   }
   console.log("PASS DOM: all 105 full lessons, every existing learning path and sixty-nine exact recent quiz paths");
   await route("#lesson/figure-features/practice");

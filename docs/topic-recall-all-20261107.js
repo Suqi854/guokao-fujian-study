@@ -10,9 +10,19 @@
  const normalize=s=>String(s??'').normalize('NFKC').trim().replace(/\s+/g,'').replace(/[。.!！?？]+$/g,'').toLowerCase();
  function judge(value,blank){const v=normalize(value);if(!v)return{status:'empty',label:'未填'};if([blank.answer,...(blank.accept||[])].some(x=>normalize(x)===v))return{status:'correct',label:'正确'};const trap=(blank.traps||[]).find(x=>x.answers.some(a=>normalize(a)===v));return trap?{status:'wrong',label:'需订正',hint:trap.hint}:{status:'review',label:'表述待核对',hint:'尚未识别这句话，请对照标准答案自查。'};}
  const fresh=()=>({mode:'cards',values:{},submitted:false,revealed:false,confirmReset:false});
- let sessions={},storageWarning=false;
- try{const raw=sessionStorage.getItem(KEY);if(raw&&raw.length<=MAX){const data=JSON.parse(raw);if(data?.version===VERSION&&data.topics&&typeof data.topics==='object'){for(const [id,cards]of Object.entries(D)){const s=data.topics[id];if(!s||typeof s!=='object')continue;const next=fresh();next.mode=s.mode==='quiz'?'quiz':'cards';next.submitted=s.submitted===true;next.revealed=s.revealed===true;for(const c of cards)c.blanks.forEach((_,i)=>{const key=c.id+':'+i;if(typeof s.values?.[key]==='string')next.values[key]=s.values[key].slice(0,100);});sessions[id]=next;}}}}catch(_){storageWarning=true;}
- const state=id=>sessions[id]||(sessions[id]=fresh());
+ let sessions={},storageWarning=false,restoredTopics={};
+ const hydratedTopics=new Set();
+ try{const raw=sessionStorage.getItem(KEY);if(raw&&raw.length<=MAX){const data=JSON.parse(raw);if(data?.version===VERSION&&data.topics&&typeof data.topics==='object'){restoredTopics=data.topics;for(const [id,cards]of Object.entries(D)){const s=data.topics[id];if(!s||typeof s!=='object')continue;const next=fresh();next.mode=s.mode==='quiz'?'quiz':'cards';next.submitted=s.submitted===true;next.revealed=s.revealed===true;for(const c of cards)c.blanks.forEach((_,i)=>{const key=c.id+':'+i;if(typeof s.values?.[key]==='string')next.values[key]=s.values[key].slice(0,100);});sessions[id]=next;}}}}catch(_){storageWarning=true;}
+ const state=id=>{
+  const next=sessions[id]||(sessions[id]=fresh());
+  // Content extensions may register additional blanks after this script loads.
+  // Hydrate them once, when the complete topic is first used; never resurrect reset answers.
+  if(!hydratedTopics.has(id)){
+   hydratedTopics.add(id);const old=restoredTopics[id];
+   for(const card of D[id]||[])card.blanks.forEach((_,i)=>{const key=card.id+':'+i;if(typeof old?.values?.[key]==='string'&&next.values[key]===undefined)next.values[key]=old.values[key].slice(0,100);});
+  }
+  return next;
+ };
  function save(){try{sessionStorage.setItem(KEY,JSON.stringify({version:VERSION,topics:sessions}));storageWarning=false;}catch(_){storageWarning=true;}}
  function foot(){return `<p class="recall-foot" data-recall-storage>${storageWarning?'本轮暂时无法保存，刷新可能丢失答案。':'本轮答案仅在当前标签页临时保存，不纳入学习备份或刷题成绩。'}</p>`;}
  function result(c,s){return `<ul class="recall-answer-list">${c.blanks.map((b,i)=>{const j=judge(s.values[c.id+':'+i],b);return `<li class="recall-${j.status}"><strong>第 ${i+1} 空 · ${s.submitted?j.label:'参考答案'}</strong><span>标准答案：<b>${esc(b.answer)}</b></span>${s.submitted&&j.hint?`<small>${esc(j.hint)}</small>`:''}</li>`;}).join('')}</ul>`;}

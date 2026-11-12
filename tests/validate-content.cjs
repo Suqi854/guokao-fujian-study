@@ -14,7 +14,7 @@ for (const file of scripts.filter(f => f !== "app-topics-20261107.js")) {
 const C = JSON.parse(JSON.stringify(context.window.STUDY_CONTENT));
 const q = Object.fromEntries(C.questions.map(v => [v.id, v]));
 const lessons = Object.fromEntries(C.lessons.map(v => [v.id, v]));
-assert.equal(Object.keys(q).length, 885);
+assert.equal(Object.keys(q).length, 1162);
 assert.equal(Object.keys(lessons).length, 127);
 assert.equal(C.lessons.filter(l => l.learningLevels).length, 119);
 assert.equal(C.writing.length, 87);
@@ -43,16 +43,16 @@ for (const l of C.lessons) {
 const newIds = ["logic", "quantified-logic", "solid-views", "figure-features", "arrangement", "remainders", "geometry-scale", "growth-contribution", "multi-table", "context-blanks", "title-choice", "cpi", "fujian-geography", "constitutional-rights", "admin-review", "estimation-boundary", "without-replacement", "three-set-counting", "next-paragraph", "practice-cognition", "contradiction-method", "productive-relations", "mao-thought-context"];
 for (const id of newIds) {
   const l = lessons[id];
-  assert.equal(l.sections.length, 9);
-  assert.deepEqual(Object.values(l.learningLevels).flatMap(g => g.sections), [...Array(9).keys()]);
-  for (const g of Object.values(l.learningLevels)) assert.equal(g.questionIds.length, id === "multi-table" ? 3 : 2, id + ":" + g.stage);
+  assert.ok(l.sections.length >= 9);
+  assert.deepEqual(Object.values(l.learningLevels).flatMap(g => g.sections).filter(i => i < 9), [...Array(9).keys()]);
+  for (const g of Object.values(l.learningLevels)) assert.equal(g.questionIds.filter(qid => !qid.startsWith("ki-")).length, id === "multi-table" ? 3 : 2, id + ":" + g.stage);
 }
 for (let n = 322; n <= 345; n++) {
   assert.equal(q["q" + n].optionReviews.length, 4);
   assert.ok(q["q" + n].optionReviews.every(s => s.trim().length > 0));
 }
 assert.deepEqual([...Array(24)].map((_, i) => q["q" + (322 + i)].answer), [0,2,3,1,2,0,1,3,0,2,3,1,2,0,3,1,0,2,1,3,2,0,3,1]);
-console.log("PASS All 127 lessons, 885 questions, 87 writing tasks and recent paths have valid links and explicit provenance");
+console.log("PASS All 127 lessons, 1162 questions, 87 writing tasks and recent paths have valid links and explicit provenance");
 
 const truth = n => Array.from({length: 2 ** n}, (_, mask) => Array.from({length:n}, (_, i) => Boolean(mask & (1 << i))));
 const implies = (a, b) => !a || b;
