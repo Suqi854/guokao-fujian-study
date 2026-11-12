@@ -12,7 +12,7 @@ const legacy = {schemaVersion:1, exam:'fujian', read:['growth','marx-connection'
 w.localStorage.setItem('zhixu-study-v1', JSON.stringify(legacy));
 let beforeContent;
 for(const [,file] of html.matchAll(/src="\.\/([^\"]+)"/g)) {
-  if(file === 'theory-originals-all-20261107.js') beforeContent = JSON.stringify(w.STUDY_CONTENT);
+  if(file === 'theory-originals-all-20261107-clean.js') beforeContent = JSON.stringify(w.STUDY_CONTENT);
   w.eval(fs.readFileSync(root + '/docs/' + file, 'utf8'));
 }
 const original = w.STUDY_THEORY_ORIGINALS;

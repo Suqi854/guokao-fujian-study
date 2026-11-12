@@ -19,3 +19,6 @@ main{max-width:1200px;padding:32px 38px 40px}h1,h2,h3{letter-spacing:-.02em}.hea
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 
 @media(min-width:641px) and (max-width:760px){.sidebar{height:auto;border-top:1px solid var(--line);border-right:0;padding:5px 5px calc(5px + env(safe-area-inset-bottom))}.sidebar-bottom{display:none}.sidebar nav{display:grid;grid-template-columns:repeat(5,1fr);gap:0}.nav-item{flex-direction:column;gap:3px}.nav-item .badge{position:absolute;right:8px;top:4px}.workspace{padding-bottom:80px}.topic-layout{display:block}.topic-toc{display:none}.topic-mobile-toc{display:flex;position:sticky;top:0;z-index:15;gap:8px;background:#f6f9f2;padding:8px}.topic-mobile-toc select{min-width:0;flex:1;font-size:16px;min-height:44px}.topic-mobile-toc button{min-height:44px;min-width:44px}}
+
+/* Compact copy-free entry cards. */
+.studio-hero h2{margin-bottom:20px}.studio-subject-bottom{border:0;padding-top:0;margin-top:10px}.studio-subject{min-height:0}

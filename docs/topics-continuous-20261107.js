@@ -715,7 +715,7 @@
    if (actual.join('|') !== expected.join('|') || new Set(actual).size !== actual.length) throw Error('Incomplete continuous topic ' + id);
    t.blocks = blocks;
    t.restructured = true;
-   t.scope = '本页按完整理论或题型合并相关讲义，取消逐点小标题与学习轮次拆分。原定义、例子、限制条件逐段保留；这是连续编排，不代表全部正文已逐句重写，也不代表覆盖全部考试内容。';
+   t.scope = '本专题保留已有定义、例子与条件，尚未覆盖全部考点。';
    // Existing recall data keeps its identity, but its chapter references follow the new map.
    if (id === 'growth-analysis') {
      const partMap = [0,0,0,1,1,2,2,3,3];
@@ -730,7 +730,7 @@
    const directory = tmp.content.querySelector('[data-topic-directory]');
    if (directory) {
      const scope = directory.querySelector('.topic-scope > p');
-     if (scope) scope.textContent = '54 个专题都采用同页连续阅读，相关理论或题型合并为 1–4 个正文部分。原讲义、例子与条件保留；唯物辩证法已连续改写，其余专题本轮完成结构合并，逐句精编仍需继续。';
+     if (scope) scope.textContent = '54 个专题，保留原讲义与记录；内容仍在补充。';
      return tmp.innerHTML;
    }
    if (parts[2] !== 'topic' || !plans[parts[3]]) return html;
@@ -738,7 +738,8 @@
    const t = T.topics.find(t => t.id === parts[3]);
    root.classList.add('continuous-topic','continuous-source-topic');
    const top = root.querySelector('#topic-top');
-   top.innerHTML = '<h2>本站讲解</h2>';
+   top.innerHTML = '';
+   top.style.cssText='padding:0;margin:0;border:0';
    root.querySelectorAll('.topic-concept').forEach(node => {
      const heading = node.querySelector('h3');
      if (heading) { node.setAttribute('aria-label',heading.textContent); heading.remove(); }

@@ -2,7 +2,7 @@
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict');
 const crypto=require('node:crypto');
 const base=path.join(__dirname,'..'),here=__dirname,plain=x=>JSON.parse(JSON.stringify(x));
-const html=fs.readFileSync(path.join(base,'docs/index.html'),'utf8'),scripts=[...html.matchAll(/src="\.\/([^\"]+)"/g)].map(m=>m[1]).filter(f=>f!=='app-studio-20261112.js');
+const html=fs.readFileSync(path.join(base,'docs/index.html'),'utf8'),scripts=[...html.matchAll(/src="\.\/([^\"]+)"/g)].map(m=>m[1]).filter(f=>f!=='app-studio-20261112-clean.js');
 assert.equal(scripts.filter(f=>f==='practice-next.js').length,1);
 assert.ok(scripts.indexOf('focused-methods.js')<scripts.indexOf('practice-next.js')&&scripts.indexOf('practice-next.js')<scripts.indexOf('coverage-map.js'));
 const adapter=fs.readFileSync(path.join(base,'docs/practice-next.js'),'utf8');

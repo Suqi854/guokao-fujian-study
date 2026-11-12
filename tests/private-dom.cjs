@@ -24,7 +24,7 @@ function fixture({ noLocks = false, seed = {} } = {}) {
   if (!noLocks) Object.defineProperty(w.navigator, "locks", { value: { request(name, opts, fn) { const job = tail.then(() => gate).then(fn); tail = job.catch(() => {}); return job; } } });
   for (const [k, v] of Object.entries(seed)) w.localStorage.setItem(k, v);
   w.STUDY_CONTENT = Object.freeze({ questions: Object.freeze([{ id: "q1", meta: { source: "original" } }]) });
-  for (const name of ["local-progress-store.js", "private-library.js", "private-workspace.js"]) w.eval(fs.readFileSync(path.join(root, "docs", name), "utf8"));
+  for (const name of ["local-progress-store.js", "private-library.js", "private-workspace-clean.js"]) w.eval(fs.readFileSync(path.join(root, "docs", name), "utf8"));
   const $ = s => d.querySelector(s), change = el => el.dispatchEvent(new w.Event("change", { bubbles: true }));
   return { w, d, $, errors, requests, downloads,
     hold() { gate = new Promise(r => { release = r; }); }, release() { release(); },

@@ -4,7 +4,7 @@ const {installSerialLocks,navigateHash}=require('./progress-dom-support.cjs');
 const root=path.join(__dirname,'..'),html=fs.readFileSync(root+'/docs/index.html','utf8');
 const file='knowledge-integration-20261108.js';
 const files=[...html.matchAll(/src="\.\/([^\"]+)"/g)].map(m=>m[1]);
-if(!files.includes(file))files.splice(files.indexOf('app-studio-20261112.js'),0,file);
+if(!files.includes(file))files.splice(files.indexOf('app-studio-20261112-clean.js'),0,file);
 const errors=[],vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));
 const dom=new JSDOM(html,{url:'https://integration.synthetic.example/#course',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc}),w=dom.window,d=w.document;
 installSerialLocks(w);w.scrollTo=()=>{};w.HTMLElement.prototype.scrollIntoView=function(){};

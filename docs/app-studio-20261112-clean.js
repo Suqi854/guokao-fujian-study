@@ -1,0 +1,1482 @@
+"use strict";
+(() => {
+  const C = window.STUDY_CONTENT, T = window.STUDY_TRAINING, R = window.STUDY_RECORD_CAPACITY,
+    KEY = "zhixu-study-v2", LEGACY_KEY = "zhixu-study-v1";
+  const $ = (s) => document.querySelector(s),
+    esc = (s) =>
+      String(s).replace(
+        /[&<>"']/g,
+        (c) =>
+          ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;",
+          })[c],
+      );
+  const icons = {
+    home: '<path d="m3 10 9-7 9 7v10H3z"/><path d="M9 20v-7h6v7"/>',
+    book: '<path d="M12 5C8 3 5 3 2 4v15c3-1 6-1 10 1 4-2 7-2 10-1V4c-3-1-6-1-10 1zM12 5v15"/>',
+    pen: '<path d="m15 3 6 6-12 12H3v-6zM12 6l6 6"/>',
+    wrong: '<path d="M5 3h14v18l-7-4-7 4zM9 7l6 6M15 7l-6 6"/>',
+    write:
+      '<path d="M14 3H4v18h16V11M8 8h3M8 13h5M8 17h8m-1-9 5-5 3 3-5 5-4 1z"/>',
+    arrow: '<path d="M5 12h14m-5-5 5 5-5 5"/>',
+    back: '<path d="M19 12H5m5-5-5 5 5 5"/>',
+    check: '<path d="m5 12 4 4L19 6"/>',
+    clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/>',
+    star: '<path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9z"/>',
+    search: '<circle cx="10" cy="10" r="7"/><path d="m15 15 6 6"/>',
+    settings:
+      '<path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3" fill="white"/><circle cx="16" cy="17" r="3" fill="white"/>',
+    chart: '<path d="M4 20V10m8 10V4m8 16v-7"/>',
+    download: '<path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4"/>',
+    shield:
+      '<path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6z"/><path d="m8 11 3 3 5-5"/>',
+  };
+  const icon = (n) =>
+    `<svg viewBox="0 0 24 24" aria-hidden="true">${icons[n] || icons.book}</svg>`;
+  const lesson = (id) => C.lessons.find((l) => l.id === id),
+    question = (id) => C.questions.find((q) => q.id === id),
+    writing = (id) => C.writing.find((w) => w.id === id);
+  const capacityReason=result=>result.reason==="attempt-limit"?"已达到50,000条逐题记录保护上限，未新增作答，原记录未截断。":result.reason==="file-limit"?"学习记录接近10 MiB备份保护上限，未写入本次变更。":"记录结构不符合安全保存要求，原记录未改动。";
+  function assessCapacity(snapshot,options){
+    try{
+      // Capacity must also fit the paused export form, without pausing live state.
+      let projected=snapshot;
+      if(snapshot.activeRun?.status==="running"){
+        const active=JSON.parse(JSON.stringify(snapshot.activeRun));T.pause(active,Date.now());
+        projected=T.isTerminal(active)?{...snapshot,runs:[...snapshot.runs,active],activeRun:null}:{...snapshot,activeRun:active};
+      }
+      return R.assess(projected,options);
+    }catch{return {ok:false,reason:"invalid-structure",nearLimit:false};}
+  }
+  const fresh = () => ({
+    schemaVersion: 2,
+    revision: 0,
+    exam: "both",
+    read: [],
+    favorites: [],
+    notes: {},
+    attempts: [],
+    drafts: {},
+    checks: {},
+    ...T.empty(),
+  });
+  let state = fresh(),
+    storageError = "", capacityMessage = "",
+    catalogFilter = "全部",
+    query = "",
+    onlySaved = false,
+    learningPath = "",
+    quiz = null,
+    toastTimer, progressStore = null, trainingUI = null, pendingSaves = 0, replacing = false;
+  const replacementControls = new Map();
+  function validate(raw) {
+    if (!raw || ![1,2].includes(raw.schemaVersion)) throw Error("备份版本不支持");
+    if (raw.schemaVersion === 2 && (!Number.isSafeInteger(raw.revision) || raw.revision < 0)) throw Error("记录版本号无效");
+    const out = fresh();
+    if (!["both", "national", "fujian"].includes(raw.exam))
+      throw Error("备考方向无效");
+    out.exam = raw.exam;
+    for (const name of ["read", "favorites"]) {
+      if (
+        !Array.isArray(raw[name]) ||
+        raw[name].length > 1000 ||
+        raw[name].some((id) => typeof id !== "string" || !lesson(id))
+      )
+        throw Error("知识记录无效");
+      out[name] = [...new Set(raw[name])];
+    }
+    if (!Array.isArray(raw.attempts) || raw.attempts.length > 50000)
+      throw Error("答题记录无效");
+    out.attempts = raw.attempts.map((a) => {
+      if (
+        !a ||
+        !question(a.qid) ||
+        !Number.isInteger(a.choice) ||
+        a.choice < 0 ||
+        a.choice > 19 ||
+        typeof a.at !== "string" ||
+        !Number.isFinite(Date.parse(a.at)) ||
+        !Number.isFinite(a.seconds) ||
+        a.seconds < 0 ||
+        a.seconds > 31536000
+      )
+        throw Error("答题记录内容无效");
+      const attempt = { qid: a.qid, choice: a.choice, at: a.at, seconds: a.seconds };
+      if (raw.schemaVersion === 2 && Object.prototype.hasOwnProperty.call(a, "snapshot")) {
+        attempt.snapshot = T.validateAttemptSnapshot(a.snapshot, question(a.qid), a.choice);
+      } else if (a.choice > 3) throw Error("旧答题记录选项无效");
+      return attempt;
+    });
+    for (const key of ["notes", "drafts"]) {
+      if (!raw[key] || typeof raw[key] !== "object" || Array.isArray(raw[key]))
+        throw Error("文字记录无效");
+      for (const [id, value] of Object.entries(raw[key])) {
+        if (
+          !(key === "notes" ? lesson(id) : writing(id)) ||
+          typeof value !== "string" ||
+          value.length > 50000
+        )
+          throw Error("文字记录内容无效");
+        out[key][id] = value;
+      }
+    }
+    if (
+      !raw.checks ||
+      typeof raw.checks !== "object" ||
+      Array.isArray(raw.checks)
+    )
+      throw Error("自查记录无效");
+    for (const [id, values] of Object.entries(raw.checks)) {
+      if (
+        !writing(id) ||
+        !Array.isArray(values) ||
+        values.some(
+          (i) =>
+            !Number.isInteger(i) || i < 0 || i >= writing(id).points.length,
+        )
+      )
+        throw Error("自查记录内容无效");
+      out.checks[id] = [...new Set(values)];
+    }
+    if (raw.schemaVersion === 2) { out.revision = raw.revision; Object.assign(out,T.validate(raw)); }
+    return out;
+  }
+  function savingStatus() {
+    const text = storageError ? "未能保存，请导出本页副本" : pendingSaves ? "正在安全保存…" : "已保存到本机";
+    for (const el of document.querySelectorAll("#note-status,#draft-status")) el.textContent = text;
+  }
+  function reportStorageError(message) {
+    storageError = message;
+    if (trainingUI) trainingUI.suspendForStorageError();
+    savingStatus();
+    const main = document.querySelector("#main");
+    if(main){let alert=main.querySelector("#storage-save-error");if(!alert){alert=document.createElement("div");alert.id="storage-save-error";alert.className="storage-alert";alert.setAttribute("role","alert");main.prepend(alert);}alert.textContent=message;}
+    if (document.querySelector("#toast")) showToast(message);
+  }
+  try {
+    progressStore = window.STUDY_PROGRESS_STORE.create({ key:KEY,legacyKey:LEGACY_KEY,normalize:validate,onError:reportStorageError });
+    const loaded = progressStore.read();
+    if (loaded.value) state = loaded.value;
+    if (loaded.error) storageError = loaded.error;
+    if (!loaded.writeSupported && !storageError) storageError = "此浏览器缺少安全的跨标签保存支持，当前只读。请先导出本页副本，不要依赖自动保存。";
+  } catch (e) {
+    storageError = "本机记录无法读取。原文未覆盖，请到备份页导出原文后再处理。";
+  }
+  async function persist() {
+    if (replacing) return false;
+    if (storageError || !progressStore) { savingStatus();return false; }
+    const capacity=assessCapacity(state);
+    capacityMessage=capacity.nearLimit?"学习记录接近保护上限，请先导出学习记录备份；私人题库需另行备份。":"";
+    if(!capacity.ok){reportStorageError(capacityReason(capacity)+" 本页修改未保存，可在备份页导出应急本页副本。");return false;}
+    const reference = state;
+    pendingSaves++;savingStatus();
+    try {
+      const result = await progressStore.save(state);
+      if (result.ok) { if(state===reference)state.revision=result.value.revision;return true; }
+      if (!result.cancelled) reportStorageError(result.error || "本机保存失败，请导出本页副本。");
+      return false;
+    } catch (e) { reportStorageError("本机保存失败，原记录保留；请导出本页副本。");return false; }
+    finally { pendingSaves--;savingStatus(); }
+  }
+  function lockForReplacement() {
+    for(const el of document.querySelectorAll("input,textarea,select,button")){if(!replacementControls.has(el))replacementControls.set(el,el.disabled);el.disabled=true;}
+    const main=document.querySelector("#main");
+    if(main&&!main.querySelector("#replace-status")){const info=document.createElement("div");info.id="replace-status";info.className="storage-alert";info.setAttribute("role","status");info.textContent="正在安全替换记录，暂时停止编辑。写入成功后才切换数据。";main.prepend(info);}
+  }
+  async function replaceProgress(next) {
+    if(replacing)return {ok:false,cancelled:true};
+    const c=assessCapacity(next);if(!c.ok)return {ok:false,error:capacityReason(c)};
+    replacing=true;lockForReplacement();
+    try {
+      const result=await progressStore.replace(next);
+      if(result.ok){state=result.value;storageError="";capacityMessage="";quiz=null;trainingUI?.resetView();}
+      else if(!result.cancelled)reportStorageError(result.error||"替换未完成，原记录保留。");
+      return result;
+    } finally {replacing=false;for(const [el,disabled] of replacementControls)if(el.isConnected)el.disabled=disabled;replacementControls.clear();render();}
+  }
+  function showToast(t) {
+    $("#toast").textContent = t;
+    $("#toast").classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => $("#toast").classList.remove("show"), 4000);
+  }
+  // Content data is plain text. Only renderer-owned templates create HTML.
+  const btn = (text, href, secondary = false) =>
+    `<a class="btn${secondary ? " secondary" : ""}" href="${esc(href)}">${esc(text)}${icon("arrow")}</a>`;
+  const heading = (label, title, sub, extra = "") =>
+    `<div class="page-heading"><div><h1>${esc(title)}</h1>${sub ? `<p class="subtitle">${esc(sub)}</p>` : ""}</div>${extra}</div>`;
+  const empty = (title, desc, link = "") =>
+    `<div class="empty">${icon("book")}<h2>${esc(title)}</h2><p>${esc(desc)}</p>${link}</div>`;
+  const latest = () => {
+    const a = {};
+    for (const row of state.attempts) a[row.qid] = row;
+    return a;
+  };
+  const wrongIds = () =>
+    Object.values(latest())
+      .filter((a) => a.choice !== question(a.qid).answer)
+      .map((a) => a.qid);
+  const correctCount = () =>
+    state.attempts.filter((a) => a.choice === question(a.qid).answer).length;
+  const dateKey = (date) => {
+    const d = new Date(date);
+    return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+  };
+  const todayAttempts = () =>
+    state.attempts.filter((a) => dateKey(a.at) === dateKey(new Date()));
+  function nav(active) {
+    $("#navigation").innerHTML = [
+      ["home", "home", "学习概览"],
+      ["course", "book", "连续学习"],
+      ["practice", "pen", "专项练习"],
+      ["writing", "write", "申论写作"],
+      ["mistakes", "wrong", "错题回顾"],
+    ]
+      .map(
+        ([id, i, label]) =>
+          `<a class="nav-item ${active === id ? "active" : ""}" href="#${id}" ${active === id ? 'aria-current="page"' : ""}>${icon(i)}<span>${label}</span>${id === "mistakes" && wrongIds().length ? `<span class="badge">${wrongIds().length}</span>` : ""}</a>`,
+      )
+      .join("");
+  }
+  function studyRoutes() {
+    if (!C.theoryTrack) return "";
+    return `<section class="panel" data-study-routes><h2>练习与理解，两条学习线</h2><p>应试线继续分类练习、错题复盘与申论输出；理论线按概念、原文背景与迁移问题循序读，不用一条线替代另一条。</p><div class="actions">${btn("应试：分类与错题", "#targeted", true)}${btn("计时记录与复盘", "#training", true)}${btn("申论：材料输出", "#writing", true)}${btn("长期：政治理论入门", "#theory")}</div></section>`;
+  }
+  function theoryLearningGuide(l) {
+    const a = C.theoryLearningAids?.[l.id];
+    if (!a) return "";
+    return `<div class="theory-learning-aids" data-theory-aids="${esc(l.id)}"><span class="pill">理解与记忆</span><h2>要点</h2><p class="stat-foot">学习重点，不代表官方考频。</p><ul class="theory-key-points">${a.keyPoints.map(p=>`<li><strong>${esc(p.title)}</strong><span>${esc(p.text)}</span></li>`).join("")}</ul><p class="theory-memory-cue"><strong>理解线索：</strong>${esc(a.memoryCue)}</p><details><summary>例子与辨析</summary><h3>${esc(a.plainExample.title)}</h3><p>${esc(a.plainExample.text)}</p>${a.contrasts.map(c=>`<div class="theory-contrast"><p><strong>${esc(c.left.term)}：</strong>${esc(c.left.text)}</p><p><strong>${esc(c.right.term)}：</strong>${esc(c.right.text)}</p><p class="stat-foot">${esc(c.cue)}</p></div>`).join("")}</details><details data-theory-recall><summary>自测</summary>${a.recall.map((r,i)=>`<div class="theory-recall-item"><p><strong>${i+1}. ${esc(r.question)}</strong></p><details><summary>答案要点</summary><ul>${r.checkpoints.map(t=>`<li>${esc(t)}</li>`).join("")}</ul></details></div>`).join("")}</details><p class="stat-foot">${esc(a.scope)}</p></div>`;
+  }
+  function theoryPage() {
+    const track = C.theoryTrack;
+    if (!track) return missing();
+    const steps = track.steps.filter(s => lesson(s.lessonId));
+    const read = steps.filter(s => state.read.includes(s.lessonId)).length;
+    const next = steps.find(s => !state.read.includes(s.lessonId)) || steps[0];
+    return heading("POLITICAL FOUNDATIONS", track.title, track.intro) +
+      `<section class="panel"><p>${esc(track.scope)}</p><p class="stat-foot">更新 ${esc(track.updated)} · 已标记已读 ${read} / ${steps.length} 个主题；已读不等于掌握，不据此预测考试分数。</p><div class="actions">${next ? btn(read === steps.length ? "重读第一个主题" : "从尚未标记的主题开始", "#lesson/" + next.lessonId + "/intro") : ""}${btn("返回应试练习", "#targeted", true)}${btn("进入申论输出", "#writing", true)}</div></section><div class="stack" data-theory-steps>${steps.map((step, i) => {
+        const l = lesson(step.lessonId);
+        return `<section class="panel" data-theory-lesson="${esc(l.id)}"><span class="pill ${state.read.includes(l.id) ? "green" : "gray"}">主题 ${i + 1} · ${state.read.includes(l.id) ? "已标记已读" : "待阅读"}</span><h2>${esc(l.title)}</h2><p>${esc(step.purpose)}</p><p><strong>迁移时问：</strong>${esc(step.bridge)}</p><div class="actions">${Object.entries(C.learningPaths).map(([id, path]) => btn(path.label, "#lesson/" + l.id + "/" + id, id !== "intro")).join("")}${btn("练这课的 " + l.practice.length + " 道原创题", "#quiz/lesson/" + l.id, true)}</div><p class="stat-foot">${esc(l.versionNote).replace(/[。]+$/, "")}。三个层次是教学安排，题目难度未经样本标定。</p></section>`;
+      }).join("")}</div><section class="panel"><h2>读完后，用自己的话说清楚</h2><ol>${track.reflection.map(t => `<li>${esc(t)}</li>`).join("")}</ol><p>可把回答写入对应讲义的个人笔记，只保存在当前浏览器；没有自动评分或上传。</p><a class="text-button" href="#sources">集中查看原文年代、官方来源与核验边界 →</a></section><details class="roadmap"><summary>本阶段的范围与待补内容</summary><ul>${track.gaps.map(t => `<li>${esc(t)}</li>`).join("")}</ul></details>`;
+  }
+  function home() {
+    const done = state.read.length,
+      total = state.attempts.length,
+      wrong = wrongIds().length,
+      next = C.lessons.find((l) => !state.read.includes(l.id)) || C.lessons[0];
+    const nextTopic = window.STUDY_COMPLETE_TOPICS?.forLesson(next.id);
+    const stats = [
+      [
+        "已读知识",
+        done,
+        `/ ${C.lessons.length} 篇`,
+        "按「标记已读」统计",
+        "book",
+      ],
+      ["今日练习", todayAttempts().length, "次", "每次提交计为一次练习", "pen"],
+      [
+        "练习正确率",
+        total ? Math.round((correctCount() / total) * 100) + "%" : "—",
+        "",
+        total ? `累计 ${total} 次作答` : "完成第一道题，开始记录",
+        "chart",
+      ],
+      ["待巩固错题", wrong, "题", "再次答对后自动移出", "wrong"],
+    ];
+    const subjects = [
+      ["data","资料分析","量、率与计算","01"], ["reasoning","判断推理","逻辑、论证与图形","02"],
+      ["verbal","言语理解","语境、主旨与表达","03"], ["quant","数量关系","模型、比例与计数","04"],
+      ["politics","政治理论","原文、框架与辨析","05"], ["general","常识判断","法律、科技与人文","06"],
+      ["writing","申论方法","材料、结构与成文","07"], ["fujian","福建专题","省情与政策学习","08"]
+    ];
+    const topics = window.STUDY_COMPLETE_TOPICS?.topics || [];
+    return `<section class="studio-home">
+      <div class="studio-heading"><div><h1>学习概览</h1></div><a class="studio-search" href="#learn">${icon("search")} 查知识点</a></div>
+      <section class="studio-hero"><div class="studio-hero-main"><span class="studio-label">接着学</span><h2>${esc(nextTopic?.title || next.title)}</h2><a class="studio-start" href="${nextTopic ? window.STUDY_COMPLETE_TOPICS.link(nextTopic) : "#lesson/"+next.id}">进入完整专题 ${icon("arrow")}</a></div><div class="studio-progress"><div class="studio-ring" style="--progress:${Math.round(done/C.lessons.length*100)}%"><span><strong>${done}</strong><small>/ ${C.lessons.length} 篇已读</small></span></div></div></section>
+      <div class="studio-metrics">${stats.slice(1).map(s=>`<div><span>${s[0]}</span><strong>${s[1]}<small>${s[2]}</small></strong></div>`).join("")}</div>
+      <div class="studio-section-heading"><h2>知识体系</h2><span>${topics.length} 个完整专题</span></div>
+      <div class="studio-subjects">${subjects.map(([id,title,desc,num])=>{const group=topics.filter(t=>t.track===id);return `<a class="studio-subject" href="#course/${id}"><span class="studio-subject-top"><span class="studio-subject-number">${num}</span><span>${group.length} 专题</span></span><h3>${title}</h3><span class="studio-subject-bottom">${icon("arrow")}</span></a>`;}).join("")}</div>
+      <div class="studio-section-heading"><h2>练习与复习</h2><a href="#practice">全部练习 →</a></div>
+      <div class="studio-actions"><a href="#practice">${icon("pen")}<span><strong>专项刷题</strong><small>${C.questions.length} 道原创题</small></span>${icon("arrow")}</a><a href="#writing">${icon("write")}<span><strong>申论写作</strong><small>${C.writing.length} 个材料练习</small></span>${icon("arrow")}</a><a href="#mistakes">${icon("wrong")}<span><strong>错题巩固</strong><small>${wrong} 题待复习</small></span>${icon("arrow")}</a><a href="#diagnostics">${icon("chart")}<span><strong>薄弱点分析</strong><small>根据本机作答记录</small></span>${icon("arrow")}</a></div>
+      <details class="studio-records"><summary>最近 7 天的练习记录</summary>${activity()}</details>
+      <div class="studio-footnote"><a href="#coverage">查看覆盖范围</a> · <a href="#settings">备份本机记录</a></div>
+    </section>`;
+  }
+
+  function activity() {
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      days.push({
+        d,
+        n: state.attempts.filter((a) => dateKey(a.at) === dateKey(d)).length,
+      });
+    }
+    const max = Math.max(1, ...days.map((x) => x.n));
+    return `<div class="activity">${days.map((x) => `<div class="activity-day" title="${x.d.toLocaleDateString("zh-CN")}：${x.n} 次"><span class="activity-bar" style="height:${Math.max(3, (x.n / max) * 50)}px"></span>${x.d.getMonth() + 1}/${x.d.getDate()}</div>`).join("")}</div>`;
+  }
+  let diagramStep = 0,
+    diagramRule = "xor";
+
+  function methodLinks(l) {
+    const entries = C.methods.filter((m) => m.lessons.includes(l.id));
+    return entries.length
+      ? `<section class="source-panel"><h2>方法出处与对照</h2><p>以下是历史公开资料的阅读索引。本站讲义与题目独立编写，不代表作者授权、认可或提供官方答案。</p>${entries.map((m) => `<p><a href="${esc(m.url)}" target="_blank" rel="noopener noreferrer">${esc(m.name)} · ${esc(m.date)} ↗</a> · ${esc(m.topic)}</p>`).join("")}<a class="text-button" href="#methods">比较适用任务与方法边界 →</a></section>`
+      : "";
+  }
+
+  let methodFilter = "all",
+    fjClass = "A",
+    fjScope = "general",
+    fjPolice = false;
+  function methodsPage(topicId) {
+    if (topicId && C.comparisons.some((t) => t.id === topicId))
+      methodFilter = topicId;
+    const topics = C.comparisons.filter(
+      (t) => methodFilter === "all" || t.id === methodFilter,
+    );
+    const ids = new Set(topics.flatMap((t) => t.refs));
+    const records =
+      methodFilter === "all"
+        ? C.methods
+        : C.methods.filter((m) => ids.has(m.id));
+    return (
+      heading(
+        "COMPARE & PRACTICE",
+        "方法对照",
+        "",
+      ) +
+      `<div class="filters" aria-label="方法模块"><button class="chip ${methodFilter === "all" ? "active" : ""}" data-action="method-filter" data-id="all">全部</button>${C.comparisons.map((t) => `<button class="chip ${methodFilter === t.id ? "active" : ""}" data-action="method-filter" data-id="${t.id}">${t.filterLabel || t.module}</button>`).join("")}</div><details class="roadmap"><summary>五模块来源盘点 · 哪些还没有两位具名教师</summary>${C.comparisons.map((t) => `<div class="coverage-row"><strong>${t.module}<small>同一知识点 · ${t.refs.length} 份出处</small></strong><p>${esc(t.gap)}</p></div>`).join("")}<p class="stat-foot">当前${C.methods.length}份资料中，${C.methods.filter((m) => m.kind === "historical-teacher").length}份有历史教学身份或关联介绍、${C.methods.filter((m) => m.kind === "author").length}份只核实到作者署名、${C.methods.filter((m) => m.kind === "institution").length}份只核实到机构。定义判断、估算和细节判断已有两份具名教学资料；其余专题仍有缺口。</p></details><div class="comparison-list">${topics
+        .map(
+          (t) =>
+            `<section class="panel comparison-card"><span class="pill gray">${t.module} · 两个可核查出处</span><h2>${esc(t.title)}</h2><div class="comparison-sources">${t.refs
+              .map((id) => {
+                const m = C.methods.find((m) => m.id === id);
+                return `<article><h3>${esc(m.name)}</h3><p>${esc(m.observation)}</p><a href="${esc(m.url)}" target="_blank" rel="noopener noreferrer">${esc(m.title)} ↗</a><small>${esc(m.date)} · ${esc(m.publisher)}</small></article>`;
+              })
+              .join(
+                "",
+              )}</div><h3>共通之处</h3><p>${esc(t.agreement)}</p><h3>侧重点与差异</h3><p>${esc(t.difference)}</p><h3>本站独立结论</h3><p>${esc(t.conclusion)}</p><div class="note">适用边界：${esc(t.boundary)}</div><p class="stat-foot">待补：${esc(t.gap)}</p><div class="actions">${btn("学专题与配套训练", "#lesson/" + t.lesson)}${btn(t.module === "申论方法" ? "写作训练" : "练本专题", t.module === "申论方法" ? "#write/w09" : "#quiz/lesson/" + t.lesson, true)}</div></section>`,
+        )
+        .join(
+          "",
+        )}</div><details class="roadmap"><summary>展开本页出处档案 · 身份、年代与使用范围</summary><div class="source-grid method-grid">${records.map((m) => `<article class="panel method-card"><span class="pill gray">${esc(m.topic)} · ${esc(m.date)}</span><h2>${esc(m.name)}</h2><p>${esc(m.identity)}</p><p>${esc(m.application)}</p><p>${esc(m.boundary)}</p><a href="${esc(m.url)}" target="_blank" rel="noopener noreferrer">${esc(m.title)} ↗</a><p class="stat-foot">核对 ${m.checked} · ${esc(m.rights)}</p></article>`).join("")}</div></details><p class="stat-foot">比较为本站独立评论，不是原作者公开论辩或共同结论。原文、商业例题、模板与图片未转载；[<a href="https://www.huatu.com/z/privacy.html" target="_blank" rel="noopener noreferrer">原站版权说明</a>]。资料日期未知处保持未知。</p>`
+    );
+  }
+  function fujianResult() {
+    const group = C.fujian.thresholds[fjScope],
+      row = group[fjClass];
+    return `<section class="panel" id="fujian-result" aria-live="polite"><span class="pill gray">仅2026年度 · ${fjClass}类</span><h2>公告中的最低合格要求</h2><div class="threshold-grid">${row.total === null ? "" : `<div><small>公共科目总分</small><strong>≥ ${row.total}</strong></div>`}<div><small>行政职业能力测验</small><strong>≥ ${row.xingce}</strong></div>${fjPolice ? `<div><small>公安专业科目</small><strong>≥ ${group.police}</strong></div>` : ""}</div><p>以上是合格线，不是某职位进面分数或录用保证。是否适用倾斜政策及专业科目，请核对原通知与具体职位。</p></section>`;
+  }
+  function fujianPage() {
+    return (
+      heading(
+        "FUJIAN · 2026 SNAPSHOT",
+        "福建考情，按年份核对。",
+        "2026年度已发布信息的学习快照；不作为2027年度报名或考试安排。",
+      ) +
+      `<section class="panel"><h2>已核实与待核实分开看</h2><p>2026公告安排：3月14日行测、申论；3月15日公安专业科目。需要其他专业加试的职位另有通知。具体是否参加某科目以职位要求为准。</p><p>2026合格线通知区分A类、B类及加考公安专业科目；下方按通知演示最低合格要求。不是用字母类别猜题型或难度。</p><div class="note">待补：报考指南正文直接读取超时，尚未完整核验2026职位类别与申论卷种对应。因此本页不把A/B、机关层级或国考卷种强行互相映射。</div><a href="${C.fujian.guideUrl}" target="_blank" rel="noopener noreferrer">查看官方2026报考指南 ↗</a></section><section class="panel"><h2>查看2026分类合格线</h2><div class="bank-filters"><label class="bank-field">职位类别<select id="fj-class"><option value="A" ${fjClass === "A" ? "selected" : ""}>A类</option><option value="B" ${fjClass === "B" ? "selected" : ""}>B类</option></select></label><label class="bank-field">通知适用范围<select id="fj-scope"><option value="general" ${fjScope === "general" ? "selected" : ""}>普通标准</option><option value="eligible" ${fjScope === "eligible" ? "selected" : ""}>符合23县倾斜政策的职位</option></select></label></div><label><input type="checkbox" id="fj-police" ${fjPolice ? "checked" : ""}> 职位要求加考公安专业科目</label><p class="stat-foot">倾斜范围包括通知所列县及规定范围内职位，不能只凭居住地选择；请逐条核对原通知。</p></section>${fujianResult()}<section class="panel"><h2>如何安排本站练习</h2><p>先根据目标年份职位表核对笔试科目，再选择需要训练的模块。本网站当前没有福建历年真题库；通用原创练习不等于对应年份原卷。</p><div class="actions">${btn("练通用行测", "#practice")}${btn("练申论方法", "#writing", true)}${btn("福建自然地理", "#lesson/fujian-geography", true)}</div></section><section class="panel"><h2>官方依据与核验边界</h2>${C.fujian.sources.map((x) => `<article class="source-item"><a href="${x.url}" target="_blank" rel="noopener noreferrer">${esc(x.title)} ↗</a><small>${esc(x.publisher)} · ${esc(x.date)}</small><p>${esc(x.scope)}</p></article>`).join("")}<p class="stat-foot">核对 ${C.fujian.checked}；新年度、补充通知和具体职位条件须另查。本页不替代官方报考资格判断。</p></section>`
+    );
+  }
+  function sourcePanel(l) {
+    return `<section class="source-panel"><h2>来源与适用范围</h2><p>${esc(l.basis || "独立编写")} · 整理核对 ${esc(l.updated || "2026-11-05")}</p>${(
+      l.sources || []
+    )
+      .map((id) => {
+        const src = C.sources[id];
+        return `<div class="source-item"><a href="${esc(src.url)}" target="_blank" rel="noopener noreferrer">${esc(src.title)} ↗</a><small>${esc(src.publisher)} · ${esc(src.year)}</small><p>${esc(src.scope)}</p></div>`;
+      })
+      .join(
+        "",
+      )}<p class="stat-foot">来源支持其标明的事实或范围；解题步骤、数字例子与练习由本站独立编写，不是官方例题或评分。</p></section>`;
+  }
+  function arrowFigure(deg, label, marked = false) {
+    return `<svg class="study-figure" viewBox="0 0 100 100" role="img" aria-label="${esc(label)}"><rect x="4" y="4" width="92" height="92" rx="14" fill="#fff" stroke="#dfe2ef"/><g transform="rotate(${deg} 50 50)"><path d="M50 76V25m-17 17 17-17 17 17" stroke="#5055db" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>${marked ? '<circle cx="24" cy="24" r="5" fill="#202535"/>' : ""}</g></svg>`;
+  }
+  function gridFigure(bits, label) {
+    return `<div class="bit-figure" role="img" aria-label="${esc(label)}：${bits}">${[...bits].map((bit) => `<span class="bit ${bit === "1" ? "filled" : ""}"></span>`).join("")}</div>`;
+  }
+
+  const visual = window.STUDY_VISUAL;
+  let featureExample = 0, featureTurns = 0, featureMirrored = false, solidTurns = 0;
+  const featureExamples = [
+    { name: "外圈与孔洞", rows: ["111", "101", "111"] },
+    { name: "中心对称与轴对称", rows: ["110", "010", "011"] },
+    { name: "角点接触", rows: ["101", "010", "101"] },
+    { name: "共边连通", rows: ["100", "100", "110"] },
+  ];
+  function featureFigure(rows, label) {
+    const size = rows.length, cell = 84 / size;
+    return `<svg class="feature-grid" viewBox="0 0 100 100" role="img" aria-label="${esc(label)}：上到下各行为${rows.join("、")}，1为黑格，0为白格">${rows.map((row, y) => [...row].map((bit, x) => `<rect x="${8 + x * cell}" y="${8 + y * cell}" width="${cell}" height="${cell}" fill="${bit === "1" ? "#282e46" : "white"}" stroke="#c9cfdf" stroke-width="0.8"/>`).join("")).join("")}</svg>`;
+  }
+  function featureDemo() {
+    const sample = featureExamples[featureExample];
+    let rows = featureMirrored ? visual.mirror(sample.rows) : sample.rows;
+    for (let i = 0; i < featureTurns; i++) rows = visual.rotate(rows);
+    const f = visual.features(rows);
+    return `<section class="diagram-box" id="lesson-demo"><div class="panel-head"><h2>动手观察 · 数量与属性</h2><span class="pill gray">共边才相连</span></div><div class="filters" aria-label="选择方格示例">${featureExamples.map((v, i) => `<button class="chip ${i === featureExample ? "active" : ""}" data-action="feature-example" data-id="${i}" aria-pressed="${i === featureExample}">${v.name}</button>`).join("")}</div><div class="feature-demo-figure">${featureFigure(rows, sample.name)}</div><p class="diagram-caption" aria-live="polite">黑格 ${f.black} · 连通部分 ${f.parts} · 孔洞 ${f.holes}<br>中心对称：${f.central ? "是" : "否"}；四条候选轴中，${f.axes.length ? f.axes.join("、") + "对称" : "没有对称轴"}。<br>已顺时针转 ${featureTurns * 90}°${featureMirrored ? "，并先做左右镜像" : ""}。</p><div class="actions"><button class="btn" data-action="feature-turn">顺时针转90°</button><button class="btn secondary" data-action="feature-mirror">左右镜像</button><button class="btn secondary" data-action="feature-reset">重置图形</button></div><p class="stat-foot">灰线只辅助定位；孔洞按上下左右的白格通路判断。水平、竖直与两条对角线均过外框中心；这里不统计其他模型的对称轴。</p></section>`;
+  }
+  function solidRotationDemo() {
+    let rows = ["23", "10"];
+    for (let i = 0; i < solidTurns; i++) rows = visual.rotate(rows);
+    const heights = [0, 1].map(c => Math.max(...rows.map(row => Number(row[c]))));
+    return `<div class="solid-rotation-demo"><h3>整体旋转后，再从固定近侧看</h3><p class="stat-foot">俯视纸面上方为远、下方为近；固定观察方向不动。</p><div class="rotation-height-map" role="img" aria-label="旋转${solidTurns * 90}度后柱高：远排${rows[0].split("").join("、")}；近排${rows[1].split("").join("、")}"><span>远排</span>${[...rows[0]].map(v => `<b>${v}</b>`).join("")}<span>近排</span>${[...rows[1]].map(v => `<b>${v}</b>`).join("")}</div><p class="rotation-caption" aria-live="polite">顺时针 ${solidTurns * 90}° · 正视高度从左到右 ${heights.join("、")}；总块数始终为6。</p><div class="actions"><button class="btn" data-action="solid-turn">柱高整体转90°</button><button class="btn secondary" data-action="solid-reset">重置柱高方向</button></div></div>`;
+  }
+
+  let cubeFace = "C",
+    cubeBack = false,
+    solidView = "front";
+  const netCells = [
+    ["A", 1, 0],
+    ["B", 0, 1],
+    ["C", 1, 1],
+    ["D", 2, 1],
+    ["E", 1, 2],
+    ["F", 1, 3],
+  ];
+  const opposite = { A: "E", E: "A", B: "D", D: "B", C: "F", F: "C" };
+  const stacks = [
+    [2, 1, 0],
+    [1, 3, 1],
+  ]; // Near row, then far row; each from left to right.
+  function cubeNet(selected = null) {
+    return `<svg class="net-figure" viewBox="0 0 192 252" role="img" aria-label="正方体展开图：C上方A、左侧B、右侧D、下方E，E下方F">${netCells.map(([name, x, y]) => `<g><rect x="${x * 60 + 6}" y="${y * 60 + 6}" width="60" height="60" rx="3" fill="${name === selected ? "#595ce8" : selected && name === opposite[selected] ? "#e3b760" : "#f1f2fc"}" stroke="#858ba6"/><text x="${x * 60 + 36}" y="${y * 60 + 44}" text-anchor="middle" fill="${name === selected ? "white" : "#242942"}" font-size="24">${name}</text></g>`).join("")}</svg>`;
+  }
+  function cubeSolid() {
+    const face = cubeBack ? ["A", "F", "B"] : ["A", "C", "D"];
+    const points = [
+      "80,8 148,45 80,82 12,45",
+      "12,45 80,82 80,160 12,123",
+      "80,82 148,45 148,123 80,160",
+    ];
+    const centers = [
+      [80, 50],
+      [46, 108],
+      [114, 108],
+    ];
+    return `<svg class="cube-figure" viewBox="0 0 160 175" role="img" aria-label="折叠示意：上${face[0]}，左侧可见${face[1]}，右侧可见${face[2]}；只标记面，不表示字母朝向">${face.map((n, i) => `<polygon points="${points[i]}" fill="${n === cubeFace ? "#595ce8" : n === opposite[cubeFace] ? "#e3b760" : ["#f1f2fc", "#e3e5fb", "#d5d9f6"][i]}" stroke="#858ba6"/><text x="${centers[i][0]}" y="${centers[i][1]}" text-anchor="middle" font-size="24" fill="${n === cubeFace ? "white" : "#242942"}">${n}</text>`).join("")}</svg>`;
+  }
+  function heightMap() {
+    return `<div class="height-map" role="img" aria-label="完整柱高：远排从左到右1、3、1；近排从左到右2、1、0。正视方向从近排向远排。"><span>远排</span>${stacks[1].map((n) => `<b>${n}</b>`).join("")}<span>近排</span>${stacks[0].map((n) => `<b class="${n ? "" : "zero"}">${n}</b>`).join("")}<small>↑ 正视方向</small></div>`;
+  }
+  function projection() {
+    const top = solidView === "top",
+      heights = top
+        ? null
+        : solidView === "front"
+          ? [0, 1, 2].map((i) => Math.max(...stacks.map((row) => row[i])))
+          : stacks.map((row) => Math.max(...row));
+    let blocks = [];
+    if (top)
+      for (let y = 0; y < 2; y++)
+        for (let x = 0; x < 3; x++) if (stacks[1 - y][x]) blocks.push([x, y]);
+
+    if (!top)
+      for (let x = 0; x < heights.length; x++)
+        for (let h = 0; h < heights[x]; h++) blocks.push([x, 2 - h]);
+    const label = top
+      ? "俯视投影5格"
+      : solidView === "front"
+        ? "正视轮廓从左到右2、3、1"
+        : "侧视轮廓按近排到远排为2、3";
+    return `<svg class="projection-figure" viewBox="0 0 150 150" role="img" aria-label="${label}">${blocks.map(([x, y]) => `<rect x="${x * 42 + 12}" y="${y * 42 + 12}" width="40" height="40" rx="3" fill="#7c80e8" stroke="#4c52a3"/>`).join("")}</svg>`;
+  }
+  function spatialDemo(l) {
+    if (l.diagram === "cube-net")
+      return `<section class="diagram-box" id="lesson-demo"><div class="panel-head"><h2>动手观察 · 正方体</h2><span class="pill gray">原创示意</span></div><div class="spatial-row">${cubeNet(cubeFace)}<span aria-hidden="true">→</span>${cubeSolid()}</div><div class="filters" aria-label="选择观察的面">${Object.keys(
+        opposite,
+      )
+        .sort()
+        .map(
+          (n) =>
+            `<button class="chip ${n === cubeFace ? "active" : ""}" data-action="cube-face" data-id="${n}" aria-pressed="${n === cubeFace}">${n} 面</button>`,
+        )
+        .join(
+          "",
+        )}</div><p class="diagram-caption" aria-live="polite"><strong>${cubeFace} 面</strong>（紫色）与 <strong>${opposite[cubeFace]} 面</strong>（金色）相对；与 ${Object.keys(
+        opposite,
+      )
+        .sort()
+        .filter((n) => n !== cubeFace && n !== opposite[cubeFace])
+        .join(
+          "、",
+        )} 相邻。</p><button class="btn secondary" data-action="cube-turn">换一个观察方向</button><p class="stat-foot">右图仅展示三个可见面；隐藏面也保留关系。字母只标面，未模拟字母朝向。</p></section>`;
+    return `<section class="diagram-box" id="lesson-demo"><div class="panel-head"><h2>动手观察 · 柱高与投影</h2><span class="pill gray">柱内无空洞</span></div><div class="spatial-row">${heightMap()}<span aria-hidden="true">→</span>${projection()}</div><div class="filters">${[
+      ["front", "正视"],
+      ["top", "俯视"],
+      ["side", "侧视"],
+    ]
+      .map(
+        ([id, label]) =>
+          `<button class="chip ${solidView === id ? "active" : ""}" data-action="solid-view" data-id="${id}" aria-pressed="${solidView === id}">${label}</button>`,
+      )
+      .join(
+        "",
+      )}</div><p class="diagram-caption" aria-live="polite">${solidView === "front" ? "正视：每列取前后最大值，高度依次 2、3、1。" : solidView === "top" ? "俯视：五个位置有柱子，所以投影占 5 格。" : "侧视：按近排到远排展示，各排最高分别为 2、3。"}</p><p class="stat-foot">柱高表数字是完整高度。总块数为 8；投影格数不是总块数。</p>${solidRotationDemo()}</section>`;
+  }
+
+  function diagram(l) {
+    if (!l.diagram) return "";
+    if (l.diagram === "figure-features") return featureDemo();
+    if (["cube-net", "solid-views"].includes(l.diagram)) return spatialDemo(l);
+    if (l.diagram === "rotation")
+      return `<section class="diagram-box" id="lesson-demo"><div class="panel-head"><h2>动手观察 · 旋转</h2><span class="pill gray">原创示意</span></div><div class="figure-row">${arrowFigure(0, "起始：箭头向上，黑点左上", true)}<span>→</span>${arrowFigure(diagramStep * 90, `第${diagramStep}步`, true)}</div><p class="diagram-caption" aria-live="polite">已转 ${diagramStep} 步，每步顺时针90°；箭头与黑点一起旋转。</p><div class="actions"><button class="btn" data-action="rotate-demo">下一步 ↻</button><button class="btn secondary" data-action="reset-demo">重置</button></div></section>`;
+    const a = "110",
+      b = "101",
+      result =
+        diagramRule === "xor" ? "011" : diagramRule === "union" ? "111" : "100";
+    return `<section class="diagram-box" id="lesson-demo"><div class="panel-head"><h2>动手观察 · 叠加</h2><span class="pill gray">黑1 / 白0</span></div><div class="figure-row"><div>A${gridFigure(a, "图A")}</div><span>+</span><div>B${gridFigure(b, "图B")}</div></div><div class="filters">${[
+      ["union", "并集"],
+      ["intersection", "交集"],
+      ["xor", "异或"],
+    ]
+      .map(
+        ([id, text]) =>
+          `<button class="chip ${diagramRule === id ? "active" : ""}" aria-pressed="${diagramRule === id}" data-action="overlay-demo" data-id="${id}">${text}</button>`,
+      )
+      .join(
+        "",
+      )}</div><div class="figure-row" aria-live="polite"><span>结果</span>${gridFigure(result, "叠加结果")}<strong>${result}</strong></div><p class="diagram-caption">${diagramRule === "xor" ? "不同色才保留黑格。" : diagramRule === "union" ? "至少一幅是黑格就保留。" : "只有两幅都黑才保留。"}</p></section>`;
+  }
+  function questionGraphic(q) {
+    if (!q.graphic) return "";
+    if (q.graphic.type === "feature-grid")
+      return `<div class="question-features">${featureFigure(q.graphic.values, q.graphic.label || "题目方格图")}</div>`;
+    if (q.graphic.type === "feature-pair")
+      return `<div class="question-features">${q.graphic.values.map((rows, i) => `<div><strong>${i === 0 ? "甲" : "乙"}</strong>${featureFigure(rows, i === 0 ? "甲图" : "乙图")}</div>`).join("")}</div>`;
+    if (q.graphic.type === "cube-net")
+      return `<div class="question-spatial">${cubeNet()}</div>`;
+    if (q.graphic.type === "height-map")
+      return `<div class="question-spatial">${heightMap()}</div>`;
+    if (q.graphic.type === "bits")
+      return `<div class="question-figures">${q.graphic.values.map((bits, i) => `<div>${i === 0 ? "A" : "B"}${gridFigure(bits, `图${i === 0 ? "A" : "B"}`)}</div>`).join("")}<span class="figure-question">?</span></div>`;
+    return `<div class="question-figures" aria-label="题目图形序列">${q.graphic.values.map((deg) => arrowFigure(deg, { 0: "向上", 90: "向右", 180: "向下", 270: "向左" }[deg]+(q.graphic.marked ? "，含同步旋转的黑点" : ""),Boolean(q.graphic.marked))).join("")}<span class="figure-question">?</span></div>`;
+  }
+  let coverageModule = "all",
+    coverageStatus = "all";
+  function coverageMatrixResults() {
+    const groups = C.coverageMatrix.filter(
+      (g) => coverageModule === "all" || g.module === coverageModule,
+    );
+    const count = groups.reduce(
+      (n, g) =>
+        n +
+        [...g.topics, ...g.gaps].filter(
+          (t) => coverageStatus === "all" || t.status === coverageStatus,
+        ).length,
+      0,
+    );
+    return `<p class="stat-foot" role="status">当前 ${count} 个目录条目；条目是本站划分，不是考试考点总数。</p>${groups
+      .map((g) => {
+        const rows = [...g.topics, ...g.gaps].filter(
+          (t) => coverageStatus === "all" || t.status === coverageStatus,
+        );
+        return `<details class="roadmap coverage-module" ${coverageModule !== "all" || coverageStatus !== "all" ? "open" : ""}><summary>${g.module} · ${g.topics.length} 篇讲义 / ${g.topics.reduce((n, t) => n + t.questionIds.length, 0)} 道原创题 / ${g.topics.reduce((n, t) => n + t.writingIds.length, 0)} 个写作练习</summary><div class="coverage-topics">${rows.map((t) => `<article class="coverage-topic" data-topic="${esc(t.id)}" data-status="${t.status}"><span class="pill ${t.status === "missing" ? "gray" : ""}">${t.status === "missing" ? "待建设 / 待扩充" : "已有入门"}${C.coverageAdded.includes(t.id) ? " · 本轮补空白" : C.coverageDeepened?.includes(t.id) ? " · 本轮深化" : C.coveragePracticeExpanded?.includes(t.id) ? " · 本轮扩充练习" : ""}</span><h3>${esc(t.title)}</h3><p>${esc(t.scope)}</p><p class="coverage-counts">${t.lessonIds.length} 篇讲义 · ${t.questionIds.length} 道原创题 · ${t.writingIds.length} 个写作练习</p><p class="stat-foot">${esc(t.remaining)}</p>${t.lessonIds.length ? `<div class="actions">${btn("阅读讲义", "#lesson/" + t.lessonIds[0], true)}${t.questionIds.length ? btn(`练 ${t.questionIds.length} 道配套题`, "#quiz/lesson/" + t.lessonIds[0]) : t.writingIds.length ? btn(`写作训练 · ${t.writingIds.length} 个任务`, "#write/" + t.writingIds[0]) : ""}</div>` : '<p class="stat-foot">此缺口没有可供练习的题组，不以其他题型填充。</p>'}</article>`).join("")}</div></details>`;
+      })
+      .join("")}`;
+  }
+  function coverageMatrixPage() {
+    return (
+      heading(
+        "COVERAGE, WITH BOUNDARIES",
+        "已有多少，缺在哪里。",
+        "按模块查看讲义、配套题与待建设项，再决定下一步学什么。",
+      ) +
+      `<section class="panel"><div class="actions"><span class="pill">${C.lessons.length} 篇讲义</span><span class="pill">${C.questions.length} 道原创题</span><span class="pill">${C.writing.length} 个写作练习</span></div><p>这是本站内容盘点，不是官方完整大纲或完成率。入门条目只有少量练习，不代表该题型已全面覆盖；当前历年真题收录为0，难度未标定。</p><div class="bank-filters"><label class="bank-field">选择模块<select id="coverage-module"><option value="all">全部模块</option>${C.coverageMatrix.map((g) => `<option ${coverageModule === g.module ? "selected" : ""}>${g.module}</option>`).join("")}</select></label><label class="bank-field">查看范围<select id="coverage-status"><option value="all">已有与缺口</option><option value="intro" ${coverageStatus === "intro" ? "selected" : ""}>已有入门</option><option value="missing" ${coverageStatus === "missing" ? "selected" : ""}>待建设 / 待扩充</option></select></label></div><p class="stat-foot">当前${C.lessons.filter(l=>l.learningLevels).length}课已逐层编写，${C.lessons.filter(l=>!l.learningLevels).length}课仍待分层。每课路径与题组见对应讲义；层级是教学安排，不是实测难度或能力认证。</p></section><section id="coverage-results">${coverageMatrixResults()}</section><details class="roadmap"><summary>数量关系：两位具名教师出处核验</summary><p>目前仍缺同题型两位具名教师的可靠出处链；已收录一份行程署名作者资料，见出处与对照。以下为历史未采用候选，本轮未重查，不计入已核实方法数量。</p>${C.quantitySourceAudit.map((x) => `<article class="source-item"><a href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">${esc(x.title)} ↗</a><small>${esc(x.date)}</small><p>${esc(x.identity)}</p><p>${esc(x.result)}</p></article>`).join("")}<p class="stat-foot">核对2026-11-05。公开可读不等于有转载许可；未复制商业题干、解析、图片或模板。已采用的其他历史方法见<a href="#methods">出处与对照</a>。</p></details>`
+    );
+  }
+  function coverageRows() {
+    return C.coverage
+      .map(
+        ([cat, included, gap]) =>
+          `<div class="coverage-row"><strong>${cat}<small>${C.lessons.filter((l) => l.category === cat).length} 篇 · ${C.questions.filter((q) => lesson(q.lesson).category === cat).length} 道选择题</small></strong><div><p>${included}</p><small>待补：${gap}</small></div></div>`,
+      )
+      .join("");
+  }
+  function roadmap() {
+    return `<details class="roadmap"><summary>备考路线与实际覆盖 · 展开查看</summary><div class="note">先学基础与方法 → 配套练习 → 错题回看 → 申论材料写作。国考题型参照2026年度官方大纲；新年度和福建具体职位要求应另查公告。本版不是完整教材，也没有两套独立真题库。</div>${coverageRows()}<a class="text-button" href="#sources">查看全部来源、年份与编写边界 →</a> · <a class="text-button" href="#methods">方法出处与对照 →</a></details>`;
+  }
+  function sourcesPage() {
+    return (
+      heading(
+        "SOURCES & SCOPE",
+        "资料来源与范围",
+        "事实查来源，方法看条件，练习用原创。来源核对日期：2026-11-05。",
+      ) +
+      `<section class="panel"><h2>实际覆盖</h2><a class="text-button" href="#coverage">逐专题查看题数与空白 →</a>${coverageRows()}</section><div class="section-head"><h2>公开参考资料</h2><span class="pill">${Object.keys(C.sources).length} 项</span></div><div class="source-grid">${Object.values(
+        C.sources,
+      )
+        .map(
+          (src) =>
+            `<article class="panel"><h3><a href="${esc(src.url)}" target="_blank" rel="noopener noreferrer">${esc(src.title)} ↗</a></h3><span class="pill gray">${esc(src.year)}</span><p class="stat-foot">${esc(src.publisher)}</p><p>${esc(src.scope)}</p><small>核对：${src.checked}</small></article>`,
+        )
+        .join(
+          "",
+        )}</div><div class="note notice"><a href="#methods">查看历史方法资料与本站独立对照 →</a><br>未复制商业题库、教材图表或官方样题。数学公式为基础演绎，图示与虚构材料由本站独立编写。政治与法律页面只覆盖所列基础条目；法规和年度文件可能更新，请以权威文本为准。</div>`
+    );
+  }
+  function pathChoices(base, selected = "") {
+    return `<nav class="learning-paths" aria-label="学习路径"><a class="chip ${!selected ? "active" : ""}" href="${base}" ${!selected ? 'aria-current="page"' : ''}>完整讲义</a>${Object.entries(C.learningPaths).map(([id,p])=>`<a class="chip ${selected===id?"active":""}" href="${base}/${id}" ${selected===id?'aria-current="page"':''}>${esc(p.label)}</a>`).join("")}</nav>`;
+  }
+  function levelGuide(l, selected) {
+    const path=l.learningLevels?.[selected];
+    if(!path) return "";
+    const ids=[...new Set(path.questionIds || l.practice.filter(id=>question(id)?.meta.trainingStage===path.stage))].filter(id=>l.practice.includes(id) && question(id)?.lesson===l.id);
+    const tasks=[...new Set(path.writingIds || [])].map(writing).filter(w=>w && w.lesson===l.id);
+    return `<section class="level-guide"><span class="pill">${esc(path.label)}</span><h2>${esc(path.goal)}</h2><p>${tasks.length?`${tasks.length}个原创写作任务`:`${ids.length}道${esc(path.stage)}练习`}。路径不是能力诊断或实测难度。</p><div class="actions">${ids.length?btn("练本路径 · "+ids.length+"题", "#quiz/target/"+ids.join(",")):""}${tasks.map((w,i)=>btn(tasks.length===1?"写本路径 · 1个任务":`写作任务 ${i+1} · ${w.title}`,"#write/"+w.id)).join("")}</div>${!ids.length&&!tasks.length?"<p>本路径配套训练待补，可先阅读讲解。</p>":""}</section>`;
+  }
+  function lessonCards() {
+    const list = C.lessons.filter(
+      (l) =>
+        (catalogFilter === "全部" || l.category === catalogFilter) &&
+        (!learningPath || Boolean(l.learningLevels?.[learningPath])) &&
+        (!onlySaved || state.favorites.includes(l.id)) &&
+        (!query ||
+          [l.title, l.subtitle, l.category, ...l.tags, ...l.sections.flat()]
+            .join(" ")
+            .includes(query)),
+    );
+    return `<p class="stat-foot" aria-live="polite">找到 ${list.length} 篇讲义 · 基础方法整理，非官方教材</p><div class="catalog-grid">${list.map((l) => `<article class="card lesson-card"><div class="card-top"><span class="pill ${l.category === "申论方法" ? "green" : "gray"}">${esc(l.category)}</span><button class="small-icon ${state.favorites.includes(l.id) ? "saved" : ""}" data-action="favorite" data-id="${l.id}" aria-pressed="${state.favorites.includes(l.id)}" aria-label="收藏：${esc(l.title)}">${icon("star")}</button></div><a href="#lesson/${l.id}${learningPath ? "/"+learningPath : ""}"><h3>${esc(l.title)}</h3></a><a class="card-bottom" href="#lesson/${l.id}${learningPath ? "/"+learningPath : ""}"><span>${l.minutes} 分钟 · ${l.practice.length ? l.practice.length + " 道配套题" : "写作方法"} ${state.read.includes(l.id) ? "· 已读" : ""}</span>${icon("arrow")}</a></article>`).join("")}</div>${list.length ? "" : empty("没有找到对应讲义", "试试其他关键词，或取消分类和收藏筛选。", '<button class="btn secondary" data-action="reset-search">重置筛选</button>')}`;
+  }
+  function learn() {
+    const choice=location.hash.split("/")[1];
+    learningPath=Object.keys(C.learningPaths).includes(choice)?choice:"";
+    return (
+      heading(
+        "KNOWLEDGE MAP",
+        "知识地图",
+        "",
+        btn("查看覆盖矩阵", "#coverage", true),
+      ) +
+      window.STUDY_COURSE.entry() + studyRoutes() +
+      `<section class="panel"><h2>学习路径</h2>${pathChoices("#learn",learningPath)}</section>` +
+      roadmap() +
+      `<label class="search-box">${icon("search")}<input id="search" aria-label="搜索知识点" placeholder="搜索知识点、公式或技巧…" value="${esc(query)}"></label><div class="filters">${C.categories.map((c) => `<button class="chip ${c === catalogFilter ? "active" : ""}" data-action="filter" data-id="${c}" aria-pressed="${c === catalogFilter}">${c}</button>`).join("")}<button class="chip ${onlySaved ? "active" : ""}" data-action="saved-filter" aria-pressed="${onlySaved}">★ 收藏</button></div><div id="catalog">${lessonCards()}</div>`
+    );
+  }
+  // Hide only the established attribution notes, not teaching about multiple sources.
+  const attributionHeadings=new Set(["方法归属与答后检查", "历史出处与使用边界", "历史出处与本站对照的归属", "复盘与来源边界", "练习复盘与出处边界", "来源边界与复盘检查", "两个出处的同与异"]);
+  function lessonPage(id, pathId) {
+    const l = lesson(id);
+    if (!l) return missing();
+    const selected=Object.keys(C.learningPaths).includes(pathId) && l.learningLevels?.[pathId]?pathId:"";
+    const sections=(selected ? l.learningLevels[selected].sections.map(i=>l.sections[i]) : l.sections).filter(item=>item && !attributionHeadings.has(item[0]));
+    const inTheory = C.theoryTrack?.steps.some(s => s.lessonId === l.id);
+    return `<a class="back-link" href="#learn">${icon("back")}知识地图</a>${inTheory ? '<span class="muted" aria-hidden="true"> · </span><a class="back-link" href="#theory">返回政治理论路线</a>' : ""}<div class="reading-grid"><article class="panel reading"><span class="pill">${esc(l.category)} · 学习讲义</span><h1>${esc(l.title)}</h1><span class="muted" style="font-size:12px">约 ${l.minutes} 分钟 · ${l.tags.map(esc).join(" / ")} · 更新 ${esc(l.updated || "2026-11-05")}${l.versionNote ? " · "+esc(l.versionNote):""}</span>${l.learningLevels ? pathChoices("#lesson/"+l.id,selected)+levelGuide(l,selected):""}<div class="formula">${esc(l.formula)}</div>${theoryLearningGuide(l)}${diagram(l)}${sections.map((s) => `<section><h2>${esc(s[0])}</h2><p>${esc(s[1])}</p></section>`).join("")}<p class="stat-foot"><a href="#sources">资料说明</a> · <a href="#methods">方法对照</a></p><div class="note">学习讲义并非官方教材，适用条件以题干为准。</div><div class="actions"><button class="btn" data-action="read" data-id="${l.id}">${icon("check")}${state.read.includes(l.id) ? "已读 · 点击取消" : "标记已读"}</button><button class="btn secondary" data-action="favorite" data-id="${l.id}" aria-pressed="${state.favorites.includes(l.id)}">${icon("star")}${state.favorites.includes(l.id) ? "已收藏" : "收藏讲义"}</button></div></article><aside class="stack sticky"><div class="panel"><h2>配套练习</h2><p class="subtitle">${l.practice.length ? `${l.practice.length} 道原创题` : "写作任务"}</p><div class="actions">${btn(l.practice.length ? "练配套题" : "去申论写作", l.practice.length ? "#quiz/lesson/" + l.id : "#write/" + (C.writing.find((w) => w.lesson === l.id)?.id || "w01"))}</div></div><div class="panel"><label class="field-label" for="lesson-note">我的笔记</label><textarea id="lesson-note" data-note="${l.id}" rows="7" maxlength="10000" placeholder="输入笔记">${esc(state.notes[l.id] || "")}</textarea><div class="field-meta"><span id="note-status">仅保存在当前浏览器</span></div></div></aside></div>`;
+  }
+
+  const bankDefaults = () => ({
+    search: "",
+    module: "",
+    type: "",
+    knowledge: "",
+    target: "",
+    origin: "",
+    year: "",
+    difficulty: "",
+    status: "",
+    stage: "",
+  });
+  let bankFilter = bankDefaults(),
+    bankPage = 0;
+  function filteredQuestions(f = bankFilter) {
+    const wrong = new Set(wrongIds()),
+      done = new Set(state.attempts.map((a) => a.qid));
+    return C.questions.filter((q) => {
+      const m = q.meta;
+      const haystack = [
+        q.id,
+        q.stem,
+        lesson(q.lesson).title,
+        m.module,
+        m.type,
+        ...m.tags,
+      ]
+        .join(" ")
+        .toLowerCase();
+      return (
+        (!f.search || haystack.includes(f.search.toLowerCase())) &&
+        (!f.module || m.module === f.module) &&
+        (!f.stage || m.trainingStage === f.stage) &&
+        (!f.type || m.type === f.type) &&
+        (!f.knowledge || m.knowledgeIds.includes(f.knowledge)) &&
+        (!f.target || m.applicableExams.includes(f.target)) &&
+        (!f.origin ||
+          (f.origin === "original"
+            ? m.source.kind === "original"
+            : m.examSource.system === f.origin)) &&
+        (!f.year ||
+          (f.year === "none"
+            ? m.examSource.year === null
+            : String(m.examSource.year) === f.year)) &&
+        (!f.difficulty ||
+          (f.difficulty === "unrated"
+            ? m.difficulty.level === null
+            : m.difficulty.level === f.difficulty)) &&
+        (!f.status ||
+          (f.status === "wrong"
+            ? wrong.has(q.id)
+            : f.status === "new"
+              ? !done.has(q.id)
+              : done.has(q.id)))
+      );
+    });
+  }
+  function bankSelect(name, label, options) {
+    return `<label class="bank-field">${label}<select id="bank-${name}" data-bank="${name}"><option value="">全部</option>${options.map(([v, t]) => `<option value="${esc(v)}" ${bankFilter[name] === String(v) ? "selected" : ""}>${esc(t)}</option>`).join("")}</select></label>`;
+  }
+  function bankResults() {
+    const rows = filteredQuestions(),
+      pages = Math.max(1, Math.ceil(rows.length / 12));
+    bankPage = Math.min(bankPage, pages - 1);
+    const params = new URLSearchParams(
+      Object.entries(bankFilter).filter(([, v]) => v),
+    ).toString();
+    const route = "#quiz/filtered/" + encodeURIComponent(params);
+    const wrong = new Set(wrongIds()),
+      done = new Set(state.attempts.map((a) => a.qid));
+    return `<div class="bank-result-head"><p role="status">找到 <strong>${rows.length}</strong> 道题 · 第 ${bankPage + 1} / ${pages} 页</p>${rows.length ? btn("练习筛选结果", route) : ""}</div>${
+      rows.length
+        ? `<div class="bank-list">${rows
+            .slice(bankPage * 12, (bankPage + 1) * 12)
+            .map(
+              (q) =>
+                `<article class="panel bank-question"><div class="bank-tags"><span class="pill gray">${q.id.toUpperCase()} · ${esc(q.meta.module)}</span><span class="pill ${wrong.has(q.id) ? "" : "gray"}">${wrong.has(q.id) ? "待巩固" : done.has(q.id) ? "已练习" : "未练习"}</span></div><h3>${esc(q.stem)}</h3><p class="stat-foot">${esc(q.meta.type)} · ${esc(q.meta.trainingStage)} · ${q.meta.tags.map(esc).join(" / ")}</p><p class="stat-foot">原创 · 无真题年份 · 难度未标定</p><div class="actions">${btn("做这道题", "#quiz/one/" + q.id)}<a class="text-button" href="#lesson/${q.lesson}">先学知识点 →</a></div></article>`,
+            )
+            .join(
+              "",
+            )}</div><div class="bank-pagination"><button class="btn secondary" data-action="bank-prev" ${bankPage === 0 ? "disabled" : ""}>上一页</button><span>${bankPage + 1} / ${pages}</span><button class="btn secondary" data-action="bank-next" ${bankPage === pages - 1 ? "disabled" : ""}>下一页</button></div>`
+        : empty(
+            "暂时没有匹配的题目",
+            "当前全部为原创练习，尚未收录经核验授权的国考或福建历年真题。可放宽条件，继续练已有内容。",
+            '<button class="btn secondary" data-action="bank-reset">清除筛选</button>',
+          )
+    }`;
+  }
+  function bank() {
+    const uniques = (key) =>
+      [...new Set(C.questions.map((q) => q.meta[key]))].map((x) => [x, x]);
+    const years = [
+      ...new Set(
+        C.questions
+          .map((q) => q.meta.examSource.year)
+          .filter((x) => x !== null),
+      ),
+    ]
+      .sort((a, b) => b - a)
+      .map((x) => [String(x), String(x)]);
+    const levels = [
+      ...new Set(
+        C.questions.map((q) => q.meta.difficulty.level).filter(Boolean),
+      ),
+    ].map((x) => [x, x]);
+    return (
+      heading(
+        "QUESTION FINDER",
+        "题库筛选",
+        "",
+      ) +
+      `<a class="back-link" href="#practice">${icon("back")}专项练习</a><section class="panel"><label class="field-label" for="bank-search">搜索题目、知识点或题号</label><input id="bank-search" class="bank-search" type="search" value="${esc(bankFilter.search)}" placeholder="试试：相对面、浓度、q64" maxlength="100"><div class="bank-filters">${bankSelect("module", "模块", uniques("module"))}${bankSelect("type", "题型", uniques("type"))}${bankSelect(
+        "stage",
+        "训练层次",
+        [
+          ["识别概念", "识别概念"],
+          ["迁移运用", "迁移运用"],
+          ["检查边界", "检查边界"],
+          ["未分层", "此前题目（未分层）"],
+        ],
+      )}</div><details class="bank-advanced"><summary>更多筛选 · 知识点、错题、来源与年份</summary><div class="bank-filters">${bankSelect(
+        "knowledge",
+        "知识点",
+        C.lessons.filter((l) => l.practice.length).map((l) => [l.id, l.title]),
+      )}${bankSelect("target", "学习方向", [
+        ["national", "国考通用练习"],
+        ["fujian", "福建省考通用练习"],
+      ])}${bankSelect("origin", "题目来源", [
+        ["original", "本站原创"],
+        ["national", "国考真题（按来源）"],
+        ["fujian", "福建真题（按来源）"],
+      ])}${bankSelect("year", "考试年份", [["none", "无考试年份（原创）"], ...years])}${bankSelect("difficulty", "难度标定", [["unrated", "未标定"], ...levels])}${bankSelect(
+        "status",
+        "本机学习状态",
+        [
+          ["new", "尚未练习"],
+          ["wrong", "当前错题"],
+          ["done", "已练习"],
+        ],
+      )}</div></details><div class="actions"><button class="btn secondary" data-action="bank-reset">清除筛选</button></div><p class="stat-foot">训练层次表示编写目标，不是实测难度。学习方向是适用建议，不是真题出处。现有 ${C.questions.length} 道均为原创，无真题年份，难度尚无样本标定。</p></section><div id="bank-results">${bankResults()}</div>`
+    );
+  }
+  function questionMaterial(q) {
+    const m = C.questionMaterials?.[q.materialId];
+    if (!m) return "";
+    return `<section class="question-material" aria-label="本题共用材料"><h2>${esc(m.title)}</h2><p>${esc(m.note)}</p>${m.tables.map((t) => `<div class="data-table-wrap"><table><caption>${esc(t.caption)}</caption><thead><tr>${t.columns.map((c) => `<th scope="col">${esc(c)}</th>`).join("")}</tr></thead><tbody>${t.rows.map((row) => `<tr>${row.map((v, i) => (i ? `<td>${esc(v)}</td>` : `<th scope="row">${esc(v)}</th>`)).join("")}</tr>`).join("")}</tbody></table></div>`).join("")}<p class="stat-foot">同一材料下可有多个设问；每题作答单独记录。</p></section>`;
+  }
+  function optionReview(q) {
+    return q.optionReviews
+      ? `<div class="option-review"><h2>逐项核对</h2><ul>${q.optionReviews.map((r, i) => `<li><strong>${String.fromCharCode(65 + i)} · ${i === q.answer ? "符合题意" : "排除"}</strong> ${esc(r)}</li>`).join("")}</ul></div>`
+      : "";
+  }
+  function questionMeta(q) {
+    const m = q.meta,
+      year = m.examSource.year === null ? "无考试年份" : m.examSource.year;
+    return `<details class="question-meta"><summary>题目档案 · 来源、条件与难度</summary><p>${esc(m.type)} · ${esc(m.module)} · ${m.tags.map(esc).join(" / ")}</p><p>训练层次：${esc(m.trainingStage)}；目标：${esc(m.trainingGoal)}。</p><p>出处：${esc(m.source.title)}；${esc(year)}。难度：${esc(m.difficulty.level || "未标定")}。用途：${esc(m.purpose)}。</p><p>${esc(m.rights.note)}</p><p>答案核对：${esc(m.answerReview.date)}；${esc(m.answerReview.basis)}</p><p>本题独立编写；<a href="#methods">可查看方法出处与独立对照</a>，相关作者未参与本题或认可其答案。事实核验汇总见<a href="#sources">资料说明</a>。</p></details>`;
+  }
+
+  let targetModule = "all",
+    targetStage = "all";
+  const targetEligible = (id) =>
+    targetStage === "all" || question(id).meta.trainingStage === targetStage;
+  function targetRows() {
+    const done = latest();
+    return C.lessons
+      .filter(
+        (l) =>
+          l.practice.length &&
+          (targetModule === "all" || l.category === targetModule),
+      )
+      .map((l) => ({
+        lesson: l,
+        wrong: l.practice.filter(
+          (id) =>
+            targetEligible(id) &&
+            done[id] &&
+            done[id].choice !== question(id).answer,
+        ),
+        fresh: l.practice.filter((id) => targetEligible(id) && !done[id]),
+      }))
+      .filter((r) => r.wrong.length || r.fresh.length)
+      .sort(
+        (a, b) =>
+          b.wrong.length - a.wrong.length || b.fresh.length - a.fresh.length,
+      );
+  }
+  function targetQueue(rows) {
+    const ids = [];
+    for (const key of ["wrong", "fresh"]) {
+      const groups = rows.map((r) => [...r[key]]);
+      while (ids.length < 12 && groups.some((g) => g.length)) {
+        for (const g of groups)
+          if (g.length && ids.length < 12) ids.push(g.shift());
+      }
+    }
+    return ids;
+  }
+  const targetLink = (ids) => "#quiz/target/" + ids.join(",");
+  function targeted() {
+    const rows = targetRows(),
+      ids = targetQueue(rows);
+    const wrong = rows.reduce((n, r) => n + r.wrong.length, 0),
+      freshCount = rows.reduce((n, r) => n + r.fresh.length, 0);
+    return (
+      heading(
+        "YOUR NEXT PRACTICE",
+        "下一组，从记录出发。",
+        "先回看最近答错，再练尚未尝试的题。记录仅在本机计算。",
+      ) +
+      `<section class="panel"><div class="bank-filters"><label class="bank-field">选择练习模块<select id="target-module"><option value="all">全部选择题模块</option>${C.categories
+        .filter((c) => !["全部", "申论方法"].includes(c))
+        .map(
+          (c) =>
+            `<option ${targetModule === c ? "selected" : ""}>${esc(c)}</option>`,
+        )
+        .join(
+          "",
+        )}</select></label><label class="bank-field">训练目标<select id="target-stage"><option value="all">全部训练目标</option>${["识别概念", "迁移运用", "检查边界", "未分层"].map((t) => `<option ${targetStage === t ? "selected" : ""}>${esc(t)}</option>`).join("")}</select></label></div><p class="stat-foot">训练目标是编写目的，不是难度等级。以下题组仅从所选模块与目标中选取。</p><div class="actions"><span class="pill">${wrong} 道最近答错</span><span class="pill gray">${freshCount} 道尚未练习</span></div><p>未做过不等于薄弱，答对一次也不等于掌握。当前题目均为原创，难度尚未经样本标定。</p>${ids.length ? btn(`开始这组 · ${ids.length} 题`, targetLink(ids))+btn("限时记录这组", "#training/ids/"+ids.join(","), true) : btn("自主选择重练", "#bank", true)}${btn("看本机线索", "#diagnostics", true)}<details class="roadmap"><summary>这组题怎样选出来</summary><p>先按模块与训练目标筛选，再选最近一次答错的题，用未做题补足，最多12题。知识点按错题数量、再按未做数量排序，同数按目录顺序；每轮每个知识点取一题，避免单一知识点占满。进入后题号固定，刷新会从本组首题重新开始，已提交记录保留。练完回到本页会重新计算。</p><p>这里不推断能力、考试得分或遗忘周期；申论草稿不自动评分，可到申论写作页训练。</p></details></section><div class="practice-grid">${rows.map((r) => `<section class="card practice-card target-card" data-lesson="${r.lesson.id}"><span class="pill gray">${esc(r.lesson.category)}</span><h2>${esc(r.lesson.title)}</h2><p class="target-reason">${r.wrong.length ? `最近答错 ${r.wrong.length} 道，建议回看解析。` : "还有未练题，可继续检验理解。"}未练 ${r.fresh.length} 道。</p><div class="actions">${btn("练这个知识点", targetLink(targetQueue([r])))}${btn("先读讲义", "#lesson/" + r.lesson.id, true)}</div></section>`).join("")}</div>${!rows.length ? empty("当前筛选下没有待选题", "所选范围可能暂无题目，或最近一次作答均正确。可以调整筛选、自行重练或继续申论写作。", btn("练申论", "#writing")) : ""}`
+    );
+  }
+  function practice() {
+    const categories = C.categories.filter(
+      (c) => !["全部", "申论方法"].includes(c),
+    );
+    return (
+      heading(
+        "PRACTICE LAB",
+        "专项练习",
+        `${C.questions.length} 道原创练习题，非历年真题。`,
+      ) +
+      `<section class="panel bank-entry"><div><h2>原创长题组与模块复盘</h2><p class="subtitle">自组1至200题 · 60题配置与固定120题卷 · 独立备份，非标准模考</p></div><a class="btn" href="./long-mock.html">打开长题组</a></section><section class="panel bank-entry"><div><h2>三套原创方法训练短卷</h2><p class="subtitle">各20题 · 引用已有60题 · 非全真模拟或分数预测</p></div>${btn("选择短卷", "#papers")}</section><section class="panel bank-entry"><div><h2>自选限时与本机复盘</h2></div>${btn("打开训练记录", "#training")}</section><section class="panel bank-entry"><div><h2>薄弱点线索与下一步</h2></div>${btn("看看下一步练什么", "#diagnostics")}</section><section class="panel bank-entry"><div><h2>根据本机记录练下一组</h2><p class="subtitle">最近答错优先 · 未练补充 · 最多12题</p></div>${btn("打开针对性练习", "#targeted")}</section><section class="panel bank-entry"><div><h2>按题型与知识点找题</h2></div>${btn("打开题库检索", "#bank")}</section><div class="practice-grid"><section class="card practice-card"><div class="tile-icon">${icon("chart")}</div><h3>综合练习</h3><span class="pill">${C.questions.length} 道 · 基础</span>${btn("开始综合练习", "#quiz/all")}</section>${categories
+        .map((c) => {
+          const count = C.questions.filter(
+            (q) => lesson(q.lesson).category === c,
+          ).length;
+          return `<section class="card practice-card"><div class="tile-icon">${icon("pen")}</div><h3>${c}</h3><span class="pill gray">${count} 道 · 原创示例</span>${btn("开始专项练习", "#quiz/category/" + encodeURIComponent(c))}</section>`;
+        })
+        .join(
+          "",
+        )}<section class="card practice-card"><div class="tile-icon">${icon("wrong")}</div><h3>错题重练</h3><p>只练最近一次答错的题；再次答对后自动移出错题集。</p><span class="pill gray">${wrongIds().length} 道待巩固</span>${btn("回顾错题", "#mistakes")}</section></div>`
+    );
+  }
+  function makeQuiz(parts) {
+    let ids = [];
+    if (parts[1] === "all") ids = C.questions.map((q) => q.id);
+    else if (parts[1] === "lesson") ids = lesson(parts[2])?.practice || [];
+    else if (parts[1] === "topic") {
+      const topic = window.STUDY_COMPLETE_TOPICS?.topics.find(t => t.id === parts[2]);
+      ids = topic ? [...new Set(topic.sourceLessonIds.flatMap(id => lesson(id).practice))].filter(id => question(id)) : [];
+    }
+    else if (parts[1] === "category")
+      ids = C.questions
+        .filter((q) => lesson(q.lesson).category === parts[2])
+        .map((q) => q.id);
+    else if (parts[1] === "filtered") {
+      const f = {
+        ...bankDefaults(),
+        ...Object.fromEntries(new URLSearchParams(parts[2] || "")),
+      };
+      ids = filteredQuestions(f).map((q) => q.id);
+    } else if (parts[1] === "wrong") ids = wrongIds();
+    else if (parts[1] === "one" && question(parts[2])) ids = [parts[2]];
+    else if (parts[1] === "target")
+      ids = [...new Set((parts[2] || "").split(","))]
+        .filter((id) => question(id))
+        .slice(0, 12);
+    return {
+      route: location.hash,
+      ids,
+      index: 0,
+      choice: null,
+      submitted: false,
+      results: [],
+      started: Date.now(),
+      questionStart: Date.now(),
+      complete: false,
+    };
+  }
+  function quizPage(parts) {
+    if(parts[1] === "timed") return trainingUI.quizPage(parts[2]);
+    if (!quiz || quiz.route !== location.hash) quiz = makeQuiz(parts);
+    if (!quiz.ids.length)
+      return empty(
+        "当前没有可练习的题目",
+        "可以先选一个专项，或去知识地图阅读。",
+        btn("选择专项", "#practice"),
+      );
+    if (quiz.complete) {
+      const n = quiz.results.filter((r) => r.correct).length;
+      return `<div class="quiz-wrap">${heading("SESSION COMPLETE", "本组结果", "")}<section class="panel result"><div class="result-number">${n}<small> / ${quiz.ids.length}</small></div><h2>本次答对 ${n} 题</h2><p class="subtitle">共用时 ${Math.max(1, Math.round(((quiz.finishedAt || Date.now()) - quiz.started) / 1000))} 秒 · 所有记录留在本机</p><div class="actions">${btn("查看错题", "#mistakes")}${btn("继续学习", "#learn", true)}<button class="btn secondary" data-action="restart">再练这组</button></div></section></div>`;
+    }
+    const q = question(quiz.ids[quiz.index]),
+      l = lesson(q.lesson),
+      correct = quiz.choice === q.answer;
+    return `<div class="quiz-wrap"><div class="quiz-header"><a class="back-link" href="#practice" style="margin:0">${icon("back")}退出本组</a><span>${quiz.index + 1} / ${quiz.ids.length} 题 · <span id="elapsed">${Math.floor((Date.now() - quiz.questionStart) / 1000)}</span> 秒</span></div><div class="mini-progress"><span style="width:${(quiz.index / quiz.ids.length) * 100}%"></span></div><section class="panel quiz-card"><span class="pill">${esc(l.category)} · 原创示例</span><h1 class="${q.stem.includes("\n") ? "passage-stem" : ""}">${esc(q.stem)}</h1>${questionMaterial(q)}${questionGraphic(q)}${questionMeta(q)}<div class="options" role="group" aria-label="选择一个答案">${q.options.map((o, i) => `<button class="option ${quiz.choice === i ? "selected" : ""} ${quiz.submitted && i === q.answer ? "correct" : ""} ${quiz.submitted && quiz.choice === i && !correct ? "incorrect" : ""}" data-action="choose" data-id="${i}" aria-pressed="${quiz.choice === i}" ${quiz.submitted ? "disabled" : ""}><span>${String.fromCharCode(65 + i)}</span><span>${esc(o)}${quiz.submitted && i === q.answer ? " ✓ 正确答案" : ""}${quiz.submitted && quiz.choice === i && !correct ? " · 你的选择" : ""}</span></button>`).join("")}</div>${quiz.submitted ? `<div class="feedback ${correct ? "" : "wrong"}" role="status"><strong>${correct ? "回答正确" : "回答错误"}</strong><p>${esc(q.explanation)}</p>${optionReview(q)}<a href="#lesson/${l.id}">回看知识点：${esc(l.title)} →</a></div>` : ""}<div class="quiz-actions"><span class="muted" style="font-size:12px">${quiz.submitted ? (quiz.saved === null ? "正在安全保存本次提交…" : quiz.saved ? "提交已保存到本机；答错会进入错题集。" : "提交仅在本页，未保存；请先导出本页副本。") : ""}</span><button class="btn" data-action="${quiz.submitted ? "next" : "submit"}" ${quiz.choice === null || (quiz.submitted && quiz.saved === null) ? "disabled" : ""}>${quiz.submitted ? (quiz.index === quiz.ids.length - 1 ? "查看本组结果" : "下一题") : "提交答案"}${icon("arrow")}</button></div></section></div>`;
+  }
+  function mistakes() {
+    const ids = wrongIds();
+    return (
+      heading(
+        "REVIEW & REFLECT",
+        "错题回顾",
+        "这里保留最近一次答错的题。再次答对后移出，历史作答仍保留。",
+        ids.length ? btn("重练全部", "#quiz/wrong") : "",
+      ) +
+      (ids.length
+        ? ids
+            .map((id) => {
+              const q = question(id),
+                a = latest()[id];
+              return `<article class="card wrong-row"><div><span class="pill gray">${esc(lesson(q.lesson).category)}</span><p>${esc(q.stem)}</p><small>最近作答：${new Date(a.at).toLocaleString("zh-CN")} · 选择 ${String.fromCharCode(65 + a.choice)}</small></div>${btn("重新作答", "#quiz/one/" + id, true)}</article>`;
+            })
+            .join("")
+        : empty(
+            "暂时没有待巩固的错题",
+            "先做一组练习，系统会自动收集错题。",
+            btn("开始练习", "#practice"),
+          ))
+    );
+  }
+  let writingType = "all",
+    writingStatus = "all",
+    writingQuery = "";
+  const writingCategory = (w) => w.taskKind || w.type.split("·")[0].trim();
+  function writingResults() {
+    const rows = C.writing.filter(
+      (w) =>
+        (writingType === "all" || writingCategory(w) === writingType) &&
+        (writingStatus === "all" ||
+          (writingStatus === "draft"
+            ? !!state.drafts[w.id]?.trim()
+            : !state.drafts[w.id]?.trim())) &&
+        (!writingQuery ||
+          [w.title, w.type, w.task, w.material]
+            .join(" ")
+            .includes(writingQuery)),
+    );
+    return `<p class="stat-foot" role="status">当前 ${rows.length} / ${C.writing.length} 个原创练习 · 不是历年真题 · 不提供自动评分</p><div class="writing-cards">${rows.map((w) => `<article class="card writing-card" data-writing="${w.id}"><div class="type"><span class="pill">${esc(w.type)}</span>${state.drafts[w.id]?.trim() ? '<span class="pill green">有本机草稿</span>' : ""}</div><h3>${esc(w.title)}</h3><p>${esc(w.task)}</p><div class="actions">${btn(state.drafts[w.id]?.trim() ? "继续写作" : "开始写作", "#write/" + w.id)}<a class="text-button" href="#lesson/${w.lesson}${w.learningLevel ? "/" + w.learningLevel : ""}">先学对应方法 →</a></div><div class="card-bottom"><span>建议练习 ${w.minutes} 分钟</span><span>${w.minLength ? `${w.minLength}—${w.limit} 字` : `不超过 ${w.limit} 字`}</span></div></article>`).join("")}</div>${rows.length ? "" : empty("没有匹配的写作练习", "当前材料组仍有限，可以放宽条件查看已有原创练习。", '<button class="btn secondary" data-action="writing-clear">清除筛选</button>')}`;
+  }
+  function writingList() {
+    return (
+      heading(
+        "WRITING STUDIO",
+        "申论写作",
+        "",
+      ) +
+      `<section class="panel"><div class="bank-filters"><label class="bank-field">搜索训练<input id="writing-search" type="search" value="${esc(writingQuery)}" placeholder="题目、材料或任务关键词"></label><label class="bank-field">训练任务<select id="writing-type"><option value="all">全部任务</option>${[...new Set(C.writing.map(writingCategory))].map((t) => `<option ${writingType === t ? "selected" : ""}>${esc(t)}</option>`).join("")}</select></label><label class="bank-field">本机草稿<select id="writing-status"><option value="all">全部状态</option><option value="draft" ${writingStatus === "draft" ? "selected" : ""}>已有草稿</option><option value="new" ${writingStatus === "new" ? "selected" : ""}>尚无草稿</option></select></label></div><p class="stat-foot">均为原创虚构材料与参考表达。草稿不等于完成，勾选不等于得分；不提供AI阅卷或分数预测。</p></section><section id="writing-results">${writingResults()}</section><div class="section-head"><h2>写作方法</h2><a href="#learn">知识地图 →</a></div><div class="compact-links">${C.lessons
+        .filter((l) => l.category === "申论方法")
+        .map(
+          (l) =>
+            `<a class="compact-link" href="#lesson/${l.id}"><span class="tile-icon">${icon("book")}</span><div><strong>${esc(l.title)}</strong></div>${icon("arrow")}</a>`,
+        )
+        .join("")}</div>`
+    );
+  }
+  function relatedWriting(w) {
+    const related = w.materialGroup
+      ? C.writing.filter(
+          (x) => x.id !== w.id && x.materialGroup === w.materialGroup,
+        )
+      : [];
+    return related.length
+      ? `<div class="note"><strong>同材料，换一个任务</strong><p>材料相同，设问和草稿分别保存；不要直接复用整篇答案。</p>${related.map((x) => `<a class="text-button" href="#write/${x.id}">${esc(x.title)} →</a>`).join("")}</div>`
+      : "";
+  }
+  const countWords = (text) => Array.from(text.replace(/\s/g, "")).length;
+  function writePage(id) {
+    const w = writing(id);
+    if (!w) return missing();
+    const value = state.drafts[id] || "",
+      count = countWords(value);
+    return `<a class="back-link" href="#writing">${icon("back")}申论写作</a>${heading(w.type, w.title, `原创虚构材料 · 建议练习 ${w.minutes} 分钟 · 字数仅作自查`)}${trainingUI.writingPanel(id)}<div class="writing-grid"><div class="stack"><section class="panel"><h2>给定材料</h2><p class="material">${esc(w.material)}</p><div class="task"><strong>作答任务</strong><br>${esc(w.task)}</div>${relatedWriting(w)}<a class="text-button" href="#lesson/${w.lesson}${w.learningLevel ? "/" + w.learningLevel : ""}">先看对应方法 →</a></section><section class="panel"><h2>自查要点</h2>${w.points.map((p, i) => `<label class="check-item"><input type="checkbox" data-check="${id}" value="${i}" ${(state.checks[id] || []).includes(i) ? "checked" : ""}>${esc(p)}</label>`).join("")}<p class="stat-foot">自查勾选只记录你的判断，不代表评分。</p></section></div><section class="panel"><label class="field-label" for="draft">我的答案</label><textarea id="draft" class="writing-area" data-draft="${id}" maxlength="20000" placeholder="输入答案">${esc(value)}</textarea><div class="field-meta"><span id="draft-status">本机自动保存</span><span id="word-count" class="${count > w.limit ? "over-limit" : ""}">${count} / ${w.limit} 字${w.minLength && count < w.minLength ? ` · 尚不足${w.minLength}字` : ""}</span></div><p class="stat-foot">统计非空白字符，包含标点；不等同于答题纸格数。</p><div class="actions"><button class="btn secondary" data-action="export-draft" data-id="${id}">${icon("download")}导出这篇草稿</button></div><details><summary>参考要点与示例</summary><div class="note">以下是编写者参考，不是官方答案或评分标准。</div><ul>${w.points.map((p) => `<li>${esc(p)}</li>`).join("")}</ul><div class="reference">${esc(w.sample)}</div>${window.SHENLUN_FEEDBACK?.render(w) || ""}</details></section></div>`;
+  }
+  function settings() {
+    return (
+      heading(
+        "YOUR DATA, YOUR PACE",
+        "备份与设置",
+        "备份包含笔记、草稿、作答和计时训练记录。请保存在私人位置，不要上传公开仓库。",
+      ) +
+      `<div class="settings-grid"><div class="stack"><section class="panel"><h2>备份与恢复</h2><p>记录只保存在当前设备、浏览器及网站地址下。清除网站数据、换设备或更换网址后不会自动同步，请定期导出。</p><div class="actions"><button class="btn" data-action="backup">${icon("download")}导出学习记录备份</button><label class="btn secondary file-button" for="import-file">导入学习记录备份</label><input class="sr-only" type="file" id="import-file" accept="application/json,.json"></div><p class="stat-foot">可导入旧v1和新v2学习记录备份；导出为包含训练记录的v2。新版普通作答带题目版本快照，旧网页可能丢弃快照，请用当前或更新版本恢复，不要在升级前的标签页继续保存。旧记录不会补造版本。私人题库另存，不在此备份中；私人临时答案和草稿不持久化。导入文件最多10 MiB，普通导出使用同一文件上限。导入先校验再确认，运行中计时按暂停快照恢复。建议先导出。</p><div id="import-status" role="status"></div><p class="stat-foot">公开内容保留全部旧题号；缺失或未知题号会拒绝导入并保留现有记录，不静默丢条。私人题库缺失不会影响这份学习记录，可到独立入口恢复私人备份。</p><p>逐题记录上限50,000条、计时历史500组。达到保护上限前请先备份；不会自动删除旧记录，浏览器仍可能更早因配额不足停止保存。</p><a class="btn secondary" href="./private-library.html">打开本机私人题库与独立备份</a><p><a class="text-button" href="./long-mock.html">打开长题组与其独立备份 →</a></p><p class="stat-foot">使用三类功能时，请分别导出学习记录、私人题库、长题组三份备份；本页学习记录备份不含另两类内容，没有跨键统一恢复。长题组不进入本页逐题统计或薄弱点诊断，只提供本组复习线索。</p><p class="stat-foot">私人题库仅接收UTF-8 JSON，来源/答案未经本站核验，不上传或计入公开题量。其内容需在私人题库入口另行备份。</p><button class="text-button" data-action="page-recovery">导出应急本页副本（不保证可直接导入）</button><p class="stat-foot">仅在普通备份失败时保存当前页原始状态，可能包含未保存笔记、草稿与答案；需私人保管并另行核验恢复，不包含私人题库。</p>${storageError ? '<button class="btn secondary" data-action="raw-backup">导出存储原文（受限时用缓存）</button><p class="stat-foot">缓存副本不保证最新，文件名会注明；可另导出完整本页副本。</p>' : ""}</section><section class="panel"><h2>当前记录</h2><p>已读 ${state.read.length} 篇 · 收藏 ${state.favorites.length} 篇<br>作答 ${state.attempts.length} 次 · 草稿 ${Object.values(state.drafts).filter(Boolean).length} 篇 · 计时训练 ${state.runs.length} 组</p><div class="note">网站无账号、广告、分析追踪或远程同步。打开页面时托管方仍可处理常规访问请求。公开代码中不包含你的学习记录。</div></section><section class="panel danger-zone"><h2>重置本机记录</h2><p>重置当前v2记录，其他网站不受影响。首次迁移保留的v1原文不改动，也不会在重置后自动恢复。旧标签页后续修改不会同步到新版；需要彻底清除本站数据时，可在浏览器清除站点数据，务必先备份。</p><button class="btn danger" data-action="reset">重置当前新版记录</button></section></div><div class="stack"><section class="panel"><h2>内容范围 · 知识基础版</h2><p>当前提供 ${C.lessons.length} 篇基础讲义、${C.questions.length} 道原创选择题、${C.writing.length} 个原创虚构材料写作练习。适用于通用方法入门，不声称覆盖国考或福建省考全部大纲。</p><ul><li>已扩展到政治理论、常识、福建地理、平面图形、更多言语数量资料题型，以及材料分析、对策落实、应用文和论证段方法。</li><li>仍未覆盖完整理论与时政、断代史与文学全体系、复杂空间重构、全部言语数量题型和福建文化政策专题。<a class="source" href="#sources">查看逐模块覆盖与来源 →</a></li><li>尚无历年真题库；已有原型和知识手册尚未成功取回，未并入本版。</li><li>备考方向选项仅用于记录目标，不会把同一内容包装成两套专属题库。</li></ul><p>申论参考要点与框架是学习提示，不是官方评分。不要把模板当成固定答案。</p></section><section class="panel"><h2>官方信息入口</h2><p><a class="source" href="#sources">讲义来源、年份与编写边界 →</a>以下是官方招录信息入口，供核对公告与考试要求；它们不是本站原创题目的出处。请以报考年度和具体职位公告为准。</p><a class="source" href="https://bm.scs.gov.cn/pp/gkweb/core/web/ui/business/home/gkhome.html" target="_blank" rel="noopener noreferrer">国家公务员考试专题 ↗</a><a class="source" href="https://gwykl.fujian.gov.cn/" target="_blank" rel="noopener noreferrer">福建省公务员考试录用网 ↗</a><p class="stat-foot">入口检索核对：2026-11-05。本站没有提供报名时间、资格判断或最新政策解读。</p></section></div></div>`
+    );
+  }
+  function missing() {
+    return empty(
+      "这个页面暂时不存在",
+      "请返回知识地图或学习概览。",
+      btn("返回概览", "#home"),
+    );
+  }
+  function render({ focus = false } = {}) {
+    let parts;
+    try {
+      parts = (location.hash.slice(1) || "home")
+        .split("/")
+        .map(decodeURIComponent);
+    } catch {
+      parts = ["missing"];
+    }
+    const page = parts[0];
+    const active =
+      {
+        lesson: "course",
+        learn: "course",
+        course: "course",
+        theory: "course",
+        quiz: "practice",
+        bank: "practice",
+        targeted: "practice",
+        diagnostics: "practice",
+        training: "practice",
+        papers: "practice",
+        coverage: "course",
+        methods: "course",
+        fujian: "course",
+        write: "writing",
+      }[page] || page;
+    nav(active);
+    $("#page-title").textContent =
+      {
+        home: "学习概览",
+        learn: "讲义搜索",
+        course: "连续学习",
+        practice: "专项练习",
+        writing: "申论写作",
+        mistakes: "错题回顾",
+        settings: "备份与内容说明",
+        sources: "资料来源与覆盖",
+      }[active] || "学习工作台";
+    $("#exam").value = state.exam;
+    const views = {
+      home,
+      learn,
+      course: () => window.STUDY_COURSE.render(parts, state, lessonPage),
+      theory: theoryPage,
+      lesson: () => lessonPage(parts[1],parts[2]),
+      practice,
+      targeted,
+      diagnostics: () => adaptiveUI.page(parts),
+      training: () => trainingUI.page(parts),
+      papers: () => window.STUDY_PAPERS.catalogHtml(),
+      bank,
+      quiz: () => quizPage(parts),
+      mistakes,
+      writing: writingList,
+      write: () => writePage(parts[1]),
+      settings,
+      sources: sourcesPage,
+      coverage: coverageMatrixPage,
+      methods: () => methodsPage(parts[1]),
+      fujian: fujianPage,
+    };
+    $("#main").innerHTML =
+      (storageError
+        ? `<div id="storage-save-error" class="storage-alert" role="alert">${esc(storageError)}</div>`
+        : "") + window.STUDY_COURSE.trainingReturn(parts) + (views[page] || missing)();
+    if (focus) {
+      window.scrollTo({ top: 0 });
+      $("#main").focus({ preventScroll: true });
+    }
+    if (page === "theory") $("#page-title").textContent = "政治理论入门";
+    if (page === "learn") $("#page-title").textContent = "讲义搜索";
+    if (page === "course") $("#page-title").textContent = "连续学习";
+    if (page === "diagnostics") $("#page-title").textContent = "薄弱点线索";
+    if (page === "training") $("#page-title").textContent = "训练记录与复盘";
+    if (page === "papers") $("#page-title").textContent = "原创方法训练短卷";
+    if(capacityMessage)$("#main").insertAdjacentHTML("afterbegin",`<div id="record-capacity-alert" class="storage-alert" role="status">${esc(capacityMessage)} <a href="#settings">备份与容量说明</a></div>`);
+    if (storageError || pendingSaves) savingStatus();
+    if(replacing)lockForReplacement();
+    document.title = $("#page-title").textContent + " · 知序";
+  }
+  const adaptiveUI=window.STUDY_ADAPTIVE_UI.create({C,T,A:window.STUDY_ADAPTIVE,esc,btn,heading,getState:()=>state,getError:()=>storageError,isSaving:()=>pendingSaves>0});
+  async function saveChoice() {
+    if (replacing) return;
+    if (!quiz || quiz.choice === null || quiz.submitted) return;
+    const q = question(quiz.ids[quiz.index]);
+    const currentQuiz = quiz;
+    const now = Date.now();
+    const seconds = Math.max(0,Math.round((now - quiz.questionStart) / 1000));
+    const a = {
+      qid: q.id,
+      choice: quiz.choice,
+      at: new Date(now).toISOString(),
+      seconds,
+      snapshot: T.attemptSnapshot(q, now < quiz.questionStart),
+    };
+    const capacity=assessCapacity(state,{additionalAttempt:a});
+    if(!capacity.ok){capacityMessage=capacityReason(capacity)+" 本次没有提交，请先备份学习记录。";showToast(capacityMessage);render();return;}
+    capacityMessage=capacity.nearLimit?"学习记录接近保护上限，请先导出备份。":"";
+    quiz.submitted=true;quiz.saved=null;
+    state.attempts.push(a);
+    quiz.results.push({ qid: q.id, correct: quiz.choice === q.answer });
+    render();
+    const ok=await persist();
+    if(quiz===currentQuiz){quiz.saved=ok;render();}
+  }
+  function download(name, data, type = "application/json") {
+    const blob = new Blob([data], { type }),
+      url = URL.createObjectURL(blob),
+      a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+  }
+  function backupSnapshot() {
+    const copy = validate(state);
+    if(copy.activeRun && copy.activeRun.status === "running") {
+      T.pause(copy.activeRun,Date.now());
+      if(T.isTerminal(copy.activeRun)){copy.runs.push(copy.activeRun);copy.activeRun=null;}
+    }
+    return validate(copy);
+  }
+  function exportBackup() {
+    try { download(`zhixu-backup-${new Date().toISOString().slice(0,10)}.json`,R.serializeBackup(backupSnapshot(),new Date().toISOString()));showToast("已生成v2学习记录备份，请存私人位置；私人题库需另行导出。"); }
+    catch(e){showToast("学习记录备份未生成："+e.message+"。可在备份页导出应急本页副本或存储原文。");}
+  }
+  trainingUI = window.STUDY_TRAINING_UI.create({ C,T,getState:()=>state,save:persist,render,notify:showToast,getError:()=>storageError,questionMaterial,questionGraphic,questionMeta,optionReview,
+    canRecordAttempt:(event,proposedRun)=>{const c=assessCapacity({...state,activeRun:proposedRun},{additionalAttempt:{qid:event.qid,choice:event.choice,at:event.at,seconds:event.seconds}});return {...c,reason:c.ok?null:capacityReason(c)};},
+    recordAttempt: event => state.attempts.push({qid:event.qid,choice:event.choice,at:event.at,seconds:event.seconds}) });
+  if(storageError)trainingUI.suspendForStorageError();
+  function replaceActiveDiagram(button, current) {
+    const target = button.closest("[data-topic-lesson]") || $("#lesson-demo");
+    if (!target) return null;
+    const holder = document.createElement("template"); holder.innerHTML = diagram(current);
+    const replacement = holder.content.firstElementChild;
+    if (target.dataset.topicLesson) { replacement.dataset.topicLesson = current.id; replacement.id = "topic-diagram-" + current.id; }
+    target.replaceWith(replacement); return replacement;
+  }
+  document.addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-action]");
+    if (!b) return;
+    const id = b.dataset.id,
+      a = b.dataset.action;
+    if(replacing&&!["backup","raw-backup","export-draft"].includes(a))return;
+    if (await trainingUI.handle(a,id)) return;
+    if (a === "writing-clear") {
+      writingQuery = "";
+      writingType = "all";
+      writingStatus = "all";
+      render();
+      $("#writing-search").focus();
+    }
+    if (a === "rotate-demo" || a === "reset-demo" || a === "overlay-demo") {
+      if (a === "rotate-demo") diagramStep = (diagramStep + 1) % 4;
+      if (a === "reset-demo") diagramStep = 0;
+      if (a === "overlay-demo") diagramRule = id;
+      const activeLesson = lesson(b.closest("[data-topic-lesson]")?.dataset.topicLesson || location.hash.split("/")[location.hash.startsWith("#course/") ? 3 : 1]);
+      if (activeLesson) replaceActiveDiagram(b, activeLesson);
+    }
+    if (["feature-example", "feature-turn", "feature-mirror", "feature-reset", "solid-turn", "solid-reset"].includes(a)) {
+      if (a === "feature-example" && featureExamples[Number(id)]) { featureExample = Number(id); featureTurns = 0; featureMirrored = false; }
+      if (a === "feature-turn") featureTurns = (featureTurns + 1) % 4;
+      if (a === "feature-mirror") featureMirrored = !featureMirrored;
+      if (a === "feature-reset") { featureTurns = 0; featureMirrored = false; }
+      if (a === "solid-turn") solidTurns = (solidTurns + 1) % 4;
+      if (a === "solid-reset") solidTurns = 0;
+      const current = lesson(b.closest("[data-topic-lesson]")?.dataset.topicLesson || location.hash.split("/")[location.hash.startsWith("#course/") ? 3 : 1]);
+      const keepFocus = document.activeElement === b;
+      if (current && (b.closest("[data-topic-lesson]") || $("#lesson-demo"))) {
+        const updatedDiagram = replaceActiveDiagram(b, current);
+        if (keepFocus) updatedDiagram.querySelector(`[data-action="${a}"]${a === "feature-example" ? `[data-id="${id}"]` : ""}`)?.focus();
+      }
+    }
+    if (["cube-face", "cube-turn", "solid-view"].includes(a)) {
+      if (a === "cube-face" && opposite[id]) cubeFace = id;
+      if (a === "cube-turn") cubeBack = !cubeBack;
+      if (a === "solid-view" && ["front", "top", "side"].includes(id))
+        solidView = id;
+      const current = lesson(b.closest("[data-topic-lesson]")?.dataset.topicLesson || location.hash.split("/")[location.hash.startsWith("#course/") ? 3 : 1]);
+      if (current) replaceActiveDiagram(b, current);
+    }
+    if (a === "favorite") {
+      state.favorites = state.favorites.includes(id)
+        ? state.favorites.filter((x) => x !== id)
+        : [...state.favorites, id];
+      persist();
+      render();
+    }
+    if (a === "read-topic") {
+      const topic = window.STUDY_COMPLETE_TOPICS?.topics.find(t => t.id === id);
+      if (topic) {
+        state.read = [...new Set([...state.read, ...topic.sourceLessonIds])];
+        await persist();
+        render();
+      }
+    }
+    if (a === "read") {
+      state.read = state.read.includes(id)
+        ? state.read.filter((x) => x !== id)
+        : [...state.read, id];
+      persist();
+      render();
+    }
+    if (a === "filter") {
+      catalogFilter = id;
+      render();
+    }
+    if (a === "saved-filter") {
+      onlySaved = !onlySaved;
+      render();
+    }
+    if (a === "reset-search") {
+      catalogFilter = "全部";
+      query = "";
+      onlySaved = false;
+      render();
+    }
+    if (a === "method-filter") {
+      methodFilter = id;
+      if (location.hash.includes("methods/")) location.hash = "#methods";
+      else render();
+    }
+    if (a === "bank-reset") {
+      bankFilter = bankDefaults();
+      bankPage = 0;
+      render();
+    }
+    if (a === "bank-next" || a === "bank-prev") {
+      bankPage = Math.max(0, bankPage + (a === "bank-next" ? 1 : -1));
+      $("#bank-results").innerHTML = bankResults();
+      $("#bank-results").scrollIntoView({ block: "start" });
+    }
+    if (a === "choose" && quiz && !quiz.submitted) {
+      quiz.choice = Number(id);
+      render();
+    }
+    if (a === "submit") saveChoice();
+    if (a === "next" && quiz && quiz.submitted) {
+      if (quiz.index === quiz.ids.length - 1) { quiz.complete = true;quiz.finishedAt=Date.now(); }
+      else {
+        quiz.index++;
+        quiz.choice = null;
+        quiz.submitted = false;
+        quiz.questionStart = Date.now();
+      }
+      render({ focus: true });
+    }
+    if (a === "restart") {
+      const ids = [...quiz.ids];
+      quiz = { ...makeQuiz([]), route: location.hash, ids };
+      render({ focus: true });
+    }
+    if (a === "backup") exportBackup();
+    if(a === "page-recovery"){
+      try{download("zhixu-page-recovery-unvalidated.json",JSON.stringify({format:"zhixu-page-recovery",version:1,exportedAt:new Date().toISOString(),warning:"应急本页原始状态，未保证符合可导入格式；私人题库另行备份",state}));showToast("已生成应急本页副本；请私人保管，不能直接当普通学习记录备份导入。");}catch{showToast("应急副本生成失败，请勿关闭页面，先复制需要保留的文字。");}
+    }
+    if (a === "raw-backup") {
+      let raw = null, cached = false;
+      try { raw = progressStore?.getRaw(); }
+      catch { /* Permission can fail after the last successful read. */ }
+      if (raw === null || raw === undefined) {
+        raw = progressStore?.loadedRaw;
+        cached = raw !== null && raw !== undefined;
+      }
+      if (raw === null || raw === undefined) {
+        showToast("无法取得存储原文，也没有可用缓存。未生成原文文件；可尝试导出本页副本。");
+      } else {
+        try {
+          download(cached ? "zhixu-recovery-cached-not-latest.txt" : "zhixu-recovery-raw.txt", raw, "text/plain");
+          showToast(cached ? "已生成缓存原文副本，不保证是最新存储内容；文件名已注明。" : "已生成当前可读取的存储原文副本。");
+        } catch { showToast("浏览器未能生成原文文件，请保留本页并检查下载权限。"); }
+      }
+    }
+    if (a === "export-draft") {
+      const w = writing(id);
+      download(
+        `知序-${w.type}-草稿.txt`,
+        `${w.title}\n\n${state.drafts[id] || ""}`,
+        "text/plain;charset=utf-8",
+      );
+    }
+    if (a === "reset" && confirm("确定重置当前新版学习与训练记录吗？请先导出备份。旧版原文副本会保留，不会自动恢复到新版。")) {
+      const result = await replaceProgress(fresh());
+      if(result.ok)showToast("当前新版记录已重置，旧版原文副本未改动。");
+    }
+
+  });
+  document.addEventListener("input", (e) => {
+    if(replacing)return;
+    const t = e.target;
+    if(trainingUI.change(t)) return;
+    if (t.id === "writing-search") {
+      writingQuery = t.value.trim();
+      $("#writing-results").innerHTML = writingResults();
+    }
+    if (t.id === "bank-search") {
+      bankFilter.search = t.value.trim();
+      bankPage = 0;
+      $("#bank-results").innerHTML = bankResults();
+    }
+    if (t.id === "search") {
+      query = t.value.trim();
+      $("#catalog").innerHTML = lessonCards();
+    }
+    if (t.dataset.note) {
+      state.notes[t.dataset.note] = t.value;
+      persist();
+    }
+    if (t.dataset.draft) {
+      state.drafts[t.dataset.draft] = t.value;
+      persist();
+      const w = writing(t.dataset.draft),
+        n = countWords(t.value);
+      $("#word-count").textContent =
+        `${n} / ${w.limit} 字${w.minLength && n < w.minLength ? ` · 尚不足${w.minLength}字` : ""}`;
+      $("#word-count").classList.toggle("over-limit", n > w.limit);
+    }
+  });
+  document.addEventListener("change", async (e) => {
+    if(replacing)return;
+    const t = e.target;
+    if(trainingUI.change(t)) return;
+    if (["coverage-module", "coverage-status"].includes(t.id)) {
+      if (t.id === "coverage-module") coverageModule = t.value;
+      else coverageStatus = t.value;
+      $("#coverage-results").innerHTML = coverageMatrixResults();
+    }
+    if (["writing-type", "writing-status"].includes(t.id)) {
+      if (t.id === "writing-type") writingType = t.value;
+      else writingStatus = t.value;
+      $("#writing-results").innerHTML = writingResults();
+    }
+    if (["target-module", "target-stage"].includes(t.id)) {
+      if (t.id === "target-module") targetModule = t.value;
+      else targetStage = t.value;
+      const focusId = t.id;
+      render();
+      $("#" + focusId).focus();
+    }
+    if (t.dataset.bank) {
+      bankFilter[t.dataset.bank] = t.value;
+      bankPage = 0;
+      $("#bank-results").innerHTML = bankResults();
+    }
+    if (["fj-class", "fj-scope", "fj-police"].includes(t.id)) {
+      if (t.id === "fj-class") fjClass = t.value;
+      if (t.id === "fj-scope") fjScope = t.value;
+      if (t.id === "fj-police") fjPolice = t.checked;
+      $("#fujian-result").outerHTML = fujianResult();
+    }
+    if (t.id === "exam") {
+      state.exam = t.value;
+      persist();
+      showToast("已记录备考方向；当前提供通用基础内容。");
+    }
+    if (t.dataset.check) {
+      const id = t.dataset.check,
+        n = Number(t.value),
+        list = state.checks[id] || [];
+      state.checks[id] = t.checked
+        ? [...new Set([...list, n])]
+        : list.filter((i) => i !== n);
+      persist();
+    }
+    if (t.id === "import-file") {
+      const f = t.files[0];
+      if (!f) return;
+      try {
+        if (f.size > R.MAX_FILE_BYTES) throw Error("学习记录备份超过10 MiB上限");
+        const rawImport=JSON.parse(await f.text());
+        if(rawImport?.format)throw Error("这不是主站学习记录备份；私人题库、长题组请用各自入口，应急副本需另行核验恢复");
+        const parsed = validate(rawImport);
+
+        if(parsed.activeRun?.status === "running"){parsed.activeRun.status="paused";parsed.activeRun.anchorMs=null;}
+        const importCapacity=assessCapacity(parsed);if(!importCapacity.ok)throw Error(capacityReason(importCapacity)+"；未覆盖现有记录");
+        if (
+          confirm(
+            `已校验：${parsed.attempts.length} 次作答、${parsed.read.length} 篇已读、${parsed.runs.length} 组计时记录。是否替换当前新版记录？建议先导出；进行中计时将保持暂停。`,
+          )
+        ) {
+          const result=await replaceProgress(parsed);
+          if(!result.ok)throw Error(result.error||"本机保存未完成，原记录保留");
+          showToast("备份已恢复，活动计时保持暂停。");
+        }
+      } catch (err) {
+        const msg = "导入失败：" + err.message;
+        showToast(msg);
+        if ($("#import-status")) $("#import-status").textContent = msg;
+      } finally {
+        t.value = "";
+      }
+    }
+  });
+  // Course context changes navigation, not the identity of a running writing task.
+  function trainingRouteHash(hash) {
+    const parts = hash.slice(1).split("/");
+    return parts[0] === "write" && window.STUDY_COURSE.trainingReturn(parts)
+      ? "#write/" + parts[1] : hash;
+  }
+  window.addEventListener("hashchange", async () => {
+    if(replacing)return;
+    if (!location.hash.startsWith("#quiz/") || location.hash.startsWith("#quiz/timed/")) quiz = null;
+    await trainingUI.routeChanged(trainingRouteHash(location.hash));
+    render({focus:true});
+  });
+  setInterval(() => {
+    if(replacing)return;
+    trainingUI.tick();
+    if (quiz && !quiz.complete && !quiz.submitted && $("#elapsed"))
+      $("#elapsed").textContent = Math.floor(
+        (Date.now() - quiz.questionStart) / 1000,
+      );
+  }, 1000);
+  $("#settings-link").innerHTML = icon("settings");
+  trainingUI.routeChanged(trainingRouteHash(location.hash)).then(()=>render());
+  render();
+})();

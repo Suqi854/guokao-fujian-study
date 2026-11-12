@@ -22,7 +22,7 @@ for (const file of adapters) {
   assert.ok(embedded, file + ' self-contained reviewed JSON input');
   assert.equal(hash(JSON.parse(embedded[1])), reviewed.adapterPayloads[file], file + ' entire approved payload, including source and review metadata');
 }
-const contentScripts = scriptNames('index.html').filter(file => !['app-studio-20261112.js','political-mao-deng-expansion.js','marxism-course-20261107.js','political-complete-integration.js','policy-current-2026.js'].includes(file));
+const contentScripts = scriptNames('index.html').filter(file => !['app-studio-20261112-clean.js','political-mao-deng-expansion.js','marxism-course-20261107.js','political-complete-integration.js','policy-current-2026.js'].includes(file));
 const c = context(); for (const file of contentScripts) execute(c, file);
 const C = c.window.STUDY_CONTENT, T = c.window.STUDY_TRAINING;
 assert.deepEqual([C.lessons.length, C.questions.length, C.writing.length, C.lessons.filter(l => l.learningLevels).length, C.lessons.filter(l => !l.learningLevels).length, Object.keys(C.sources).length, Object.keys(C.theoryLearningAids).length], [105, 753, 87, 97, 8, 43, 19]);
@@ -190,7 +190,7 @@ rejectsAtomically(adapters[0], C => { C.lessons.find(l => l.id === deepened[0]).
 rejectsAtomically(adapters[0], C => { C.writing.push(plain(writing[0])); }, 'writing ID conflict');
 rejectsAtomically(adapters[0], C => { C.theoryLearningAids[deepened[0]] = { synthetic: true }; }, 'learning aid conflict');
 rejectsAtomically(adapters[1], C => { C.lessons.find(l => l.id === expanded[0]).learningLevels.intro.questionIds.reverse(); }, 'existing practice path drift');
-const long = context(); for (const file of scriptNames('long-mock.html')) if (!['long-mock-workspace.js', 'long-mock-store.js','political-mao-deng-expansion.js','marxism-course-20261107.js','political-complete-integration.js','policy-current-2026.js'].includes(file)) execute(long, file);
+const long = context(); for (const file of scriptNames('long-mock.html')) if (!['long-mock-workspace-clean.js', 'long-mock-store.js','political-mao-deng-expansion.js','marxism-course-20261107.js','political-complete-integration.js','policy-current-2026.js'].includes(file)) execute(long, file);
 assert.equal(hash(long.window.STUDY_CONTENT), hash(C), 'both public entrypoints load identical content');
 const M = long.window.LONG_MOCK_MODEL; assert.equal(M.pool().length, 730); assert.equal(M.modules().length, 8);
 const presetIds = new Set();

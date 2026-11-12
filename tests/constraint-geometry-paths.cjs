@@ -2,7 +2,7 @@
 const fs = require("node:fs"), vm = require("node:vm"), path = require("node:path"), assert = require("node:assert/strict");
 const root = path.join(__dirname, ".."), context = { window: {} };
 vm.createContext(context);
-for (const m of fs.readFileSync(path.join(root, "docs/index.html"), "utf8").matchAll(/src="\.\/([^\"]+)"/g)) if (m[1] !== "app-studio-20261112.js") vm.runInContext(fs.readFileSync(path.join(root, "docs", m[1]), "utf8"), context);
+for (const m of fs.readFileSync(path.join(root, "docs/index.html"), "utf8").matchAll(/src="\.\/([^\"]+)"/g)) if (m[1] !== "app-studio-20261112-clean.js") vm.runInContext(fs.readFileSync(path.join(root, "docs", m[1]), "utf8"), context);
 const C = JSON.parse(JSON.stringify(context.window.STUDY_CONTENT)), q = Object.fromEntries(C.questions.map(x => [x.id, x]));
 assert.equal(C.lessons.length, 127);
 assert.equal(C.questions.length, 885);

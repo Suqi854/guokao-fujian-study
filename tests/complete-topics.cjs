@@ -7,7 +7,7 @@ installSerialLocks(w);w.scrollTo=()=>{};w.HTMLElement.prototype.scrollIntoView=f
 const legacy={schemaVersion:1,exam:'fujian',read:['growth','marx-connection'],favorites:['marx-connection'],notes:{'marx-connection':'原笔记 <script>不能执行</script>',growth:'基期笔记'},attempts:[],drafts:{w01:'原草稿'},checks:{w01:[0]}};
 w.localStorage.setItem('zhixu-study-v1',JSON.stringify(legacy));
 let beforeContent;
-for(const[,f]of html.matchAll(/src="\.\/([^\"]+)"/g)){if(f==='complete-topics.js')beforeContent=JSON.stringify(w.STUDY_CONTENT);w.eval(fs.readFileSync(root+'/docs/'+f,'utf8'));if(f==='complete-topics.js')assert.equal(JSON.stringify(w.STUDY_CONTENT),beforeContent,'view does not mutate content');}
+for(const[,f]of html.matchAll(/src="\.\/([^\"]+)"/g)){if(f==='complete-topics-clean.js')beforeContent=JSON.stringify(w.STUDY_CONTENT);w.eval(fs.readFileSync(root+'/docs/'+f,'utf8'));if(f==='complete-topics-clean.js')assert.equal(JSON.stringify(w.STUDY_CONTENT),beforeContent,'view does not mutate content');}
 const C=w.STUDY_CONTENT,T=w.STUDY_COMPLETE_TOPICS,P=w.STUDY_COURSE,plain=x=>JSON.parse(JSON.stringify(x));
 const route=h=>navigateHash(w,h,()=>{w.location.hash=h;}),pause=()=>new Promise(r=>setTimeout(r,20));
 const store=()=>JSON.stringify(Object.fromEntries(Array.from({length:w.localStorage.length},(_,i)=>{const k=w.localStorage.key(i);return[k,w.localStorage.getItem(k)];})));

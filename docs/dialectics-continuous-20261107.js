@@ -61,7 +61,8 @@
     const tmp = document.createElement('template'); tmp.innerHTML = html;
     const root = tmp.content.querySelector('[data-complete-topic="dialectics"]'); if (!root) return html;
     root.classList.add('continuous-topic');
-    root.querySelector('#topic-top').innerHTML = '<h2>本站讲解 · 连起来读</h2><p>先看事物怎样联系和变化，再用矛盾解释动力，接着理解积累、转变与新旧更替，最后把这些关系放回具体材料。下面四部分连续展开，重点和条件就在正文中。</p>';
+    root.querySelector('#topic-top').innerHTML = '';
+    root.querySelector('#topic-top').style.cssText='padding:0;margin:0;border:0';
     chapters.forEach((c,i)=>{
       root.querySelector('#topic-part-'+i).innerHTML = `<h2>${esc(c.title)}</h2><div class="continuous-prose" data-topic-authored="${i}">${c.paragraphs.map(p=>`<p>${rich(p)}</p>`).join('')}</div>`;
     });

@@ -163,7 +163,7 @@ async function removeOnePackPreservesOtherResponses() {
   let confirmed = 0;
   w.confirm = () => { confirmed++; return true; };
   try {
-    for (const name of ['local-progress-store.js', 'private-library.js', 'private-workspace.js'])
+    for (const name of ['local-progress-store.js', 'private-library.js', 'private-workspace-clean.js'])
       w.eval(source(name));
     const repo = w.privateWorkspace.repo;
     const pack = id => ({ format: w.PRIVATE_LIBRARY.PACK, version: 1, packId: id,

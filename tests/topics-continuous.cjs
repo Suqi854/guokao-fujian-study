@@ -6,7 +6,7 @@ const dom=new JSDOM(html,{url:'https://continuity.synthetic.example/#course',run
 installSerialLocks(w);w.scrollTo=()=>{};w.HTMLElement.prototype.scrollIntoView=function(){this.dataset.scrolled='yes';};w.fetch=()=>{throw Error('Unexpected network');};
 const legacy={schemaVersion:1,exam:'fujian',read:['growth'],favorites:['profit-bases'],notes:{'profit-bases':'保留旧笔记'},attempts:[],drafts:{w01:'旧草稿'},checks:{w01:[0]}};
 w.localStorage.setItem('zhixu-study-v1',JSON.stringify(legacy));let beforeContent;
-for(const[,f]of html.matchAll(/src="\.\/([^\"]+)"/g)){if(f==='topics-continuous-20261107.js')beforeContent=JSON.stringify(w.STUDY_CONTENT);w.eval(fs.readFileSync(root+'/docs/'+f,'utf8'));}
+for(const[,f]of html.matchAll(/src="\.\/([^\"]+)"/g)){if(f==='topics-continuous-20261107-clean.js')beforeContent=JSON.stringify(w.STUDY_CONTENT);w.eval(fs.readFileSync(root+'/docs/'+f,'utf8'));}
 const route=h=>navigateHash(w,h,()=>{w.location.hash=h;});
 const storage=()=>JSON.stringify(Object.fromEntries(Array.from({length:w.localStorage.length},(_,i)=>{const k=w.localStorage.key(i);return[k,w.localStorage.getItem(k)];})));
 (async()=>{

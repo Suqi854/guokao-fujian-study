@@ -9,14 +9,14 @@
   <link rel="stylesheet" href="./private-library.css">
   <script src="./local-progress-store.js" defer></script>
   <script src="./private-library.js" defer></script>
-  <script src="./private-workspace.js" defer></script>
+  <script src="./private-workspace-clean.js" defer></script>
 <script src="./mobile-workspace.js" defer></script></head>
 <body>
 <main id="private-workspace">
   <h1>本机私人题库</h1>
-  <p class="private-warning">这是独立实验性功能，不属于公开原创题库。仅导入自己合法取得、可用于个人学习的内容。本站不会核验来源或答案，也不会据此取得公开转载许可。</p>
-  <section aria-labelledby="private-limits">
-    <h2 id="private-limits">先了解保存边界</h2>
+  <p class="private-warning">仅供个人学习。请导入合法取得的资料；来源与答案未经本站核验，不代表可公开转载。</p>
+  <details aria-labelledby="private-limits">
+    <summary id="private-limits">存储、安全与格式限制</summary>
     <ul>
       <li>文件内容只在本页读取，题库保存在当前设备、浏览器和网站来源（协议、域名、端口）的 localStorage，不自动上传或跨设备同步。</li>
       <li>清理网站数据、隐私模式关闭或浏览器清理可能导致丢失。换网址/设备前，分别导出私人题库、主站学习记录，以及使用过的长题组备份。</li>
@@ -25,7 +25,7 @@
       <li>页面需要正常加载，没有实现离线缓存。只支持 UTF-8 JSON 纯文本，不支持 PDF/OCR、图片、HTML、外链材料下载或抓取题库。</li>
       <li>单题包最多 1 MiB、1000 题；备份最多 2 MiB；合计最多 30 个题包、3000 题及约 2 MiB。浏览器剩余额度仍可能不足。</li>
     </ul>
-  </section>
+  </details>
   <section aria-labelledby="private-import-title">
     <h2 id="private-import-title">导入与备份</h2>
     <p><a href="./private-format-example.json" download>下载原创格式样例</a> · <a href="./index.html#settings">返回主站备份与设置</a></p>
@@ -47,7 +47,7 @@
   <section aria-labelledby="private-study-title">
     <h2 id="private-study-title">私人阅读与自查</h2>
     <p id="private-summary"></p>
-    <p>选择和草稿仅暂存在本页内存，切题后可回看；刷新、离开或关闭页面即丢失，不形成主站错题或训练记录。没有正式套卷计时、分值或自动评分。</p>
+    <p>选择与草稿刷新、离开或关闭页面即丢失，不计入主站记录；无自动评分。</p>
     <div class="private-actions">
       <label>题包 <select id="private-pack"></select></label>
       <label>阅读范围 <select id="private-paper"></select></label>

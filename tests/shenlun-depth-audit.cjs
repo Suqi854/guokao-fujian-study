@@ -6,7 +6,7 @@ const base = path.join(__dirname, '..'), context = { window: {} };
 vm.createContext(context);
 const html = fs.readFileSync(path.join(base,'docs/index.html'),'utf8');
 for (const [,file] of html.matchAll(/src="\.\/([^\"]+)"/g)) {
-  if(file !== 'app-studio-20261112.js') vm.runInContext(fs.readFileSync(path.join(base,'docs',file),'utf8'),context,{filename:file});
+  if(file !== 'app-studio-20261112-clean.js') vm.runInContext(fs.readFileSync(path.join(base,'docs',file),'utf8'),context,{filename:file});
 }
 const C = JSON.parse(JSON.stringify(context.window.STUDY_CONTENT));
 const digest = value => crypto.createHash('sha256').update(JSON.stringify(value)).digest('hex');

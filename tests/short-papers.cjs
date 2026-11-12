@@ -2,7 +2,7 @@
 // Consolidated final-source paper/content contract check, not browser or exam calibration.
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict'),crypto=require('node:crypto');
 const root=path.join(__dirname,'..'),html=fs.readFileSync(root+'/docs/index.html','utf8'),c=vm.createContext({window:{}});
-for(const f of [...html.matchAll(/src="\.\/([^"]+)"/g)].map(m=>m[1]).filter(f=>f!=='app-studio-20261112.js'))vm.runInContext(fs.readFileSync(root+'/docs/'+f,'utf8'),c,{filename:f});
+for(const f of [...html.matchAll(/src="\.\/([^"]+)"/g)].map(m=>m[1]).filter(f=>f!=='app-studio-20261112-clean.js'))vm.runInContext(fs.readFileSync(root+'/docs/'+f,'utf8'),c,{filename:f});
 const C=c.window.STUDY_CONTENT,T=c.window.STUDY_TRAINING,P=c.window.STUDY_PAPERS,D=c.window.STUDY_PAPER_CATALOG,plain=x=>JSON.parse(JSON.stringify(x)),proofs=require('./short-paper-proofs.cjs');
 const canonical=v=>v===null||typeof v!=='object'?JSON.stringify(v):Array.isArray(v)?'['+v.map(canonical).join(',')+']':'{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+canonical(v[k])).join(',')+'}',hash=v=>crypto.createHash('sha256').update(canonical(v)).digest('hex');
 const prior=JSON.parse(fs.readFileSync(path.join(__dirname,'fixtures/v031-public-identities.json'),'utf8'));

@@ -208,7 +208,7 @@
   const btn = (text, href, secondary = false) =>
     `<a class="btn${secondary ? " secondary" : ""}" href="${esc(href)}">${esc(text)}${icon("arrow")}</a>`;
   const heading = (label, title, sub, extra = "") =>
-    `<div class="page-heading"><div><div class="eyebrow">${esc(label)}</div><h1>${esc(title)}</h1><p class="subtitle">${esc(sub)}</p></div>${extra}</div>`;
+    `<div class="page-heading"><div><h1>${esc(title)}</h1>${sub ? `<p class="subtitle">${esc(sub)}</p>` : ""}</div>${extra}</div>`;
   const empty = (title, desc, link = "") =>
     `<div class="empty">${icon("book")}<h2>${esc(title)}</h2><p>${esc(desc)}</p>${link}</div>`;
   const latest = () => {
@@ -295,15 +295,15 @@
     ];
     const topics = window.STUDY_COMPLETE_TOPICS?.topics || [];
     return `<section class="studio-home">
-      <div class="studio-heading"><div><span class="studio-kicker">知序 / 学习工作台</span><h1>把知识连成体系。</h1></div><a class="studio-search" href="#learn">${icon("search")} 查知识点</a></div>
-      <section class="studio-hero"><div class="studio-hero-main"><span class="studio-label">接着学</span><h2>${esc(nextTopic?.title || next.title)}</h2><p>${esc(nextTopic?.summary || next.subtitle)}</p><a class="studio-start" href="${nextTopic ? window.STUDY_COMPLETE_TOPICS.link(nextTopic) : "#lesson/"+next.id}">进入完整专题 ${icon("arrow")}</a></div><div class="studio-progress"><div class="studio-ring" style="--progress:${Math.round(done/C.lessons.length*100)}%"><span><strong>${done}</strong><small>/ ${C.lessons.length} 篇已读</small></span></div><span>从理解到运用</span></div></section>
+      <div class="studio-heading"><div><h1>学习概览</h1></div><a class="studio-search" href="#learn">${icon("search")} 查知识点</a></div>
+      <section class="studio-hero"><div class="studio-hero-main"><span class="studio-label">接着学</span><h2>${esc(nextTopic?.title || next.title)}</h2><a class="studio-start" href="${nextTopic ? window.STUDY_COMPLETE_TOPICS.link(nextTopic) : "#lesson/"+next.id}">进入完整专题 ${icon("arrow")}</a></div><div class="studio-progress"><div class="studio-ring" style="--progress:${Math.round(done/C.lessons.length*100)}%"><span><strong>${done}</strong><small>/ ${C.lessons.length} 篇已读</small></span></div></div></section>
       <div class="studio-metrics">${stats.slice(1).map(s=>`<div><span>${s[0]}</span><strong>${s[1]}<small>${s[2]}</small></strong></div>`).join("")}</div>
       <div class="studio-section-heading"><h2>知识体系</h2><span>${topics.length} 个完整专题</span></div>
-      <div class="studio-subjects">${subjects.map(([id,title,desc,num])=>{const group=topics.filter(t=>t.track===id);return `<a class="studio-subject" href="#course/${id}"><span class="studio-subject-top"><span class="studio-subject-number">${num}</span><span>${group.length} 专题</span></span><h3>${title}</h3><p>${desc}</p><span class="studio-subject-bottom">学习 · 记忆 · 配套练习 ${icon("arrow")}</span></a>`;}).join("")}</div>
+      <div class="studio-subjects">${subjects.map(([id,title,desc,num])=>{const group=topics.filter(t=>t.track===id);return `<a class="studio-subject" href="#course/${id}"><span class="studio-subject-top"><span class="studio-subject-number">${num}</span><span>${group.length} 专题</span></span><h3>${title}</h3><span class="studio-subject-bottom">${icon("arrow")}</span></a>`;}).join("")}</div>
       <div class="studio-section-heading"><h2>练习与复习</h2><a href="#practice">全部练习 →</a></div>
       <div class="studio-actions"><a href="#practice">${icon("pen")}<span><strong>专项刷题</strong><small>${C.questions.length} 道原创题</small></span>${icon("arrow")}</a><a href="#writing">${icon("write")}<span><strong>申论写作</strong><small>${C.writing.length} 个材料练习</small></span>${icon("arrow")}</a><a href="#mistakes">${icon("wrong")}<span><strong>错题巩固</strong><small>${wrong} 题待复习</small></span>${icon("arrow")}</a><a href="#diagnostics">${icon("chart")}<span><strong>薄弱点分析</strong><small>根据本机作答记录</small></span>${icon("arrow")}</a></div>
       <details class="studio-records"><summary>最近 7 天的练习记录</summary>${activity()}</details>
-      <div class="studio-footnote">原创学习与练习内容，仍在补充。<a href="#coverage">查看覆盖范围</a> · <a href="#settings">备份本机记录</a></div>
+      <div class="studio-footnote"><a href="#coverage">查看覆盖范围</a> · <a href="#settings">备份本机记录</a></div>
     </section>`;
   }
 
@@ -348,7 +348,7 @@
     return (
       heading(
         "COMPARE & PRACTICE",
-        "同一个知识点，交叉看方法。",
+        "方法对照",
         "",
       ) +
       `<div class="filters" aria-label="方法模块"><button class="chip ${methodFilter === "all" ? "active" : ""}" data-action="method-filter" data-id="all">全部</button>${C.comparisons.map((t) => `<button class="chip ${methodFilter === t.id ? "active" : ""}" data-action="method-filter" data-id="${t.id}">${t.filterLabel || t.module}</button>`).join("")}</div><details class="roadmap"><summary>五模块来源盘点 · 哪些还没有两位具名教师</summary>${C.comparisons.map((t) => `<div class="coverage-row"><strong>${t.module}<small>同一知识点 · ${t.refs.length} 份出处</small></strong><p>${esc(t.gap)}</p></div>`).join("")}<p class="stat-foot">当前${C.methods.length}份资料中，${C.methods.filter((m) => m.kind === "historical-teacher").length}份有历史教学身份或关联介绍、${C.methods.filter((m) => m.kind === "author").length}份只核实到作者署名、${C.methods.filter((m) => m.kind === "institution").length}份只核实到机构。定义判断、估算和细节判断已有两份具名教学资料；其余专题仍有缺口。</p></details><div class="comparison-list">${topics
@@ -641,7 +641,7 @@
             .join(" ")
             .includes(query)),
     );
-    return `<p class="stat-foot" aria-live="polite">找到 ${list.length} 篇讲义 · 基础方法整理，非官方教材</p><div class="catalog-grid">${list.map((l) => `<article class="card lesson-card"><div class="card-top"><span class="pill ${l.category === "申论方法" ? "green" : "gray"}">${esc(l.category)}</span><button class="small-icon ${state.favorites.includes(l.id) ? "saved" : ""}" data-action="favorite" data-id="${l.id}" aria-pressed="${state.favorites.includes(l.id)}" aria-label="收藏：${esc(l.title)}">${icon("star")}</button></div><a href="#lesson/${l.id}${learningPath ? "/"+learningPath : ""}"><h3>${esc(l.title)}</h3><p>${esc(l.subtitle)}</p></a><a class="card-bottom" href="#lesson/${l.id}${learningPath ? "/"+learningPath : ""}"><span>${l.minutes} 分钟 · ${l.practice.length ? l.practice.length + " 道配套题" : "写作方法"} ${state.read.includes(l.id) ? "· 已读" : ""}</span>${icon("arrow")}</a></article>`).join("")}</div>${list.length ? "" : empty("没有找到对应讲义", "试试其他关键词，或取消分类和收藏筛选。", '<button class="btn secondary" data-action="reset-search">重置筛选</button>')}`;
+    return `<p class="stat-foot" aria-live="polite">找到 ${list.length} 篇讲义 · 基础方法整理，非官方教材</p><div class="catalog-grid">${list.map((l) => `<article class="card lesson-card"><div class="card-top"><span class="pill ${l.category === "申论方法" ? "green" : "gray"}">${esc(l.category)}</span><button class="small-icon ${state.favorites.includes(l.id) ? "saved" : ""}" data-action="favorite" data-id="${l.id}" aria-pressed="${state.favorites.includes(l.id)}" aria-label="收藏：${esc(l.title)}">${icon("star")}</button></div><a href="#lesson/${l.id}${learningPath ? "/"+learningPath : ""}"><h3>${esc(l.title)}</h3></a><a class="card-bottom" href="#lesson/${l.id}${learningPath ? "/"+learningPath : ""}"><span>${l.minutes} 分钟 · ${l.practice.length ? l.practice.length + " 道配套题" : "写作方法"} ${state.read.includes(l.id) ? "· 已读" : ""}</span>${icon("arrow")}</a></article>`).join("")}</div>${list.length ? "" : empty("没有找到对应讲义", "试试其他关键词，或取消分类和收藏筛选。", '<button class="btn secondary" data-action="reset-search">重置筛选</button>')}`;
   }
   function learn() {
     const choice=location.hash.split("/")[1];
@@ -654,7 +654,7 @@
         btn("查看覆盖矩阵", "#coverage", true),
       ) +
       window.STUDY_COURSE.entry() + studyRoutes() +
-      `<section class="panel"><h2>学习路径</h2><p>小白先懂概念，基础阶段练迁移，高手阶段检查条件与边界。选择路径后，显示已有对应讲解的专题；完整讲义保留全部内容。</p>${pathChoices("#learn",learningPath)}<p class="stat-foot">当前${C.lessons.filter(l=>l.learningLevels).length}课已逐层编写，其他专题仍可从完整讲义进入。路径不是考试难度或能力等级认证。</p></section>` +
+      `<section class="panel"><h2>学习路径</h2>${pathChoices("#learn",learningPath)}</section>` +
       roadmap() +
       `<label class="search-box">${icon("search")}<input id="search" aria-label="搜索知识点" placeholder="搜索知识点、公式或技巧…" value="${esc(query)}"></label><div class="filters">${C.categories.map((c) => `<button class="chip ${c === catalogFilter ? "active" : ""}" data-action="filter" data-id="${c}" aria-pressed="${c === catalogFilter}">${c}</button>`).join("")}<button class="chip ${onlySaved ? "active" : ""}" data-action="saved-filter" aria-pressed="${onlySaved}">★ 收藏</button></div><div id="catalog">${lessonCards()}</div>`
     );
@@ -667,7 +667,7 @@
     const selected=Object.keys(C.learningPaths).includes(pathId) && l.learningLevels?.[pathId]?pathId:"";
     const sections=(selected ? l.learningLevels[selected].sections.map(i=>l.sections[i]) : l.sections).filter(item=>item && !attributionHeadings.has(item[0]));
     const inTheory = C.theoryTrack?.steps.some(s => s.lessonId === l.id);
-    return `<a class="back-link" href="#learn">${icon("back")}知识地图</a>${inTheory ? '<span class="muted" aria-hidden="true"> · </span><a class="back-link" href="#theory">返回政治理论路线</a>' : ""}<div class="reading-grid"><article class="panel reading"><span class="pill">${esc(l.category)} · 学习讲义</span><h1>${esc(l.title)}</h1><p class="subtitle">${esc(l.subtitle)}</p><span class="muted" style="font-size:12px">约 ${l.minutes} 分钟 · ${l.tags.map(esc).join(" / ")} · 更新 ${esc(l.updated || "2026-11-05")}${l.versionNote ? " · "+esc(l.versionNote):""}</span>${l.learningLevels ? pathChoices("#lesson/"+l.id,selected)+levelGuide(l,selected):""}<div class="formula">${esc(l.formula)}</div>${theoryLearningGuide(l)}${diagram(l)}${sections.map((s) => `<section><h2>${esc(s[0])}</h2><p>${esc(s[1])}</p></section>`).join("")}<p class="stat-foot"><a href="#sources">资料说明</a> · <a href="#methods">方法对照</a></p><div class="note">学习讲义并非官方教材，适用条件以题干为准。</div><div class="actions"><button class="btn" data-action="read" data-id="${l.id}">${icon("check")}${state.read.includes(l.id) ? "已读 · 点击取消" : "标记已读"}</button><button class="btn secondary" data-action="favorite" data-id="${l.id}" aria-pressed="${state.favorites.includes(l.id)}">${icon("star")}${state.favorites.includes(l.id) ? "已收藏" : "收藏讲义"}</button></div></article><aside class="stack sticky"><div class="panel"><h2>配套练习</h2><p class="subtitle">${l.practice.length ? `${l.practice.length} 道原创题` : "写作任务"}</p><div class="actions">${btn(l.practice.length ? "练配套题" : "去申论写作", l.practice.length ? "#quiz/lesson/" + l.id : "#write/" + (C.writing.find((w) => w.lesson === l.id)?.id || "w01"))}</div></div><div class="panel"><label class="field-label" for="lesson-note">我的笔记</label><textarea id="lesson-note" data-note="${l.id}" rows="7" maxlength="10000" placeholder="输入笔记">${esc(state.notes[l.id] || "")}</textarea><div class="field-meta"><span id="note-status">仅保存在当前浏览器</span></div></div></aside></div>`;
+    return `<a class="back-link" href="#learn">${icon("back")}知识地图</a>${inTheory ? '<span class="muted" aria-hidden="true"> · </span><a class="back-link" href="#theory">返回政治理论路线</a>' : ""}<div class="reading-grid"><article class="panel reading"><span class="pill">${esc(l.category)} · 学习讲义</span><h1>${esc(l.title)}</h1><span class="muted" style="font-size:12px">约 ${l.minutes} 分钟 · ${l.tags.map(esc).join(" / ")} · 更新 ${esc(l.updated || "2026-11-05")}${l.versionNote ? " · "+esc(l.versionNote):""}</span>${l.learningLevels ? pathChoices("#lesson/"+l.id,selected)+levelGuide(l,selected):""}<div class="formula">${esc(l.formula)}</div>${theoryLearningGuide(l)}${diagram(l)}${sections.map((s) => `<section><h2>${esc(s[0])}</h2><p>${esc(s[1])}</p></section>`).join("")}<p class="stat-foot"><a href="#sources">资料说明</a> · <a href="#methods">方法对照</a></p><div class="note">学习讲义并非官方教材，适用条件以题干为准。</div><div class="actions"><button class="btn" data-action="read" data-id="${l.id}">${icon("check")}${state.read.includes(l.id) ? "已读 · 点击取消" : "标记已读"}</button><button class="btn secondary" data-action="favorite" data-id="${l.id}" aria-pressed="${state.favorites.includes(l.id)}">${icon("star")}${state.favorites.includes(l.id) ? "已收藏" : "收藏讲义"}</button></div></article><aside class="stack sticky"><div class="panel"><h2>配套练习</h2><p class="subtitle">${l.practice.length ? `${l.practice.length} 道原创题` : "写作任务"}</p><div class="actions">${btn(l.practice.length ? "练配套题" : "去申论写作", l.practice.length ? "#quiz/lesson/" + l.id : "#write/" + (C.writing.find((w) => w.lesson === l.id)?.id || "w01"))}</div></div><div class="panel"><label class="field-label" for="lesson-note">我的笔记</label><textarea id="lesson-note" data-note="${l.id}" rows="7" maxlength="10000" placeholder="输入笔记">${esc(state.notes[l.id] || "")}</textarea><div class="field-meta"><span id="note-status">仅保存在当前浏览器</span></div></div></aside></div>`;
   }
 
   const bankDefaults = () => ({
@@ -897,15 +897,15 @@
     return (
       heading(
         "PRACTICE LAB",
-        "用练习，检验理解。",
-        `${C.questions.length} 道原创练习题，每次提交后展开解析。不是历年真题库。`,
+        "专项练习",
+        `${C.questions.length} 道原创练习题，非历年真题。`,
       ) +
-      `<section class="panel bank-entry"><div><h2>原创长题组与模块复盘</h2><p class="subtitle">自组1至200题 · 60题配置与固定120题卷 · 独立备份，非标准模考</p></div><a class="btn" href="./long-mock.html">打开长题组</a></section><section class="panel bank-entry"><div><h2>三套原创方法训练短卷</h2><p class="subtitle">各20题 · 引用已有60题 · 非全真模拟或分数预测</p></div>${btn("选择短卷", "#papers")}</section><section class="panel bank-entry"><div><h2>自选限时与本机复盘</h2><p class="subtitle">固定题组 · 未提交分开记 · 申论用时</p></div>${btn("打开训练记录", "#training")}</section><section class="panel bank-entry"><div><h2>薄弱点线索与下一步</h2><p class="subtitle">说明样本和版本 · 回看讲义 · 换题检验</p></div>${btn("看看下一步练什么", "#diagnostics")}</section><section class="panel bank-entry"><div><h2>根据本机记录练下一组</h2><p class="subtitle">最近答错优先 · 未练补充 · 最多12题</p></div>${btn("打开针对性练习", "#targeted")}</section><section class="panel bank-entry"><div><h2>按题型与知识点找题</h2><p class="subtitle">组合筛选 · 本机错题 · 题源与年份</p></div>${btn("打开题库检索", "#bank")}</section><div class="practice-grid"><section class="card practice-card"><div class="tile-icon">${icon("chart")}</div><h3>综合练习</h3><p>覆盖当前全部选择题，顺序作答。已做过的题也可以重练。</p><span class="pill">${C.questions.length} 道 · 基础</span>${btn("开始综合练习", "#quiz/all")}</section>${categories
+      `<section class="panel bank-entry"><div><h2>原创长题组与模块复盘</h2><p class="subtitle">自组1至200题 · 60题配置与固定120题卷 · 独立备份，非标准模考</p></div><a class="btn" href="./long-mock.html">打开长题组</a></section><section class="panel bank-entry"><div><h2>三套原创方法训练短卷</h2><p class="subtitle">各20题 · 引用已有60题 · 非全真模拟或分数预测</p></div>${btn("选择短卷", "#papers")}</section><section class="panel bank-entry"><div><h2>自选限时与本机复盘</h2></div>${btn("打开训练记录", "#training")}</section><section class="panel bank-entry"><div><h2>薄弱点线索与下一步</h2></div>${btn("看看下一步练什么", "#diagnostics")}</section><section class="panel bank-entry"><div><h2>根据本机记录练下一组</h2><p class="subtitle">最近答错优先 · 未练补充 · 最多12题</p></div>${btn("打开针对性练习", "#targeted")}</section><section class="panel bank-entry"><div><h2>按题型与知识点找题</h2></div>${btn("打开题库检索", "#bank")}</section><div class="practice-grid"><section class="card practice-card"><div class="tile-icon">${icon("chart")}</div><h3>综合练习</h3><span class="pill">${C.questions.length} 道 · 基础</span>${btn("开始综合练习", "#quiz/all")}</section>${categories
         .map((c) => {
           const count = C.questions.filter(
             (q) => lesson(q.lesson).category === c,
           ).length;
-          return `<section class="card practice-card"><div class="tile-icon">${icon("pen")}</div><h3>${c}</h3><p>${(C.coverage.find((row) => row[0] === c) || [])[1] || "从知识点开始练习。"}</p><span class="pill gray">${count} 道 · 原创示例</span>${btn("开始专项练习", "#quiz/category/" + encodeURIComponent(c))}</section>`;
+          return `<section class="card practice-card"><div class="tile-icon">${icon("pen")}</div><h3>${c}</h3><span class="pill gray">${count} 道 · 原创示例</span>${btn("开始专项练习", "#quiz/category/" + encodeURIComponent(c))}</section>`;
         })
         .join(
           "",
@@ -959,7 +959,7 @@
       );
     if (quiz.complete) {
       const n = quiz.results.filter((r) => r.correct).length;
-      return `<div class="quiz-wrap">${heading("SESSION COMPLETE", "这一组，完成了。", "把没弄懂的地方，再带回知识点。")}<section class="panel result"><div class="result-number">${n}<small> / ${quiz.ids.length}</small></div><h2>本次答对 ${n} 题</h2><p class="subtitle">共用时 ${Math.max(1, Math.round(((quiz.finishedAt || Date.now()) - quiz.started) / 1000))} 秒 · 所有记录留在本机</p><div class="actions">${btn("查看错题", "#mistakes")}${btn("继续学习", "#learn", true)}<button class="btn secondary" data-action="restart">再练这组</button></div></section></div>`;
+      return `<div class="quiz-wrap">${heading("SESSION COMPLETE", "本组结果", "")}<section class="panel result"><div class="result-number">${n}<small> / ${quiz.ids.length}</small></div><h2>本次答对 ${n} 题</h2><p class="subtitle">共用时 ${Math.max(1, Math.round(((quiz.finishedAt || Date.now()) - quiz.started) / 1000))} 秒 · 所有记录留在本机</p><div class="actions">${btn("查看错题", "#mistakes")}${btn("继续学习", "#learn", true)}<button class="btn secondary" data-action="restart">再练这组</button></div></section></div>`;
     }
     const q = question(quiz.ids[quiz.index]),
       l = lesson(q.lesson),
@@ -971,7 +971,7 @@
     return (
       heading(
         "REVIEW & REFLECT",
-        "错题，是下一步的路标。",
+        "错题回顾",
         "这里保留最近一次答错的题。再次答对后移出，历史作答仍保留。",
         ids.length ? btn("重练全部", "#quiz/wrong") : "",
       ) +
@@ -1013,14 +1013,14 @@
     return (
       heading(
         "WRITING STUDIO",
-        "让思路，落在纸上。",
+        "申论写作",
         "",
       ) +
       `<section class="panel"><div class="bank-filters"><label class="bank-field">搜索训练<input id="writing-search" type="search" value="${esc(writingQuery)}" placeholder="题目、材料或任务关键词"></label><label class="bank-field">训练任务<select id="writing-type"><option value="all">全部任务</option>${[...new Set(C.writing.map(writingCategory))].map((t) => `<option ${writingType === t ? "selected" : ""}>${esc(t)}</option>`).join("")}</select></label><label class="bank-field">本机草稿<select id="writing-status"><option value="all">全部状态</option><option value="draft" ${writingStatus === "draft" ? "selected" : ""}>已有草稿</option><option value="new" ${writingStatus === "new" ? "selected" : ""}>尚无草稿</option></select></label></div><p class="stat-foot">均为原创虚构材料与参考表达。草稿不等于完成，勾选不等于得分；不提供AI阅卷或分数预测。</p></section><section id="writing-results">${writingResults()}</section><div class="section-head"><h2>写作方法</h2><a href="#learn">知识地图 →</a></div><div class="compact-links">${C.lessons
         .filter((l) => l.category === "申论方法")
         .map(
           (l) =>
-            `<a class="compact-link" href="#lesson/${l.id}"><span class="tile-icon">${icon("book")}</span><div><strong>${esc(l.title)}</strong><small>${esc(l.subtitle)}</small></div>${icon("arrow")}</a>`,
+            `<a class="compact-link" href="#lesson/${l.id}"><span class="tile-icon">${icon("book")}</span><div><strong>${esc(l.title)}</strong></div>${icon("arrow")}</a>`,
         )
         .join("")}</div>`
     );

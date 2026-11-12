@@ -61,7 +61,7 @@
       const area = $("#private-reader"); area.replaceChildren();
       $("#private-remove").hidden = !pack;
       $("#private-pagination").hidden = !pack;
-      if (!pack) { area.append(node("p", "尚无可阅读的私人题包。可先下载原创格式样例，按说明整理自己合法取得的题目。")); syncControls(); return; }
+      if (!pack) { area.append(node("p", "尚无题包，请导入 JSON 文件。")); syncControls(); return; }
       area.append(node("p", "用户自备内容，来源、答案及解析未经本站核验。", "private-warning"));
       area.append(node("p", "题包来源说明：" + pack.sourceNote, "private-text"));
       const paper = selectedPaper === "" ? null : pack.papers[Number(selectedPaper)];

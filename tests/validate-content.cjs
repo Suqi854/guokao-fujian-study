@@ -7,7 +7,7 @@ const root = path.join(__dirname, "..");
 const context = { window: {} };
 vm.createContext(context);
 const scripts = [...fs.readFileSync(path.join(root, "docs/index.html"), "utf8").matchAll(/src="\.\/([^\"]+)"/g)].map(m => m[1]);
-for (const file of scripts.filter(f => f !== "app-studio-20261112.js")) {
+for (const file of scripts.filter(f => f !== "app-studio-20261112-clean.js")) {
   assert.ok(fs.existsSync(path.join(root, "docs", file)), file);
   vm.runInContext(fs.readFileSync(path.join(root, "docs", file), "utf8"), context, { filename: file });
 }

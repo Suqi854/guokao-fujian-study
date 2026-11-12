@@ -1,7 +1,7 @@
 'use strict';
 // Deterministic model and storage fault tests. Not browser durability/touch verification.
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict'),crypto=require('node:crypto');
-const root=path.join(__dirname,'..'),html=fs.readFileSync(root+'/docs/long-mock.html','utf8'),scripts=[...html.matchAll(/src="\.\/([^"]+)"/g)].map(m=>m[1]).filter(f=>f!=='long-mock-workspace.js');
+const root=path.join(__dirname,'..'),html=fs.readFileSync(root+'/docs/long-mock.html','utf8'),scripts=[...html.matchAll(/src="\.\/([^"]+)"/g)].map(m=>m[1]).filter(f=>f!=='long-mock-workspace-clean.js');
 const plain=x=>JSON.parse(JSON.stringify(x)),NOW=Date.parse('2026-11-05T10:00:00Z');
 const data=new Map(),calls=[],listeners=new Set();let failWrite=null,failRead=false,hold=false,release;
 const storage={get length(){return data.size;},key(i){return [...data.keys()][i]??null;},getItem(k){calls.push(['read',k]);if(failRead)throw Error('permission');return data.get(k)??null;},setItem(k,v){calls.push(['write',k]);if(failWrite&&failWrite(k)){const e=Error('quota');e.name='QuotaExceededError';throw e;}data.set(k,String(v));},removeItem(k){calls.push(['remove',k]);data.delete(k);}};

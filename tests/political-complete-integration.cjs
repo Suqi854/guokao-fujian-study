@@ -10,7 +10,7 @@ for(const page of ['index.html','long-mock.html']){
  for(const k of ['localStorage','sessionStorage','indexedDB','fetch'])for(const target of [c,c.window])Object.defineProperty(target,k,{get(){throw Error('unexpected data or network access '+k);}});
  const scripts=[...fs.readFileSync(path.join(root,'docs',page),'utf8').matchAll(/src="\.\/([^"]+)"/g)].map(m=>m[1]);
  for(const file of ['political-mao-deng-expansion.js','marxism-course-20261107.js','political-complete-integration.js'])assert.equal(scripts.filter(x=>x===file).length,1);
- for(const f of scripts)if(!['app-studio-20261112.js','long-mock-workspace.js','long-mock-store.js','policy-current-2026.js'].includes(f))vm.runInContext(fs.readFileSync(path.join(root,'docs',f),'utf8'),c,{filename:f});
+ for(const f of scripts)if(!['app-studio-20261112-clean.js','long-mock-workspace-clean.js','long-mock-store.js','policy-current-2026.js'].includes(f))vm.runInContext(fs.readFileSync(path.join(root,'docs',f),'utf8'),c,{filename:f});
  const C=c.window.STUDY_CONTENT,plain=x=>JSON.parse(JSON.stringify(x));
  assert.deepEqual([C.lessons.length,C.questions.length,C.writing.length,C.lessons.filter(l=>l.learningLevels).length,Object.keys(C.sources).length],[123,861,87,115,74]);
  for(const [name,rows]of Object.entries(base.collections))for(const [id,wanted]of Object.entries(rows))assert.equal(hash(require("./learning-release-identity-projection.cjs")(C)[name].find(x=>x.id===id)),wanted,page+' old '+name+'/'+id);

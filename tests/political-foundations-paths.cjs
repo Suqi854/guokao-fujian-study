@@ -2,7 +2,7 @@
 // Structural/version guards do not replace the separate primary-source and prose review.
 const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path'),assert=require('node:assert/strict');
 const root=path.join(__dirname,'..'),ctx={window:{}};vm.createContext(ctx);
-for(const m of fs.readFileSync(path.join(root,'docs/index.html'),'utf8').matchAll(/src="\.\/([^\"]+)"/g))if(m[1]!=='app-studio-20261112.js')vm.runInContext(fs.readFileSync(path.join(root,'docs',m[1]),'utf8'),ctx);
+for(const m of fs.readFileSync(path.join(root,'docs/index.html'),'utf8').matchAll(/src="\.\/([^\"]+)"/g))if(m[1]!=='app-studio-20261112-clean.js')vm.runInContext(fs.readFileSync(path.join(root,'docs',m[1]),'utf8'),ctx);
 const C=JSON.parse(JSON.stringify(ctx.window.STUDY_CONTENT)),q=Object.fromEntries(C.questions.map(x=>[x.id,x])),ids=['practice-cognition','contradiction-method','productive-relations','mao-thought-context'];
 assert.equal(C.lessons.length,127);assert.equal(C.questions.length,885);assert.equal(C.lessons.filter(l=>l.learningLevels).length,119);assert.equal(C.lessons.filter(l=>!l.learningLevels).length,8);assert.equal(Object.keys(C.sources).length,80);
 assert.equal(C.writing.length,87);assert.equal(new Set(C.writing.map(w=>w.material)).size,37);assert.equal(C.methods.length,17);assert.equal(C.comparisons.length,7);

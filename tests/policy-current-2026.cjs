@@ -10,7 +10,7 @@ for(const page of ['index.html','long-mock.html']){
  assert.equal(files.filter(f=>f==='policy-current-2026.js').length,1);
  assert.ok(files.indexOf('policy-current-2026.js')>files.indexOf('political-complete-integration.js'));
  let before,beforeCards,beforeAids;
- for(const f of files)if(!['app-studio-20261112.js','long-mock-workspace.js','long-mock-store.js'].includes(f)){
+ for(const f of files)if(!['app-studio-20261112-clean.js','long-mock-workspace-clean.js','long-mock-store.js'].includes(f)){
   if(f==='policy-current-2026.js'){before=clone(c.window.STUDY_CONTENT);beforeCards=clone(c.window.STUDY_MEMORY_METHODS.cards);beforeAids=clone(c.window.STUDY_CONTENT.theoryLearningAids);}
   vm.runInContext(fs.readFileSync(path.join(root,'docs',f),'utf8'),c,{filename:f});
  }
