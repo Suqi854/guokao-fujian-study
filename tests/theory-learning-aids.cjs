@@ -13,7 +13,7 @@ const run = name => vm.runInContext(fs.readFileSync(path.join(root, "docs", name
 // The aid is loaded explicitly below, so this works before and after UI wiring.
 let foundationsLoaded = false;
 for (const match of fs.readFileSync(path.join(root, "docs/index.html"), "utf8").matchAll(/src="\.\/([^\"]+)"/g)) {
-  if (match[1] === "app-topics-20261107.js" || match[1] === "theory-learning-aids.js") continue;
+  if (match[1] === "app-studio-20261112.js" || match[1] === "theory-learning-aids.js") continue;
   run(match[1]);
   if (match[1] === "political-foundations-paths.js") {
     foundationsLoaded = true;

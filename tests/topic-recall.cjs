@@ -2,7 +2,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),{JSDOM,VirtualConsole}=require('jsdom');
 const {installSerialLocks,navigateHash}=require('./progress-dom-support.cjs');
 const root=path.join(__dirname,'..'),html=fs.readFileSync(root+'/docs/index.html','utf8');
-assert.ok(html.includes('./topic-recall-all-20261107.js'),'single-card release gets a new asset URL');assert.ok(html.includes('./topic-recall-summary-20261107.css'),'single-card style gets a new asset URL');
+assert.ok(html.includes('./topic-recall-studio-20261112.js'),'single-card release gets a new asset URL');assert.ok(html.includes('./topic-recall-summary-20261107.css'),'single-card style gets a new asset URL');
 const files=[...html.matchAll(/src="\.\/([^\"]+)"/g)].map(m=>m[1]);
 const legacy={schemaVersion:1,exam:'fujian',read:['growth'],favorites:['marx-connection'],notes:{growth:'原有笔记'},attempts:[],drafts:{w01:'原有草稿'},checks:{w01:[0]}};
 function make(session,blocked=false){const errors=[],requests=[],vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));const dom=new JSDOM(html,{url:'https://recall.synthetic.example/#course/politics/topic/dialectics',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc}),w=dom.window;installSerialLocks(w);w.scrollTo=()=>{};w.HTMLElement.prototype.scrollIntoView=function(){};w.fetch=(...args)=>{requests.push(args);throw Error('Unexpected network');};w.localStorage.setItem('zhixu-study-v1',JSON.stringify(legacy));if(session)w.sessionStorage.setItem('zhixu-topic-recall-v1',session);if(blocked)Object.defineProperty(w,'sessionStorage',{get(){throw Error('blocked');}});for(const file of files)w.eval(fs.readFileSync(root+'/docs/'+file,'utf8'));return{dom,w,d:w.document,errors,requests};}

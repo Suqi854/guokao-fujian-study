@@ -42,7 +42,7 @@ const context = () => {
   return vm.createContext(c);
 };
 const execute = (c, file) => vm.runInContext(read(file), c, { filename: file, timeout: 2000 });
-const contentScripts = scriptNames('index.html').filter(file => file !== 'app-topics-20261107.js' && !laterAdapters.includes(file));
+const contentScripts = scriptNames('index.html').filter(file => file !== 'app-studio-20261112.js' && !laterAdapters.includes(file));
 for (const file of adapters) {
   const embedded = read(file).match(/\bconst B = ([\s\S]+?);\s*const C=window\.STUDY_CONTENT;/);
   assert.ok(embedded, file + ' self-contained reviewed payload');

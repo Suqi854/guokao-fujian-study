@@ -22,7 +22,7 @@ for (const file of adapters) {
   assert.ok(embedded, file + ' self-contained reviewed JSON input');
   assert.equal(hash(JSON.parse(embedded[1])), reviewed.adapterPayloads[file], file + ' entire approved payload, including source and review metadata');
 }
-const contentScripts = scriptNames('index.html').filter(file => !['app-topics-20261107.js','political-mao-deng-expansion.js','marxism-course-20261107.js','political-complete-integration.js','policy-current-2026.js'].includes(file));
+const contentScripts = scriptNames('index.html').filter(file => !['app-studio-20261112.js','political-mao-deng-expansion.js','marxism-course-20261107.js','political-complete-integration.js','policy-current-2026.js'].includes(file));
 const c = context(); for (const file of contentScripts) execute(c, file);
 const C = c.window.STUDY_CONTENT, T = c.window.STUDY_TRAINING;
 assert.deepEqual([C.lessons.length, C.questions.length, C.writing.length, C.lessons.filter(l => l.learningLevels).length, C.lessons.filter(l => !l.learningLevels).length, Object.keys(C.sources).length, Object.keys(C.theoryLearningAids).length], [105, 753, 87, 97, 8, 43, 19]);
